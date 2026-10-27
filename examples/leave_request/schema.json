@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "description": "First look at an employee's leave request.",
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": ["approve", "reject", "hr_review"],
+      "description": "What should happen to this leave request?",
+      "x-shishya": {
+        "options": {
+          "approve": "A clear, reasonable request; grant it as asked",
+          "reject": "No acceptable reason, or it clashes with a stated blackout period",
+          "hr_review": "Unusual or sensitive; a person in HR should decide"
+        }
+      }
+    },
+    "urgent": {
+      "type": "boolean",
+      "description": "Is this an emergency (illness, accident, death in the family)?"
+    },
+    "probation_note": {
+      "type": "boolean",
+      "description": "Should the reply mention the probation leave policy?",
+      "x-shishya": {"when": {"path": "facts.on_probation", "eq": true}}
+    }
+  }
+}

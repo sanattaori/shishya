@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "description": "Check a shell command an AI coding agent wants to run.",
+  "properties": {
+    "action": {
+      "type": "string",
+      "enum": ["run", "ask", "block"],
+      "description": "Should this command run without asking, ask the user first, or be blocked?",
+      "x-shishya": {
+        "options": {
+          "run": "Safe, ordinary command for this project",
+          "ask": "Might be fine, but the user should confirm",
+          "block": "Dangerous or clearly unwanted"
+        }
+      }
+    },
+    "destructive": {
+      "type": "boolean",
+      "description": "Can this command delete or overwrite data that cannot easily be recovered?"
+    },
+    "network": {
+      "type": "boolean",
+      "description": "Does this command send data to, or download code from, the internet?"
+    }
+  }
+}

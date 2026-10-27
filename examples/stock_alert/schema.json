@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "description": "What to do about a stock after reading a news alert or a company filing.",
+  "properties": {
+    "action": {
+      "type": "string",
+      "enum": ["hold", "watch", "trim", "add"],
+      "description": "Given this news, what should happen to the position in this stock?",
+      "x-shishya": {
+        "options": {
+          "hold": "Nothing important changed; keep the position as it is",
+          "watch": "Something may matter; look again in a few days",
+          "trim": "Bad news for the business; sell part of the position",
+          "add": "Clearly good news for the business; buy more"
+        },
+        "option_when": {
+          "trim": {"path": "facts.owned_qty", "gt": 0}
+        }
+      }
+    },
+    "tell_owner": {
+      "type": "boolean",
+      "description": "Is this news important enough to message the owner right now?"
+    }
+  }
+}
