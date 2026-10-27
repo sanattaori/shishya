@@ -15,7 +15,8 @@ Each property may carry ``description`` (what the model is asked) and an ``x-shi
 
 Conditions are evaluated by plain code against input/facts (see ``when.py``). A field whose
 ``when`` does not hold is not asked and comes back as ``null``. Fields are decided in the order of
-``x-shishya.order`` at the top level, or in property order.
+``x-shishya.order`` at the top level, or in property order. Top-level ``x-shishya.rules`` holds
+declarative rules that read ``answer.*`` and ``facts.*`` (see ``rules.json_rule``).
 """
 from __future__ import annotations
 
@@ -49,6 +50,7 @@ class Compiled:
     fields: tuple[Field, ...]
     digest: str
     schema: dict
+    rules: tuple = ()               # declarative rules from x-shishya.rules (shishya.rules.Rule)
 
     def field(self, name: str) -> Field:
         for f in self.fields:
@@ -69,6 +71,12 @@ def digest(obj: Any) -> str:
 
 def _humanize(name: str) -> str:
     return name.replace("_", " ").replace("-", " ").strip().capitalize() + "?"
+
+
+def _no_answer(cond: Any, where: str) -> None:
+    # field conditions run before the model is asked, so there is no answer to read yet
+    if any(p.split(".")[0] == "answer" for p in when_mod.paths(cond)):
+        raise SchemaError(f"{where}: field conditions cannot read 'answer' (put that in x-shishya.rules)")
 
 
 def _field(name: str, prop: Any) -> Field:
@@ -92,6 +100,7 @@ def _field(name: str, prop: Any) -> Field:
             when_mod.check(cond)
         except when_mod.ConditionError as e:
             raise SchemaError(f"{where}.{EXT}.when: {e}") from e
+        _no_answer(cond, f"{where}.{EXT}.when")
 
     typ = prop.get("type")
     if typ == "boolean":
@@ -129,6 +138,7 @@ def _field(name: str, prop: Any) -> Field:
             when_mod.check(c)
         except when_mod.ConditionError as e:
             raise SchemaError(f"{where}.{EXT}.option_when.{opt}: {e}") from e
+        _no_answer(c, f"{where}.{EXT}.option_when.{opt}")
 
     return Field(name, "choice", tuple(enum), instructions, dict(opt_text), cond, dict(opt_when))
 
@@ -143,11 +153,27 @@ def compile_schema(schema: Any) -> Compiled:
         raise SchemaError("schema needs a non-empty 'properties' object")
     fields = {name: _field(name, prop) for name, prop in props.items()}
 
-    order = schema.get(EXT, {}).get("order") if isinstance(schema.get(EXT), dict) else None
+    top = schema.get(EXT, {})
+    if not isinstance(top, dict):
+        raise SchemaError(f"top-level {EXT} must be an object")
+    unknown = set(top) - {"order", "rules"}
+    if unknown:
+        raise SchemaError(f"top-level {EXT} has unknown keys {sorted(unknown)}")
+    order = top.get("order")
     if order is None:
         names = list(props)
     else:
         if not isinstance(order, list) or sorted(order) != sorted(props) or len(set(order)) != len(order):
             raise SchemaError(f"{EXT}.order must list every property exactly once")
         names = order
-    return Compiled(tuple(fields[n] for n in names), digest(schema), schema)
+    from .rules import RuleError, json_rule
+    specs = top.get("rules", [])
+    if not isinstance(specs, list):
+        raise SchemaError(f"{EXT}.rules must be a list")
+    try:
+        rules = tuple(json_rule(r, set(props)) for r in specs)
+    except RuleError as e:
+        raise SchemaError(f"{EXT}.rules: {e}") from e
+    if len({r.name for r in rules}) != len(rules):
+        raise SchemaError(f"{EXT}.rules: rule names must be unique")
+    return Compiled(tuple(fields[n] for n in names), digest(schema), schema, rules)

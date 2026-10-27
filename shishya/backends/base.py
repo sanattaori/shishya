@@ -6,6 +6,8 @@ from typing import Any, Protocol
 
 from ..schema import Field
 
+FACTS_HEADER = "\n\nKnown facts:\n"     # separates the input from the facts in the text a model reads
+
 
 class BackendError(RuntimeError):
     pass
@@ -28,5 +30,5 @@ def render(input: Any, facts: Any = None, show_facts: bool = True) -> str:
     text = input if isinstance(input, str) else json.dumps(input, ensure_ascii=False, indent=1)
     if show_facts and facts not in (None, {}, []):
         known = facts if isinstance(facts, str) else json.dumps(facts, ensure_ascii=False, indent=1)
-        text = f"{text}\n\nKnown facts:\n{known}"
+        text = f"{text}{FACTS_HEADER}{known}"
     return text

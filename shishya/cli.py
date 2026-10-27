@@ -1,4 +1,4 @@
-"""Command line: ``shishya decide``, ``shishya serve``, ``shishya version``."""
+"""Command line: ``shishya decide``, ``serve``, ``calibrate``, ``rules`` and ``version``."""
 from __future__ import annotations
 
 import argparse
@@ -23,6 +23,48 @@ def _backend(spec: str):
     if spec.startswith("http"):
         return SystemOneBackend(spec)
     raise ValueError(f"unknown backend {spec!r}: use a URL, 'fake' or 'openrouter'")
+
+
+def _routed(backend, routes: list[str] | None):
+    """--route FIELD=MODEL (repeatable): that field is answered by a local classifier (e.g. shishya:news-base).
+
+    The field's options must be the classifier's labels (for shishya:news-*: bearish, bullish, neutral)."""
+    if not routes:
+        return backend
+    from .backends import ClassifierBackend, RouterBackend
+    table = {}
+    for spec in routes:
+        field, sep, model = spec.partition("=")
+        if not sep or not field or not model:
+            raise ValueError(f"--route needs FIELD=MODEL (got {spec!r})")
+        table[field] = ClassifierBackend(model, fields={field: {lab: lab for lab in _labels_of(model)}})
+    return RouterBackend(default=backend, routes=table)
+
+
+def _labels_of(model: str) -> list[str]:
+    from .models import MODELS
+    if model.startswith("shishya:") and model[8:] in MODELS:
+        return MODELS[model[8:]]["labels"]
+    import json as _json
+    cfg = _json.loads((Path(model) / "config.json").read_text())
+    return [v for _, v in sorted(cfg["id2label"].items(), key=lambda kv: int(kv[0]))]
+
+
+def _calibrated(backend, path: str | None):
+    if not path:
+        return backend
+    from .calibrate import CalibratedBackend, load
+    return CalibratedBackend(backend, load(path))
+
+
+def _guru(name: str | None):
+    if name == "claude":
+        from .guru import ClaudeCodeGuru
+        return ClaudeCodeGuru()
+    if name == "openrouter":
+        from .guru import OpenRouterGuru
+        return OpenRouterGuru()
+    return None
 
 
 def _load_rules(path: str) -> list:
@@ -52,14 +94,9 @@ def _decide(a: argparse.Namespace) -> int:
     text = Path(a.input[1:]).read_text() if a.input.startswith("@") else a.input
     facts = _json_arg(a.facts) if a.facts else None
     rego = Path(a.rego).read_text() if a.rego else None
-    guru = None
-    if a.guru == "claude":
-        from .guru import ClaudeCodeGuru
-        guru = ClaudeCodeGuru()
-    elif a.guru == "openrouter":
-        from .guru import OpenRouterGuru
-        guru = OpenRouterGuru()
-    engine = Shishya(_backend(a.backend), rules=_load_rules(a.rules) if a.rules else (), rego=rego, guru=guru,
+    guru = _guru(a.guru)
+    backend = _calibrated(_routed(_backend(a.backend), a.route), a.calibration)
+    engine = Shishya(backend, rules=_load_rules(a.rules) if a.rules else (), rego=rego, guru=guru,
                      min_probability=a.min_probability)
     d = engine.decide(text, schema, facts=facts)
     if a.json:
@@ -87,10 +124,64 @@ def _serve(a: argparse.Namespace) -> int:
         import uvicorn
 
         from .server import create_app
-        app = create_app(_backend(a.backend))
+        app = create_app(_calibrated(_routed(_backend(a.backend), a.route), a.calibration))
     except ImportError:
         raise ValueError("the server needs extra packages: pip install 'shishya[server]'") from None
     uvicorn.run(app, host=a.host, port=a.port)
+    return 0
+
+
+def _pct(x: float | None) -> str:
+    return "  n/a" if x is None else f"{x * 100:4.1f}%"
+
+
+def _calibrate(a: argparse.Namespace) -> int:
+    from . import calibrate as cal
+    from .schema import digest
+    schema = json.loads(Path(a.schema).read_text())
+    backend = _backend(a.backend)
+    collected = cal.collect(backend, schema, cal.load_labels(a.labels))
+    if not collected:
+        raise ValueError("no usable labels: every label was for a field the model would not be asked about, "
+                         "or not an allowed option")
+    temps = cal.fit(collected)
+    rep = cal.report(collected, temps)
+    cal.save(a.out, temps, {"schema_digest": digest(schema), "backend": backend.name,
+                            "model": getattr(backend, "model", None), "examples": len(collected)})
+    print(f"{rep['n_examples']} examples used, {rep['skipped_labels']} labels skipped. "
+          "Calibrated numbers come from 2-fold cross-fitting (fitted on one half, measured on the other).")
+    if rep["n_examples"] < 50:
+        print("warning: fewer than 50 examples, so these numbers are rough")
+    print(f"\n{'field':<24}{'n':>5}{'T':>7}{'accuracy':>10}   ECE before -> after")
+    for name, r in rep["fields"].items():
+        print(f"{name:<24}{r['n']:>5}{temps[name]:>7.2f}{_pct(r['accuracy']):>10}   "
+              f"{_pct(r['ece_before'])} -> {_pct(r['ece_after'])}")
+    print("\nAll fields (every labelled field must clear the bar):")
+    print(f"{'min probability':<18}{'automated':>10}{'error':>9}")
+    for r in rep["all_fields"]["thresholds"]:
+        print(f"{r['threshold']:<18.2f}{_pct(r['coverage']):>10}{_pct(r['error']):>9}")
+    print(f"\nwrote {a.out}; use it with: shishya decide ... --calibration {a.out}")
+    return 0
+
+
+def _rules(a: argparse.Namespace) -> int:
+    from .draft import draft_rules, examples
+    schema = json.loads(Path(a.schema).read_text())
+    facts = _json_arg(a.facts) if a.facts else None
+    drafted = draft_rules(_guru(a.guru), schema, a.english, facts)
+    print(json.dumps({"rules": drafted}, indent=2, ensure_ascii=False))
+    rows = examples(schema, drafted, facts or {})
+    print(f"\nExamples (facts: {json.dumps(facts or {}, ensure_ascii=False)}):")
+    for r in rows:
+        mark = "BLOCK" if r["blocked_by"] else "allow"
+        why = f"  <- {', '.join(r['blocked_by'])}" if r["blocked_by"] else ""
+        print(f"  {mark}  {json.dumps(r['answer'], ensure_ascii=False)}{why}")
+    if not any(r["blocked_by"] for r in rows):
+        print("  (no answer is blocked with these facts)")
+    if a.out:
+        Path(a.out).write_text(json.dumps({"rules": drafted}, indent=2, ensure_ascii=False) + "\n")
+        print(f"\nwrote {a.out}")
+    print("\nReview these rules, then add them to the schema under x-shishya.rules. Nothing was applied.")
     return 0
 
 
@@ -109,13 +200,32 @@ def main(argv: list[str] | None = None) -> int:
                    help="when no allowed answer is likely enough, ask a Guru: 'claude' (your Claude Code login, "
                         "the default) or 'openrouter' (OPENROUTER_API_KEY)")
     d.add_argument("--min-probability", type=float, default=0.0)
+    d.add_argument("--calibration", help="calibration file made by 'shishya calibrate'")
+    d.add_argument("--route", action="append", metavar="FIELD=MODEL",
+                   help="answer FIELD with a local classifier, e.g. news_impact=shishya:news-base (repeatable)")
     d.add_argument("--json", action="store_true", help="print the full result as JSON")
     d.set_defaults(fn=_decide)
     s = sub.add_parser("serve", help="run the HTTP server")
     s.add_argument("--host", default="127.0.0.1")
     s.add_argument("--port", type=int, default=8700)
     s.add_argument("--backend", default=default_backend)
+    s.add_argument("--calibration", help="calibration file made by 'shishya calibrate'")
+    s.add_argument("--route", action="append", metavar="FIELD=MODEL",
+                   help="answer FIELD with a local classifier, e.g. news_impact=shishya:news-base (repeatable)")
     s.set_defaults(fn=_serve)
+    c = sub.add_parser("calibrate", help="fit a temperature per field on labelled examples")
+    c.add_argument("schema", help="schema JSON file")
+    c.add_argument("labels", help="JSONL file: {\"input\": ..., \"facts\": ..., \"answer\": {field: value}}")
+    c.add_argument("--backend", default=default_backend, help="URL, 'fake' or 'openrouter'")
+    c.add_argument("--out", default="calibration.json", help="where to write the temperatures")
+    c.set_defaults(fn=_calibrate)
+    r = sub.add_parser("rules", help="draft rules from plain English (nothing is applied)")
+    r.add_argument("schema", help="schema JSON file")
+    r.add_argument("english", help="the rules, in plain English")
+    r.add_argument("--facts", help="example facts as a JSON file path or a JSON string")
+    r.add_argument("--guru", choices=["claude", "openrouter"], default="claude")
+    r.add_argument("--out", help="write {\"rules\": [...]} to this file (the schema is never edited)")
+    r.set_defaults(fn=_rules)
     v = sub.add_parser("version", help="print the version")
     v.set_defaults(fn=lambda a: print(__version__) or 0)
     args = ap.parse_args(argv)

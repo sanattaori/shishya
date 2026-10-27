@@ -2,6 +2,18 @@
   "type": "object",
   "description": "What to do about a stock after reading a news alert or a company filing.",
   "properties": {
+    "news_impact": {
+      "type": "string",
+      "enum": ["bearish", "bullish", "neutral"],
+      "description": "For this company, is the news bearish, bullish or neutral?",
+      "x-shishya": {
+        "options": {
+          "bearish": "Bad news: likely to push the stock down",
+          "bullish": "Good news: likely to push the stock up",
+          "neutral": "No clear effect on the stock"
+        }
+      }
+    },
     "action": {
       "type": "string",
       "enum": ["hold", "watch", "trim", "add"],

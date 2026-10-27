@@ -2,3 +2,10 @@ Shishya
 Copyright 2026 Sanat Taori
 
 This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+The released news-specialist model weights (GitHub releases, shishya-news-*-v1) were trained on:
+- SEntFiN 1.0, Copyright (c) 2021 Ankur Sinha, Satishwar Kedas, Rishu Kumar, Pekka Malo, MIT License
+  (https://github.com/pyRis/SEntFiN)
+- Twitter Financial News Sentiment v1.0.0, MIT License
+  (https://huggingface.co/datasets/zeroshot/twitter-financial-news-sentiment)
+and fine-tuned from answerdotai/ModernBERT-base / ModernBERT-large (Apache-2.0).

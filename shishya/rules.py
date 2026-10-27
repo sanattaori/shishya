@@ -39,11 +39,14 @@ class Rule:
     uses: tuple[str, ...] | None
     name: str
     message: str
+    spec: Any = None                # the JSON definition, for declarative rules
 
     def __call__(self, ans: dict, ctx: dict) -> bool:
         return bool(self.fn(ans, ctx))
 
     def fingerprint(self) -> str:
+        if self.spec is not None:
+            return hashlib.sha256(json.dumps(self.spec, sort_keys=True).encode()).hexdigest()[:16]
         try:
             src = inspect.getsource(self.fn)
         except (OSError, TypeError):
@@ -61,6 +64,52 @@ def rule(fn: Callable | None = None, *, uses: list[str] | tuple[str, ...] | None
         return Rule(f, tuple(uses) if uses is not None else None, name or f.__name__,
                     message or (doc[0] if doc else f.__name__))
     return wrap(fn) if fn is not None else wrap
+
+
+def json_rule(spec: Any, fields: set[str]) -> Rule:
+    """A declarative rule: ``{"name", "message"?, "forbid" | "require": <condition>}``.
+
+    Conditions use the language of ``when.py`` and may read ``answer.<field>``, ``facts.*`` and
+    ``input``. ``forbid`` rejects an answer when its condition is definitely true; ``require`` rejects
+    it unless its condition is definitely true (an unknown fact fails a requirement). No code runs, so
+    these rules are safe to accept from anyone, including over HTTP and from an LLM draft.
+    """
+    from . import when as when_mod
+
+    if not isinstance(spec, dict):
+        raise RuleError("a JSON rule must be an object")
+    extra = set(spec) - {"name", "message", "forbid", "require"}
+    if extra:
+        raise RuleError(f"unknown keys in JSON rule: {sorted(extra)}")
+    name = spec.get("name")
+    if not isinstance(name, str) or not name.strip():
+        raise RuleError("a JSON rule needs a 'name'")
+    kinds = [k for k in ("forbid", "require") if k in spec]
+    if len(kinds) != 1:
+        raise RuleError(f"rule {name!r} needs exactly one of 'forbid' or 'require'")
+    kind, cond = kinds[0], spec[kinds[0]]
+    try:
+        when_mod.check(cond)
+    except when_mod.ConditionError as e:
+        raise RuleError(f"rule {name!r}: {e}") from e
+    used = []
+    for p in when_mod.paths(cond):
+        parts = p.split(".")
+        if parts[0] == "answer":
+            if len(parts) < 2 or parts[1] not in fields:
+                raise RuleError(f"rule {name!r} reads {p!r}, but the schema has no such field")
+            if parts[1] not in used:
+                used.append(parts[1])
+    if not used:
+        raise RuleError(f"rule {name!r} never reads the answer (use a field condition in the schema instead)")
+    message = spec.get("message") or name
+    if not isinstance(message, str):
+        raise RuleError(f"rule {name!r}: 'message' must be a string")
+
+    def fn(ans: dict, ctx: dict) -> bool:
+        v = when_mod.evaluate(cond, {**ctx, "answer": ans})
+        return v is not True if kind == "forbid" else v is True
+    return Rule(fn, tuple(used), name, message, spec)
 
 
 def as_rules(items: Any) -> list[Rule]:

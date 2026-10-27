@@ -4,95 +4,71 @@
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 
-**Give any AI model your rules. Shishya returns the most likely answer that follows them, in milliseconds, or tells you it can't.**
+### Small AI models decide fast. Shishya makes them follow your rules.
 
-On our 60-task benchmark, a small local decision model broke a rule on **38%** of tasks: it was ready to run `rm -rf /`, approve leave beyond the balance, and buy stock while the market guard was on. With Shishya on top, the same model call broke **0%**, and correct answers went from 42% to **73%**, for **11 ms** of extra work on a laptop. ([results](bench/RESULTS.md))
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/hero-dark.svg">
+  <img alt="An agent wants to run rm -rf; the small model says run (80%); your rule says destructive commands need a person; Shishya answers ask" src="docs/img/hero-light.svg" width="100%">
+</picture>
 
-Small decision models (Kev, jev-style and other Jev-compatible servers) are fast and give a probability for every option. But they don't know *your* rules: leave balances, position limits, which shell commands an agent may run on its own. Prompting the rules in doesn't make them reliable, and the usual alternative, asking an LLM for JSON and retrying when a validator fails, costs a full LLM call per retry.
+Give Shishya a model's probabilities and your rules. It returns **the most likely answer that breaks no rule** in milliseconds, or tells you it can't.
 
-Shishya takes the model's probabilities and searches, best first, for the most likely answer that **passes every rule**. Rules are plain Python functions or OPA/Rego policies. The answer it returns can't break a rule, because each one is checked before it comes back.
+- ✅ **Never breaks a rule.** An exact best-first search; every answer is checked before it comes back.
+- ✍️ **Rules your way.** Plain English (drafted by an LLM, reviewed by you), JSON, Python or OPA/Rego.
+- 🎯 **Specialists for one field.** Plug in a small model trained for one judgement: our free-GPU news model beats a big LLM on Indian news and runs in 17 ms.
+- 📏 **Honest confidence.** Calibrate on your own labels and get a measured report of how much you can automate at each confidence level, and with what error.
+- 🧑‍🏫 **A Guru when unsure.** Hand the hard cases to Claude (your own login) or any OpenRouter model, still checked against your rules.
 
-```
-model says:   verdict = approve (70%)   hr_review (20%)   reject (10%)
-rule:         "Leave can be approved only up to the remaining balance"   (5 days asked, 3 left)
-Shishya:      verdict = hr_review       one rule check, 0.03 ms of search
-```
-
-- **Exact:** the search returns exactly the most likely allowed answer (checked against brute force on 300 random problems in the tests).
-- **Fast:** rules that name their fields cut whole branches at once. One model call, then microseconds of search; Rego policies are checked in batches.
-- **Honest:** every result says how much of the model's probability the rules removed, which rules fired, and the model's own top answer, plus a receipt (schema digest, rule fingerprints, model, timings).
-- **Any model:** works with any System One–compatible decision server, with OpenAI-compatible chat endpoints that return log-probabilities (including free OpenRouter models), or with a fake backend for tests.
-- **A Guru when stuck:** if any field of the best allowed answer is below your confidence bar, Shishya can ask a bigger LLM (the *Guru*), tell it which rules were broken, and check its answer against the same rules.
-
-> *Shishya* (शिष्य) is Sanskrit for "student", one who learns from a *guru*.
-
-## Quickstart (30 seconds, no model needed)
+## Try it in 30 seconds
 
 ```bash
 pip install "git+https://github.com/sanattaori/shishya"
 git clone https://github.com/sanattaori/shishya && cd shishya
-
-shishya decide examples/leave_request/schema.json \
+shishya decide examples/leave_request/schema.json --backend fake \
   --input "Need 5 days off next week for my sister's wedding" \
-  --facts examples/leave_request/facts.json \
-  --rules examples/leave_request/rules.py \
-  --backend fake
+  --facts examples/leave_request/facts.json --rules examples/leave_request/rules.py
 ```
 
-```
-status: ok
-answer: {"verdict": "hr_review", "urgent": true, "probation_note": null}
-model's top answer: {"verdict": "approve", "urgent": true, "probation_note": null}
-broken rule: within_balance (rejected 1)
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/terminal-dark.svg">
+  <img alt="Terminal: drafting a rule from plain English, then a decision the rule corrected" src="docs/img/terminal-light.svg" width="100%">
+</picture>
 
-`--backend fake` uses deterministic made-up probabilities, so you can see the mechanism. For real answers, use a real model (below).
+`--backend fake` uses made-up probabilities so you can see the mechanism. For real answers, point it at a decision model ([below](#use-a-real-model)).
 
-## With a real model
+## Results
 
-Any server that speaks the System One decision API works. For example, [Kev](https://github.com/jaredpalmer/kev) (Apache-2.0) runs on a laptop:
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/results-dark.svg">
+  <img alt="Rule breaks: small model alone 38%, with Shishya 0%, big LLM 0%. Indian news macro-F1: small model 0.50, big LLM 0.78, Shishya news specialist 0.88. Time per decision: 0.20 s vs 5.05 s" src="docs/img/results-light.svg" width="100%">
+</picture>
+
+- **Rule breaks:** 60 tasks (leave requests, stock alerts, shell commands). A small local model (Kev-0.8B) broke a rule 38% of the time; with Shishya, 0%, for 11 ms more.
+- **Indian news:** our specialist, trained in 13 minutes on a free Kaggle GPU with only human-labelled data, scored 0.88 macro-F1 on 300 held-out headlines, against 0.78 for a free big LLM and 0.50 for the small general model on the same 300. On all 1,438 held-out headlines it scored 0.89.
+
+Every number, including where Shishya *doesn't* help yet: [bench/RESULTS.md](bench/RESULTS.md) · [train/news_specialist/RESULTS.md](train/news_specialist/RESULTS.md)
+
+## Use a real model
+
+Any server speaking the System One decision API works, for example [Kev](https://github.com/jaredpalmer/kev) on a laptop:
 
 ```bash
-# in the Kev repo
-uv sync --extra serve
-uv run --extra serve python -m kev.serve --run jaredpalmer/kev-0.8b --port 8009   # or kev-4b
+uv run --extra serve python -m kev.serve --run jaredpalmer/kev-0.8b --port 8009     # in the Kev repo
+
+shishya decide examples/stock_alert/schema.json --backend http://127.0.0.1:8009 \
+  --input "ACMEIND: Quarterly profit up 64% year on year" \
+  --facts examples/stock_alert/facts.json --rules examples/stock_alert/rules.py \
+  --route news_impact=shishya:news-base        # this field goes to our news specialist
 ```
 
-```bash
-shishya decide examples/shell_guard/schema.json \
-  --input "The agent wants to run: rm -rf build/ data/" \
-  --facts examples/shell_guard/facts.json \
-  --rego examples/shell_guard/policy.rego \
-  --backend http://127.0.0.1:8009
-```
+`pip install "shishya[local] @ git+https://github.com/sanattaori/shishya"` adds what `--route` needs (PyTorch). The model (276 MB) downloads once and its checksum is verified.
 
-Or a hosted free model that returns log-probabilities (needs `OPENROUTER_API_KEY`):
-
-```bash
-shishya decide ... --backend openrouter        # liquid/lfm-2.5-2.6b:free by default
-```
-
-Free hosted models are often rate-limited, and few return log-probabilities, so treat this backend as a way to try Shishya, not as a production setup.
-
-## In Python
+<details>
+<summary><b>Python</b></summary>
 
 ```python
 from shishya import Shishya, rule
 from shishya.backends import SystemOneBackend
-
-schema = {
-    "type": "object",
-    "properties": {
-        "verdict": {
-            "type": "string", "enum": ["approve", "reject", "hr_review"],
-            "description": "What should happen to this leave request?",
-            "x-shishya": {"options": {"approve": "A clear, reasonable request",
-                                      "reject": "No acceptable reason",
-                                      "hr_review": "Unusual or sensitive; a person decides"}},
-        },
-        "urgent": {"type": "boolean", "description": "Is this an emergency?"},
-    },
-}
 
 @rule(uses=["verdict"])
 def within_balance(ans, ctx):
@@ -101,42 +77,36 @@ def within_balance(ans, ctx):
     return ans["verdict"] != "approve" or f["days_asked"] <= f["leave_balance"]
 
 s = Shishya(SystemOneBackend("http://127.0.0.1:8009"), rules=[within_balance])
-d = s.decide("Need 5 days off next week for my sister's wedding", schema,
-             facts={"days_asked": 5, "leave_balance": 3})
+d = s.decide("Need 5 days off for my sister's wedding", schema, facts={"days_asked": 5, "leave_balance": 3})
 
 d.status        # "ok" | "guru" | "unsure" | "none"
 d.answer        # {"verdict": "hr_review", "urgent": False}
-d.probability   # the model's joint probability for this answer
-d.confidence    # the weakest field's probability (what min_probability is compared with)
-d.top           # the model's own top answer, before rules
-d.broken_rules  # {"within_balance": 1}
-d.receipt       # schema digest, rule fingerprints, backend, timings
+d.top           # the model's own top answer before the rules: {"verdict": "approve", ...}
+d.confidence    # the weakest field's probability
+d.receipt       # schema digest, rule fingerprints, model, timings: an audit trail
+```
+</details>
+
+<details>
+<summary><b>Rules: English, JSON, Python, Rego</b></summary>
+
+**English → JSON** (drafted, never applied automatically):
+
+```bash
+shishya rules examples/stock_alert/schema.json "Never buy while the market guard is on." \
+  --facts examples/stock_alert/facts.json --guru claude
 ```
 
-## How it works
+**JSON** rules live in the schema under `x-shishya.rules`. They run no code, so they're safe to accept from anyone, including over HTTP:
 
-```
- input + facts ─┐
-                ▼
-   1. conditions   x-shishya.when / option_when are plain code: they remove fields and options
-                   the facts rule out before the model sees them
-   2. model        ONE call: a probability for every allowed option of every field
-   3. search       A* over the fields. Priority = probability so far × best possible rest,
-                   so complete answers come out most-likely-first.
-                   Python rules with `uses=[...]` run as soon as those fields are set and cut the
-                   whole branch; Rego policies check complete answers in batches.
-   4. result       ok      the most likely answer that passes every rule
-                   unsure  an allowed answer exists, but some field is below min_probability
-                           (returned as suggestion)
-                   guru    a bigger LLM answered, told which rules failed, and its answer passed the rules
-                   none    no allowed answer within the search budget
+```json
+{"name": "no_buying_when_market_weak", "message": "Never buy while the market guard is on.",
+ "forbid": {"all": [{"path": "answer.action", "eq": "add"}, {"path": "facts.market_guard_on", "eq": true}]}}
 ```
 
-Fields are scored independently given the input (v0.1). That's what makes one model call enough, and it's also the main limitation; see below.
+Operators: `eq neq gt gte lt lte in contains exists all any not`. `forbid` fires only when its condition is definitely true; `require` fails on missing facts.
 
-## Rules
-
-**Python**, for library use. Return `True` when the answer is allowed. The first docstring line is the message.
+**Python** rules name the fields they read, so a whole branch of answers is cut at once:
 
 ```python
 @rule(uses=["action", "tell_owner"])
@@ -145,119 +115,84 @@ def owner_hears_about_sells(ans, ctx):
     return ans["action"] != "trim" or ans["tell_owner"]
 ```
 
-**Rego (OPA)**, for policies kept outside code, and the only rules the HTTP server accepts. The policy sees `input.answer`, `input.input` and `input.facts`, must define `allow`, and may explain itself with `why_not`:
+**Rego (OPA)**: the policy sees `input.answer` and `input.facts` and defines `allow` (plus `why_not` reasons). Network built-ins (`http.send`, …) are blocked. See [examples/shell_guard/policy.rego](examples/shell_guard/policy.rego).
 
-```rego
-package shell_guard
-import rego.v1
-
-default allow := false
-allow if input.answer.action != "run"
-allow if {
-    input.answer.action == "run"
-    not input.answer.destructive
-    not input.answer.network
-}
-why_not contains "destructive commands always need a person" if {
-    input.answer.action == "run"
-    input.answer.destructive
-}
-```
-
-Rego needs the [`opa`](https://www.openpolicyagent.org/docs#running-opa) binary on `PATH`. Policies cannot call `http.send`, `net.lookup_ip_addr` or `opa.runtime`, so a rule check never reaches the network or the server's environment.
-
-**Conditions** (in the schema, evaluated without the model):
+**Conditions** in the schema decide, without the model, which fields and options apply:
 
 ```json
-"x-shishya": {
-  "when": {"path": "facts.on_probation", "eq": true},
-  "option_when": {"trim": {"path": "facts.owned_qty", "gt": 0}}
-}
+"x-shishya": {"when": {"path": "facts.on_probation", "eq": true},
+              "option_when": {"trim": {"path": "facts.owned_qty", "gt": 0}}}
 ```
+</details>
 
-Operators: `eq neq gt gte lt lte in contains exists all any not`. A missing fact is *unknown* and never makes a field or option eligible.
+<details>
+<summary><b>Calibration: honest confidence</b></summary>
 
-## The Guru
-
-When some field of the best allowed answer is below `min_probability`, Shishya can ask a bigger model, the *Guru*. The Guru is told which rules the earlier answers broke, and its answer must pass the same rules before it's returned.
+Decision models are often over- or under-confident. Label some real examples (JSONL: `{"input", "facts", "answer"}`), then:
 
 ```bash
-shishya decide ... --min-probability 0.9 --guru claude       # Claude through your own Claude Code login (claude -p)
+shishya calibrate schema.json labels.jsonl --backend http://127.0.0.1:8009 --out calibration.json
+shishya decide ... --calibration calibration.json --min-probability 0.9 --guru claude
+```
+
+It fits one temperature per field and reports, measured on held-out folds, how much you can automate at each confidence level and with what error. `min_probability` applies per field: every field must clear the bar.
+</details>
+
+<details>
+<summary><b>The Guru</b></summary>
+
+Below your confidence bar, Shishya can ask a bigger model. It's told which rules were broken, and its answer must pass the same rules.
+
+```bash
+shishya decide ... --min-probability 0.9 --guru claude       # your own Claude Code login (claude -p)
 shishya decide ... --min-probability 0.9 --guru openrouter   # any OpenRouter model (OPENROUTER_API_KEY)
 ```
 
-```python
-from shishya.guru import ClaudeCodeGuru, OpenRouterGuru
-Shishya(backend, rules=[...], guru=ClaudeCodeGuru(model="sonnet"), min_probability=0.9)
-```
+Guru answers come back with `trainable: false`, so Shishya never trains on them.
+</details>
 
-`ClaudeCodeGuru` runs `claude -p` with no tools, no MCP servers and no saved session, in an empty temporary folder, and checks the reply against a JSON Schema built from your fields.
+<details>
+<summary><b>How it works</b></summary>
 
-Guru answers come back with `trainable: False`. Shishya's learning loop (v0.3) will never train on them; provider terms often forbid training on their outputs.
+1. **Conditions** (plain code) remove fields and options the facts rule out.
+2. **One model call** gives a probability for every allowed option of every field; `--route` sends a field to a specialist.
+3. **A\* search** over the fields. Priority is the probability so far × the best possible rest, so complete answers come out most-likely-first. Rules that name their fields prune whole branches; Rego checks batches of complete answers.
+4. **Result:** `ok` (the best allowed answer), `unsure` (below `min_probability`, returned as `suggestion`), `guru`, or `none`.
 
-## HTTP server
+Fields are scored independently given the input. That's what makes one call enough, and it's also the main limitation: rules couple fields, the model's probabilities don't.
+</details>
+
+<details>
+<summary><b>HTTP server</b></summary>
 
 ```bash
 pip install "shishya[server] @ git+https://github.com/sanattaori/shishya"
 shishya serve --backend http://127.0.0.1:8009 --port 8700
+curl -s localhost:8700/v1/decide -d '{"input": "...", "schema": {...}, "facts": {...}, "rego": "package ..."}'
 ```
+
+Over HTTP only JSON and Rego rules are accepted, never Python code.
+</details>
+
+## Train your own specialist (free)
 
 ```bash
-curl -s localhost:8700/v1/decide -H 'content-type: application/json' -d '{
-  "input": "The agent wants to run: git push --force origin main",
-  "schema": {...}, "facts": {...}, "rego": "package shell_guard ..."
-}'
+export KAGGLE_API_TOKEN=...                                      # free account
+train/news_specialist/run_kaggle.sh YOUR_KAGGLE_USERNAME base    # ~13 min on Kaggle's free T4
 ```
 
-## Benchmark
-
-`bench/` has **rulebench v0**: 60 tasks across three scenarios (leave requests, stock alerts, shell commands). Each task has a correct answer, and the model is never shown the rules. Kev-0.8B ran locally on an M2 MacBook (16 GB); the LLM is free Nemotron on OpenRouter.
-
-| System | Correct | Breaks a rule | p50 | p95 |
-|---|---:|---:|---:|---:|
-| Kev-0.8B alone | 42% | 38% | 184 ms | 250 ms |
-| **Kev-0.8B + Shishya** | **73%** | **0%** | **195 ms** | **252 ms** |
-| LLM writes JSON, retries up to 3× when a rule fails | 83% | 0% | 5,048 ms | 42,685 ms |
-
-The big LLM judges the *text* better (mainly stock news), but it's 26× slower at the median and took up to 43 s. Shishya's job is the rules: it removed every rule break of the small model with no extra model call. Full breakdown, the Guru runs and what we learned: [`bench/RESULTS.md`](bench/RESULTS.md).
-
-```bash
-python bench/make_tasks.py > bench/tasks.jsonl
-python bench/run.py --backend http://127.0.0.1:8009 --llm 60
-```
-
-The authors wrote this benchmark, so it favours the cases rules are good at. Read it as a demonstration of the mechanism, not as a measure of model quality.
-
-## Compared with
-
-- **Validate and retry** (e.g. Instructor, or a JSON-mode LLM in a loop): works with any LLM. Each failed rule costs a full LLM call, and nothing guarantees the retry finds the *most likely* allowed answer. Shishya makes one model call and searches.
-- **Decision servers on their own** (Kev, jev-style, other Jev-compatible servers): fast, and they give probabilities, but they don't know your rules. Shishya sits on top of them.
-- **Policy engines** (OPA, Cedar): check an answer someone already chose. Shishya uses them *inside* the choice.
-
-## Limits (v0.1)
-
-- Only `boolean` and string `enum` fields. No numbers, free text or quotes from the input yet.
-- Fields are scored independently given the input, so the model's view of one field doesn't change after another is chosen. Rules can couple fields; the model's probabilities don't.
-- `probability` is the model's own number. Most decision models are not well calibrated on new tasks, so measure on your own labelled examples before trusting a threshold.
-- If the model is wrong about the facts in the text, rules can't fix that. They only stop answers your policy forbids.
+The data is human-labelled and split so no headline leaks into the test. Checkpoints and the calibration temperature are chosen on a dev split only, and results are reported on held-out tests. A model ships only if it beats the general model there. Write-up: [train/news_specialist/RESULTS.md](train/news_specialist/RESULTS.md).
 
 ## Roadmap
 
-- **v0.2:** a small stock-news specialist trained on free Kaggle GPUs (labels from two open-weight teachers that must agree, tested on human-labelled data), numbers and quoted spans from the input (checked against the source), JSON Schema `if/then`, re-scoring a field given earlier choices.
-- **v0.3:** *Shishya learns.* Guru answers and your corrections train a small local model that takes over repeat cases. It trains on free Kaggle GPUs and is only used if it beats the current one on held-out data.
+- **v0.3:** a news specialist that also reads stock-exchange filings (its known blind spot), numbers and quoted spans from the input.
+- **Learning loop:** your corrections train small specialists automatically; a new one ships only if it wins on held-out data.
 - MCP server, an agent tool-call guard, a TypeScript client.
-
-## Development
-
-```bash
-python -m venv .venv && .venv/bin/pip install -e ".[dev]"
-.venv/bin/pytest -q && .venv/bin/ruff check .
-```
 
 ## Credits
 
-Shishya calls decision models over HTTP and includes none of their code or weights. Thanks to the authors of [Kev](https://github.com/jaredpalmer/kev) and [jev-style](https://github.com/lawrence3699/jev-style) (both Apache-2.0) for open decision models, and to [Open Policy Agent](https://www.openpolicyagent.org/).
+Shishya calls decision models over HTTP and includes none of their code. Thanks to [Kev](https://github.com/jaredpalmer/kev) and [jev-style](https://github.com/lawrence3699/jev-style) for open decision models; [SEntFiN](https://github.com/pyRis/SEntFiN) and [twitter-financial-news-sentiment](https://huggingface.co/datasets/zeroshot/twitter-financial-news-sentiment) for open human-labelled data; [ModernBERT](https://huggingface.co/answerdotai/ModernBERT-base); and [Open Policy Agent](https://www.openpolicyagent.org/).
 
-## License
+*Shishya* (शिष्य) is Sanskrit for "student": one who learns from a *guru*.
 
-Apache-2.0
+**License:** Apache-2.0

@@ -139,9 +139,14 @@ def main(argv=None) -> None:
     ap.add_argument("--guru", choices=["openrouter", "claude"], default=None,
                     help="B uses Shishya with this Guru for answers below --min-probability")
     ap.add_argument("--min-probability", type=float, default=0.0)
+    ap.add_argument("--specialist", default=None,
+                    help="path of a news classifier: the stock scenario's news_impact field is routed to it")
+    ap.add_argument("--only", default=None, help="run only this scenario (leave_request, stock_alert, shell_guard)")
     args = ap.parse_args(argv)
 
     tasks = [json.loads(line) for line in Path(args.tasks).read_text().splitlines() if line.strip()]
+    if args.only:
+        tasks = [t for t in tasks if t["scenario"] == args.only]
     scen = {name: load_scenario(name) for name in SCENARIOS}
     backend = make_backend(args.backend)
     b_guru = None
@@ -151,7 +156,13 @@ def main(argv=None) -> None:
     elif args.guru == "claude":
         from shishya.guru import ClaudeCodeGuru
         b_guru = ClaudeCodeGuru()
-    engines = {name: Shishya(backend, rules=sc["rules"], rego=sc["rego"], guru=b_guru,
+    backends = {name: backend for name in scen}
+    if args.specialist:
+        from shishya.backends import ClassifierBackend, RouterBackend
+        same = {lab: lab for lab in ("bearish", "bullish", "neutral")}
+        news = ClassifierBackend(args.specialist, fields={"news_impact": same})
+        backends["stock_alert"] = RouterBackend(default=backend, routes={"news_impact": news})
+    engines = {name: Shishya(backends[name], rules=sc["rules"], rego=sc["rego"], guru=b_guru,
                              min_probability=args.min_probability) for name, sc in scen.items()}
     guru = None
     if args.llm:

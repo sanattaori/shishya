@@ -50,6 +50,23 @@ Kev-0.8B + Shishya, asking the same LLM only when the best allowed answer's prob
 
 **After the fix (v0.1.0 ships with it):** the bar is now compared per field, through `Decision.confidence`, the weakest field's probability. The Guru was asked on 42 of 60 tasks instead of 58, but overall accuracy didn't improve. The 18 answers that stayed on the fast path were 78% right, and the Guru (free Nemotron, given the broken rules) was 71% right on the 42 hard ones. Kev-0.8B's confidence doesn't yet separate easy cases from hard ones well, and on these hard cases a free LLM isn't much better than the small model. Better calibration and a stronger specialist come before the Guru pays off.
 
+## 3. v0.2: the stock scenario with a news specialist
+
+In v0.2 the stock-alert example has a separate `news_impact` field (bearish, bullish or neutral) and one more rule, `act_with_the_news`: no buying on bad news, no selling on good news, no trades on neutral news. The section 1 numbers used the v0.1 schema (the `v0.1.0` tag). To separate the effect of the specialist from the effect of the new schema, the 20 stock tasks were run with Kev alone and with `news_impact` routed to the trained news specialist ([train/news_specialist/RESULTS.md](../train/news_specialist/RESULTS.md)).
+
+| Stock alerts (20), v0.2 schema | Correct | Breaks a rule |
+|---|---:|---:|
+| Kev-0.8B alone, no rules | 40% | 20% |
+| Kev-0.8B + Shishya | 60% | 0% |
+| Kev-0.8B + news specialist + Shishya (large or base) | 60% | 0% |
+
+**The specialist didn't change this result.**
+- It changed 4 of the 20 `news_impact` calls but no final action.
+- The remaining errors are mostly the general model choosing `watch` where `hold` is right on routine notices.
+- On bad news, the alerts here are written in exchange-filing language (an auditor resigning, a rise in promoter pledges), which is the specialist's known blind spot.
+
+Its strength shows on news headlines: 0.88 macro-F1 vs 0.50 for Kev and 0.78 for a free big LLM, on the same 300 held-out Indian headlines.
+
 ## Takeaways
 
 1. **The rule search works as designed:** zero rule breaks, exact best allowed answer, ~11 ms on top of the model call.

@@ -89,7 +89,7 @@ class Shishya:
         t0 = time.perf_counter()
         timings: dict[str, float] = {}
         comp = self.compile(schema)
-        rule_list = as_rules(rules) if rules is not None else self.rules
+        rule_list = list(comp.rules) + (as_rules(rules) if rules is not None else self.rules)
         rego_obj = (RegoRules(rego) if isinstance(rego, str) else rego) if rego is not None else self.rego
         checkers = [rego_obj] if rego_obj is not None else []
         ctx = {"input": input, "facts": facts}

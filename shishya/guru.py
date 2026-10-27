@@ -54,12 +54,21 @@ class OpenRouterGuru:
         self._client = client or httpx.Client(timeout=timeout)
 
     def propose(self, text: str, fields: list[dict], feedback: list[str]) -> dict:
+        return self._chat(SYSTEM, build_prompt(text, fields, feedback))
+
+    def complete_json(self, system: str, prompt: str, json_schema: dict) -> dict:
+        """One JSON object for any task. The schema goes into the prompt; the server is asked for JSON mode."""
+        schema_text = json.dumps(json_schema, ensure_ascii=False)
+        return self._chat(system, f"{prompt}\n\nReply with one JSON object that matches this JSON Schema:\n"
+                                  f"{schema_text}")
+
+    def _chat(self, system: str, user: str) -> dict:
         if not self.api_key:
             raise RuntimeError("the Guru needs an API key: set OPENROUTER_API_KEY or pass api_key")
         body: dict[str, Any] = {
             "model": self.model,
-            "messages": [{"role": "system", "content": SYSTEM},
-                         {"role": "user", "content": build_prompt(text, fields, feedback)}],
+            "messages": [{"role": "system", "content": system},
+                         {"role": "user", "content": user}],
             "response_format": {"type": "json_object"},
             "temperature": 0,
         }
@@ -127,6 +136,13 @@ class ClaudeCodeGuru:
         return {"type": "object", "properties": props, "required": list(props), "additionalProperties": False}
 
     def propose(self, text: str, fields: list[dict], feedback: list[str]) -> dict:
+        return self._run(SYSTEM, build_prompt(text, fields, feedback), self._schema(fields))
+
+    def complete_json(self, system: str, prompt: str, json_schema: dict) -> dict:
+        """One JSON object for any task, matching ``json_schema`` (same no-tools, no-session call as propose)."""
+        return self._run(system, prompt, json_schema)
+
+    def _run(self, system: str, prompt: str, json_schema: dict) -> dict:
         import shutil
         import subprocess
         import tempfile
@@ -135,9 +151,8 @@ class ClaudeCodeGuru:
         if not exe:
             raise RuntimeError(f"the Claude Code CLI ({self.command!r}) is not on PATH")
         cmd = [exe, "-p", "--output-format", "json", "--tools", "", "--no-session-persistence",
-               "--strict-mcp-config", "--model", self.model, "--system-prompt", SYSTEM,
-               "--json-schema", json.dumps(self._schema(fields))]
-        prompt = build_prompt(text, fields, feedback)
+               "--strict-mcp-config", "--model", self.model, "--system-prompt", system,
+               "--json-schema", json.dumps(json_schema)]
         with tempfile.TemporaryDirectory(prefix="shishya-guru-") as cwd:  # no project files in view
             proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True, cwd=cwd,
                                   timeout=self.timeout, check=False)

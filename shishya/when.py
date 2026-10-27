@@ -8,7 +8,8 @@ A condition is JSON:
     {"all": [cond, ...]}   {"any": [cond, ...]}   {"not": cond}
 
 Leaf operators: eq, neq, gt, gte, lt, lte, in (value is a list), contains (path is a list or string).
-Paths are dotted and start at ``input`` (what the model reads) or ``facts`` (what your app knows).
+Paths are dotted and start at ``input`` (what the model reads), ``facts`` (what your app knows) or, in
+rules only, ``answer`` (the answer being checked).
 List items are addressed by index (``facts.trades.0.qty``).
 
 Missing facts are *unknown*, not false: a comparison with a missing path is unknown, ``not unknown`` is
@@ -21,7 +22,7 @@ from typing import Any
 
 _MISSING = object()
 LEAF_OPS = ("eq", "neq", "gt", "gte", "lt", "lte", "in", "contains")
-ROOTS = ("input", "facts")
+ROOTS = ("input", "facts", "answer")
 
 
 class ConditionError(ValueError):
@@ -149,3 +150,14 @@ def check(cond: Any) -> None:
     if ops[0] == "in" and not isinstance(cond["in"], list):
         raise ConditionError("'in' needs a list value")
     lookup(cond["path"], {})
+
+
+def paths(cond: Any) -> list[str]:
+    """Every path a (valid) condition reads, in order."""
+    if "all" in cond or "any" in cond:
+        return [p for c in cond.get("all", cond.get("any")) for p in paths(c)]
+    if "not" in cond:
+        return paths(cond["not"])
+    if "exists" in cond:
+        return [cond["exists"]]
+    return [cond["path"]]

@@ -18,3 +18,14 @@ def position_size_cap(ans, ctx):
 def owner_hears_about_sells(ans, ctx):
     "Any sell must be told to the owner."
     return ans["action"] != "trim" or ans["tell_owner"]
+
+
+@rule(uses=["news_impact", "action"])
+def act_with_the_news(ans, ctx):
+    "Trade only with the news: no buying on bad news, no selling on good news, no trades on neutral news."
+    impact, action = ans["news_impact"], ans["action"]
+    if impact == "bearish":
+        return action in ("watch", "trim")
+    if impact == "bullish":
+        return action in ("hold", "watch", "add")
+    return action in ("hold", "watch")

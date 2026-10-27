@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "shishya"
-version = "0.1.0"
+version = "0.2.0"
 description = "Give any AI model your rules: Shishya returns the most likely answer that follows them, or says it can't."
 readme = "README.md"
 license = "Apache-2.0"
@@ -22,6 +22,7 @@ dependencies = ["httpx>=0.27"]
 
 [project.optional-dependencies]
 server = ["fastapi>=0.110", "uvicorn>=0.29"]
+local = ["torch>=2.4", "transformers>=4.48", "safetensors>=0.4"]
 dev = ["pytest>=8", "ruff>=0.6", "fastapi>=0.110", "uvicorn>=0.29"]
 
 [project.scripts]
@@ -44,6 +45,7 @@ ignore = ["B905"]
 
 [tool.ruff.lint.per-file-ignores]
 "bench/*" = ["E402"]
+"train/*" = ["E402", "E501", "I001", "E731"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
