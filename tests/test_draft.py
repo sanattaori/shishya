@@ -45,7 +45,8 @@ def test_valid_draft_and_examples():
     # the allowed row shown is the closest one to the blocked one
     assert allowed[0]["answer"]["tell_owner"] == blocked[0]["answer"]["tell_owner"]
     # without the fact the rule never fires
-    assert not any(r["blocked_by"] for r in examples(SCHEMA, rules, {}))
+    # rules fail closed: with no facts at all, the rule's fact is missing, so "add" is blocked
+    assert any(r["blocked_by"] for r in examples(SCHEMA, rules, {}))
 
 
 def test_invalid_draft_retries_once_with_the_errors():
@@ -77,7 +78,7 @@ def test_system_prompt_lists_fields_options_and_facts():
                    "facts.market_guard_on", "facts.cash", "1200", "forbid", "require", "snake_case",
                    "eq", "neq", "gt", "gte", "lt", "lte", "contains", "exists", "all", "any", "not"):
         assert needle in p
-    assert "Unknown facts" in p
+    assert "fail closed" in p
 
 
 def test_examples_cap_and_limit():

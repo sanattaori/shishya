@@ -23,10 +23,35 @@ def test_forbid_rule_moves_to_next_best():
     assert d.broken_rules == {"no_buying_when_market_weak": 1}
 
 
-def test_forbid_rule_is_quiet_when_the_fact_is_false_or_missing():
+def test_forbid_rule_is_quiet_only_when_the_fact_is_false():
     s = Shishya(FakeBackend(fixed=PROBS))
     assert s.decide("x", schema(GUARD), facts={"market_guard_on": False}).answer["action"] == "add"
-    assert s.decide("x", schema(GUARD), facts={}).answer["action"] == "add"     # unknown fact: not forbidden
+
+
+def test_missing_fact_blocks_and_is_reported():
+    d = Shishya(FakeBackend(fixed=PROBS)).decide("x", schema(GUARD), facts={})
+    assert d.answer["action"] == "hold"                       # fail closed: "add" is not allowed without the fact
+    assert d.missing_facts == ["facts.market_guard_on"]
+    assert any("not sent" in r for r in d.reasons)
+
+
+def test_on_missing_allow_opts_out():
+    lenient = {**GUARD, "on_missing": "allow"}
+    d = Shishya(FakeBackend(fixed=PROBS)).decide("x", schema(lenient), facts={})
+    assert d.answer["action"] == "add" and d.missing_facts == ["facts.market_guard_on"]
+    with pytest.raises(RuleError, match="cannot allow"):
+        json_rule({"name": "r", "require": {"path": "answer.action", "eq": "add"}, "on_missing": "allow"},
+                  {"action"})
+
+
+def test_python_rule_that_crashes_blocks_instead_of_crashing():
+    @rule(uses=["action"])
+    def needs_guard(ans, ctx):
+        return not (ans["action"] == "add" and ctx["facts"]["market_guard_on"])
+    plain = {"type": "object", "properties": PROPS}
+    d = Shishya(FakeBackend(fixed=PROBS), rules=[needs_guard]).decide("x", plain, facts={})
+    assert d.status == "ok" and d.answer["action"] == "hold"
+    assert d.rule_errors and "KeyError" in d.rule_errors[0]
 
 
 def test_require_rule_fails_on_unknown_facts():

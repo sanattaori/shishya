@@ -114,6 +114,8 @@ def _decide(a: argparse.Namespace) -> int:
             print(f"broken rule: {name} (rejected {n})")
         for why in d.reasons:
             print(f"note: {why}")
+        for err in d.rule_errors:
+            print(f"rule error (blocked): {err}")
         t = d.receipt.get("timings_ms", {})
         print("timings: " + ", ".join(f"{k} {v:.0f}" for k, v in t.items()))
     return 0 if d.status in ("ok", "guru") else 2

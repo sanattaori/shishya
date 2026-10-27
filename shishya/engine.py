@@ -30,6 +30,26 @@ from .rules import RegoRules, Rule, as_rules
 from .schema import Compiled, compile_schema, digest
 from .search import normalize, search
 from .when import holds
+from .when import missing as _missing
+
+
+def when_missing(spec, ctx) -> list[str]:
+    """Missing facts read by one JSON rule (``spec`` is its definition)."""
+    if not spec:
+        return []
+    cond = spec.get("forbid", spec.get("require"))
+    return _missing(cond, ctx) if cond is not None else []
+
+
+def _fail_closed(rule: Rule, errors: list[str]) -> Rule:
+    """The same rule, except that an exception blocks the answer (and is reported) instead of crashing."""
+    def fn(ans: dict, ctx: dict) -> bool:
+        try:
+            return bool(rule.fn(ans, ctx))
+        except Exception as e:  # noqa: BLE001 - any failure inside a rule means "not allowed"
+            errors.append(f"{rule.name}: {type(e).__name__}: {e}")
+            return False
+    return Rule(fn, rule.uses, rule.name, rule.message, rule.spec)
 
 STATUSES = ("ok", "guru", "unsure", "none")
 
@@ -59,6 +79,8 @@ class Decision:
     broken_rules: dict = field(default_factory=dict)  # rule name -> answers it rejected
     reasons: list = field(default_factory=list)       # policy reasons and notes
     trainable: bool = True         # False when the answer came from a Guru whose outputs must not train models
+    missing_facts: list = field(default_factory=list)  # facts the rules needed but were not sent
+    rule_errors: list = field(default_factory=list)    # rules that raised: they block, never allow
     receipt: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
@@ -89,7 +111,9 @@ class Shishya:
         t0 = time.perf_counter()
         timings: dict[str, float] = {}
         comp = self.compile(schema)
-        rule_list = list(comp.rules) + (as_rules(rules) if rules is not None else self.rules)
+        errors: list[str] = []
+        user_rules = list(comp.rules) + (as_rules(rules) if rules is not None else self.rules)
+        rule_list = [_fail_closed(r, errors) for r in user_rules]
         rego_obj = (RegoRules(rego) if isinstance(rego, str) else rego) if rego is not None else self.rego
         checkers = [rego_obj] if rego_obj is not None else []
         ctx = {"input": input, "facts": facts}
@@ -149,6 +173,10 @@ class Shishya:
         d = Decision(status="none", answer=None, probability=0.0, top=top, tried=res.tried,
                      rejected_mass=round(res.rejected_mass, 6), broken_rules=dict(res.failures),
                      reasons=list(res.reasons))
+        d.missing_facts = sorted({p for r in comp.rules for p in when_missing(r.spec, ctx)})
+        if d.missing_facts:
+            d.reasons.append("facts the rules need were not sent, so those rules block: "
+                             + ", ".join(d.missing_facts))
         best = in_order(res.answer)
         d.top_allowed = best is not None and best == top
         if best is not None:
@@ -174,11 +202,12 @@ class Shishya:
         if d.status == "none" and res.status == "exhausted":
             d.reasons.append(f"search budget reached after {res.tried} answers")
 
+        d.rule_errors = sorted(set(errors))
         timings["total_ms"] = (time.perf_counter() - t0) * 1000
         d.receipt = {
             "shishya": __version__,
             "schema_digest": comp.digest,
-            "rules": [{"name": r.name, "fingerprint": r.fingerprint()} for r in rule_list]
+            "rules": [{"name": r.name, "fingerprint": r.fingerprint()} for r in user_rules]
                      + [{"name": c.name, "fingerprint": c.fingerprint()} for c in checkers],
             "backend": {"name": self.backend.name, "model": getattr(self.backend, "model", None)},
             "guru": ({"name": self.guru.name, "model": self.guru.model} if self.guru else None),

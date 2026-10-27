@@ -67,18 +67,20 @@ def rule(fn: Callable | None = None, *, uses: list[str] | tuple[str, ...] | None
 
 
 def json_rule(spec: Any, fields: set[str]) -> Rule:
-    """A declarative rule: ``{"name", "message"?, "forbid" | "require": <condition>}``.
+    """A declarative rule: ``{"name", "message"?, "forbid" | "require": <condition>, "on_missing"?}``.
 
     Conditions use the language of ``when.py`` and may read ``answer.<field>``, ``facts.*`` and
-    ``input``. ``forbid`` rejects an answer when its condition is definitely true; ``require`` rejects
-    it unless its condition is definitely true (an unknown fact fails a requirement). No code runs, so
-    these rules are safe to accept from anyone, including over HTTP and from an LLM draft.
+    ``input``. Rules FAIL CLOSED: ``forbid`` allows an answer only when its condition is definitely
+    false, and ``require`` only when its condition is definitely true. So if the app forgets to send a
+    fact the rule needs, the answer is blocked, never silently allowed. ``"on_missing": "allow"`` makes a
+    forbid rule step aside when its facts are missing (use it for rules that only add caution). No code
+    runs, so these rules are safe to accept from anyone, including over HTTP and from an LLM draft.
     """
     from . import when as when_mod
 
     if not isinstance(spec, dict):
         raise RuleError("a JSON rule must be an object")
-    extra = set(spec) - {"name", "message", "forbid", "require"}
+    extra = set(spec) - {"name", "message", "forbid", "require", "on_missing"}
     if extra:
         raise RuleError(f"unknown keys in JSON rule: {sorted(extra)}")
     name = spec.get("name")
@@ -105,10 +107,17 @@ def json_rule(spec: Any, fields: set[str]) -> Rule:
     message = spec.get("message") or name
     if not isinstance(message, str):
         raise RuleError(f"rule {name!r}: 'message' must be a string")
+    on_missing = spec.get("on_missing", "block")
+    if on_missing not in ("block", "allow"):
+        raise RuleError(f"rule {name!r}: 'on_missing' must be 'block' or 'allow'")
+    if on_missing == "allow" and kind == "require":
+        raise RuleError(f"rule {name!r}: a require rule cannot allow missing facts")
 
     def fn(ans: dict, ctx: dict) -> bool:
         v = when_mod.evaluate(cond, {**ctx, "answer": ans})
-        return v is not True if kind == "forbid" else v is True
+        if kind == "require":
+            return v is True
+        return v is False or (v is None and on_missing == "allow")
     return Rule(fn, tuple(used), name, message, spec)
 
 

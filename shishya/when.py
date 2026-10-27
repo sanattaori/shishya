@@ -161,3 +161,8 @@ def paths(cond: Any) -> list[str]:
     if "exists" in cond:
         return [cond["exists"]]
     return [cond["path"]]
+
+
+def missing(cond: Any, ctx: dict) -> list[str]:
+    """``facts.*`` paths the condition reads that are not in the context."""
+    return [p for p in paths(cond) if p.split(".")[0] == "facts" and lookup(p, ctx) is _MISSING]

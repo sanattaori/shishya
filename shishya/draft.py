@@ -25,7 +25,8 @@ REPLY_SCHEMA = {
     "properties": {"rules": {"type": "array", "items": {
         "type": "object",
         "properties": {"name": {"type": "string"}, "message": {"type": "string"},
-                       "forbid": {"type": "object"}, "require": {"type": "object"}},
+                       "forbid": {"type": "object"}, "require": {"type": "object"},
+                       "on_missing": {"type": "string", "enum": ["block", "allow"]}},
         "required": ["name", "message"]}}},
     "required": ["rules"],
 }
@@ -40,8 +41,9 @@ A rule is a JSON object with exactly these keys:
 
 forbid: the answer is rejected when the condition is definitely true.
 require: the answer is rejected unless the condition is definitely true.
-Unknown facts (a fact that was not provided) never make a forbid rule fire, and always make a require rule fail.
-Prefer forbid unless the sentence says something must be true.
+Rules fail closed: if a fact the condition needs is not provided, the answer is BLOCKED (for forbid and require).
+Write safety rules ("never", "must not") as forbid; only add "on_missing": "allow" when the person says the rule
+should be skipped when the fact is unknown.
 
 A condition is a JSON object, one of:
   {"path": P, "OP": value}   with OP one of eq, neq, gt, gte, lt, lte, in (value is a list), contains

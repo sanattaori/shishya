@@ -78,13 +78,29 @@ def run_kev(rows: list[dict], url: str) -> dict:
     return {"preds": preds, "ms_per_item": ms}
 
 
-def run_llm(rows: list[dict], model: str) -> dict:
+def run_finbert(rows: list[dict], model: str = "ProsusAI/finbert") -> dict:
+    """FinBERT (2019): positive / negative / neutral, mapped to bullish / bearish / neutral."""
+    import torch
+    from transformers import AutoModelForSequenceClassification, AutoTokenizer
+    tok = AutoTokenizer.from_pretrained(model)
+    net = AutoModelForSequenceClassification.from_pretrained(model).eval()
+    names = {i: n.lower() for i, n in net.config.id2label.items()}
+    to = {"positive": "bullish", "negative": "bearish", "neutral": "neutral"}
+    preds, t0 = [], time.perf_counter()
+    with torch.no_grad():
+        for r in rows:
+            logits = net(**tok(r["text"], truncation=True, max_length=128, return_tensors="pt")).logits[0]
+            preds.append(to[names[int(logits.argmax())]])
+    return {"preds": preds, "ms_per_item": (time.perf_counter() - t0) * 1000 / len(rows)}
+
+
+def run_llm(rows: list[dict], model: str, per_request: int = 20) -> dict:
     key = os.environ["OPENROUTER_API_KEY"]
     preds: list[str | None] = [None] * len(rows)
     t0 = time.perf_counter()
     with httpx.Client(timeout=180) as c:
-        for start in range(0, len(rows), 20):
-            chunk = rows[start:start + 20]
+        for start in range(0, len(rows), per_request):
+            chunk = rows[start:start + per_request]
             listing = "\n".join(f"{i + 1}. {r['text']}" for i, r in enumerate(chunk))
             prompt = (f"{QUESTION}\nAnswer for each numbered headline. Reply with JSON only: "
                       f'{{"answers": ["bearish" | "bullish" | "neutral", ...]}} in the same order.\n\n{listing}')
@@ -104,14 +120,16 @@ def run_llm(rows: list[dict], model: str) -> dict:
                     except (KeyError, ValueError, TypeError):
                         pass
                 time.sleep(3 * (attempt + 1))
-            print(f"llm {min(start + 20, len(rows))}/{len(rows)}", file=sys.stderr)
+            if (start // per_request) % max(1, 20 // per_request) == 0:
+                print(f"llm {min(start + per_request, len(rows))}/{len(rows)}", file=sys.stderr)
     ms = (time.perf_counter() - t0) * 1000 / len(rows)
     return {"preds": preds, "ms_per_item": ms}
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("which", choices=["kev", "llm"])
+    ap.add_argument("which", choices=["kev", "llm", "finbert"])
+    ap.add_argument("--per-request", type=int, default=20, help="llm: headlines per request (1 = one at a time)")
     ap.add_argument("--url", default="http://127.0.0.1:8009")
     ap.add_argument("--model", default="nvidia/nemotron-3.5-super-vl:free")
     ap.add_argument("--n", type=int, default=0, help="random sample size (0 = all)")
@@ -122,12 +140,19 @@ def main() -> None:
     if a.n:
         idx = sorted(random.Random(0).sample(idx, a.n))
     sub = [rows[i] for i in idx]
-    res = run_kev(sub, a.url) if a.which == "kev" else run_llm(sub, a.model)
+    if a.which == "kev":
+        res = run_kev(sub, a.url)
+    elif a.which == "finbert":
+        res = run_finbert(sub)
+    else:
+        res = run_llm(sub, a.model, a.per_request)
     preds = [p or "none" for p in res["preds"]]
-    out = {"which": a.which, "split": a.split, "model": a.model if a.which == "llm" else a.url, "idx": idx,
+    model = {"llm": a.model, "finbert": "ProsusAI/finbert"}.get(a.which, a.url)
+    out = {"which": a.which, "split": a.split, "model": model, "per_request": a.per_request, "idx": idx,
            "ms_per_item": res["ms_per_item"], **score(preds, [r["label"] for r in sub]),
            "unanswered": sum(p == "none" for p in preds), "preds": preds}
-    name = f"{a.which}{'-' + a.split if a.split != 'us' else ''}{'-' + str(a.n) if a.n else ''}"
+    per = f"-per{a.per_request}" if a.which == "llm" and a.per_request != 20 else ""
+    name = f"{a.which}{'-' + a.split if a.split != 'us' else ''}{'-' + str(a.n) if a.n else ''}{per}"
     (HERE / "out").mkdir(exist_ok=True)
     (HERE / "out" / f"{name}.json").write_text(json.dumps(out, indent=1))
     print(json.dumps({k: v for k, v in out.items() if k not in ("preds", "idx")}, indent=1))
