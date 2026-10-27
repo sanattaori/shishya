@@ -29,16 +29,30 @@ from .backends.base import Backend, render
 from .rules import RegoRules, Rule, as_rules
 from .schema import Compiled, compile_schema, digest
 from .search import normalize, search
-from .when import holds
-from .when import missing as _missing
+from .when import holds, unknown_facts
 
 
-def when_missing(spec, ctx) -> list[str]:
-    """Missing facts read by one JSON rule (``spec`` is its definition)."""
-    if not spec:
-        return []
-    cond = spec.get("forbid", spec.get("require"))
-    return _missing(cond, ctx) if cond is not None else []
+def fact_notes(rules: list[Rule], ctx: dict) -> tuple[list[str], list[str]]:
+    """Facts that leave JSON rules unknown: (missing fact paths, notes saying what each rule did about it)."""
+    missing, blocking, skipped, notes = set(), set(), set(), []
+    for r in rules:
+        if not r.spec:
+            continue
+        cond = r.spec.get("forbid", r.spec.get("require"))
+        lenient = r.spec.get("on_missing") == "allow"
+        for path, why in unknown_facts(cond, ctx).items():
+            if why == "missing":
+                missing.add(path)
+                (skipped if lenient else blocking).add(path)
+            else:
+                notes.append(f"rule {r.name!r} cannot use {path}: it {why}, so the rule "
+                             + ("is skipped" if lenient else "blocks the answers it might forbid"))
+    if blocking:
+        notes.insert(0, "facts the rules need were not sent, so those rules block: " + ", ".join(sorted(blocking)))
+    if skipped:
+        notes.insert(0, "facts were not sent, so rules marked on_missing=allow skip them: "
+                     + ", ".join(sorted(skipped)))
+    return sorted(missing), notes
 
 
 def _fail_closed(rule: Rule, errors: list[str]) -> Rule:
@@ -173,10 +187,8 @@ class Shishya:
         d = Decision(status="none", answer=None, probability=0.0, top=top, tried=res.tried,
                      rejected_mass=round(res.rejected_mass, 6), broken_rules=dict(res.failures),
                      reasons=list(res.reasons))
-        d.missing_facts = sorted({p for r in comp.rules for p in when_missing(r.spec, ctx)})
-        if d.missing_facts:
-            d.reasons.append("facts the rules need were not sent, so those rules block: "
-                             + ", ".join(d.missing_facts))
+        d.missing_facts, notes = fact_notes(list(comp.rules), ctx)
+        d.reasons.extend(notes)
         best = in_order(res.answer)
         d.top_allowed = best is not None and best == top
         if best is not None:

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **Breaking: rules fail closed.** A JSON `forbid` rule now allows an answer only when its condition is definitely false: if a fact it needs is missing or has the wrong type, the answers it might forbid are blocked (before, they were allowed). `"on_missing": "allow"` restores the old behaviour for one rule. A Python rule that raises blocks the answer and is reported in `Decision.rule_errors` instead of crashing the decision.
+- `Decision.missing_facts` lists facts the schema's rules needed but were not sent; `reasons` says whether each rule blocked or stepped aside, and names facts of the wrong type.
+- The English rule drafter explains fail-closed rules and no longer prefers `forbid`.
+- News baselines: FinBERT, and the LLM asked one headline per request.
+
 ## 0.2.0 (2026-10-28)
 
 - **News specialist models** (`shishya:news-base`, `shishya:news-large`): trained on a free Kaggle T4 on human-labelled Indian and US financial headlines (SEntFiN, twitter-financial-news-sentiment; MIT). On held-out Indian headlines: macro-F1 0.88 vs 0.78 for a free big LLM and 0.50 for Kev-0.8B, at 17 ms on a laptop. They download once and are checked with SHA-256.

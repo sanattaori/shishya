@@ -39,9 +39,26 @@ def test_on_missing_allow_opts_out():
     lenient = {**GUARD, "on_missing": "allow"}
     d = Shishya(FakeBackend(fixed=PROBS)).decide("x", schema(lenient), facts={})
     assert d.answer["action"] == "add" and d.missing_facts == ["facts.market_guard_on"]
+    assert any("on_missing=allow skip" in r for r in d.reasons)
+    assert not any("so those rules block" in r for r in d.reasons)
     with pytest.raises(RuleError, match="cannot allow"):
         json_rule({"name": "r", "require": {"path": "answer.action", "eq": "add"}, "on_missing": "allow"},
                   {"action"})
+
+
+def test_fact_of_the_wrong_type_blocks_and_is_explained():
+    balance = {"name": "within_balance", "forbid": {"all": [{"path": "answer.action", "eq": "add"},
+                                                            {"path": "facts.days", "gt": 3}]}}
+    d = Shishya(FakeBackend(fixed=PROBS)).decide("x", schema(balance), facts={"days": "2"})
+    assert d.answer["action"] == "hold" and d.missing_facts == []
+    assert any("facts.days" in r and "str '2'" in r and "blocks" in r for r in d.reasons)
+    d = Shishya(FakeBackend(fixed=PROBS)).decide("x", schema({**balance, "on_missing": "allow"}), facts={"days": "2"})
+    assert d.answer["action"] == "add" and any("is skipped" in r for r in d.reasons)
+
+
+def test_present_facts_leave_no_notes():
+    d = Shishya(FakeBackend(fixed=PROBS)).decide("x", schema(GUARD), facts={"market_guard_on": True})
+    assert d.missing_facts == [] and d.reasons == []
 
 
 def test_python_rule_that_crashes_blocks_instead_of_crashing():

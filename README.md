@@ -104,7 +104,7 @@ shishya rules examples/stock_alert/schema.json "Never buy while the market guard
  "forbid": {"all": [{"path": "answer.action", "eq": "add"}, {"path": "facts.market_guard_on", "eq": true}]}}
 ```
 
-Operators: `eq neq gt gte lt lte in contains exists all any not`. `forbid` fires only when its condition is definitely true; `require` fails on missing facts.
+Operators: `eq neq gt gte lt lte in contains exists all any not`. Rules **fail closed**: `forbid` allows an answer only when its condition is definitely false, and `require` only when it is definitely true. If a fact a rule needs is missing or has the wrong type (`"5"` where a number is compared), the answers that rule might forbid are blocked, and `Decision.missing_facts` and `reasons` say why. Add `"on_missing": "allow"` to a `forbid` rule that should step aside instead. A Python rule that raises also blocks, and is listed in `Decision.rule_errors`.
 
 **Python** rules name the fields they read, so a whole branch of answers is cut at once:
 

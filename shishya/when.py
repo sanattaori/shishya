@@ -163,6 +163,19 @@ def paths(cond: Any) -> list[str]:
     return [cond["path"]]
 
 
-def missing(cond: Any, ctx: dict) -> list[str]:
-    """``facts.*`` paths the condition reads that are not in the context."""
-    return [p for p in paths(cond) if p.split(".")[0] == "facts" and lookup(p, ctx) is _MISSING]
+def unknown_facts(cond: Any, ctx: dict) -> dict[str, str]:
+    """``facts.*`` paths that make a (valid) condition unknown: path -> "missing", or why it can't be compared."""
+    out: dict[str, str] = {}
+    if "all" in cond or "any" in cond:
+        for c in cond.get("all", cond.get("any")):
+            out.update(unknown_facts(c, ctx))
+    elif "not" in cond:
+        out.update(unknown_facts(cond["not"], ctx))
+    elif "path" in cond and cond["path"].split(".")[0] == "facts":
+        left = lookup(cond["path"], ctx)
+        op = next(k for k in cond if k != "path")
+        if left is _MISSING:
+            out[cond["path"]] = "missing"
+        elif _compare(op, left, cond[op]) is None:
+            out[cond["path"]] = f"is {type(left).__name__} {left!r}, which '{op} {cond[op]!r}' cannot compare"
+    return out
