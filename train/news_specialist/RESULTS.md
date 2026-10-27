@@ -34,15 +34,21 @@
 | Indian headlines, same random 300 | Accuracy | Macro-F1 | Time each |
 |---|---:|---:|---:|
 | Kev-0.8B (general decision model, local) | 56.3% | 0.499 | 93 ms |
+| [FinBERT](https://huggingface.co/ProsusAI/finbert) (2019 financial-sentiment model, local) | 62.3% | 0.637 | 22 ms |
 | Nemotron 3.5 Super (free big LLM, 20 per request) | 78.3% | 0.783 | 1,571 ms |
+| Nemotron 3.5 Super (one headline per request) | 73.7% | 0.736 | 3,737 ms |
 | **Shishya news specialist, base** | **87.7%** | **0.880** | **17 ms** |
 | Shishya news specialist, large | 86.3% | 0.866 | 35 ms |
 
 | US headlines, same random 300 | Accuracy | Macro-F1 |
 |---|---:|---:|
 | Kev-0.8B | 73.7% | 0.597 |
-| Nemotron 3.5 Super | 73.3% | 0.733 |
+| FinBERT | 75.7% | 0.704 |
+| Nemotron 3.5 Super (20 per request) | 73.3% | 0.733 |
 | **Shishya news specialist (stage 1, US data only)** | **87.0%** | **0.837** |
+
+Asking the LLM one headline at a time did **not** help it: 0.736 vs 0.783 when it saw 20 headlines per request, on the
+same 300 headlines (they agree on 88% of them). The README chart uses its better score.
 
 ## What didn't work, and the blind spot
 
