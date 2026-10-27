@@ -49,6 +49,7 @@ class Decision:
     status: str                    # ok | guru | unsure | none
     answer: dict | None            # the answer (set when status is ok or guru)
     probability: float             # joint model probability of the answer (0 for guru answers)
+    confidence: float = 0.0        # the weakest field: lowest model probability among the decided fields
     fields: dict = field(default_factory=dict)       # per field: {"value", "probability", "options"}
     top: dict | None = None        # the model's own most likely answer, before the rules
     top_allowed: bool | None = None
@@ -150,7 +151,11 @@ class Shishya:
                      reasons=list(res.reasons))
         best = in_order(res.answer)
         d.top_allowed = best is not None and best == top
-        if best is not None and res.probability >= self.min_probability:
+        if best is not None:
+            # every field the model decided must clear the bar on its own (a product over fields would
+            # fall below any bar as soon as there are a few fields)
+            d.confidence = min((probs[n][best[n]] for n in probs), default=1.0)
+        if best is not None and d.confidence >= self.min_probability:
             d.status, d.answer, d.probability = "ok", best, res.probability
         elif best is not None:
             d.status, d.suggestion, d.probability = "unsure", best, res.probability
@@ -163,7 +168,7 @@ class Shishya:
             timings["guru_ms"] = (time.perf_counter() - t) * 1000
             if got is not None:
                 got = in_order(got)
-                d.status, d.answer, d.probability, d.suggestion = "guru", got, 0.0, None
+                d.status, d.answer, d.probability, d.confidence, d.suggestion = "guru", got, 0.0, 0.0, None
                 d.trainable = bool(getattr(self.guru, "trainable", False))
                 d.fields = field_report(got)
         if d.status == "none" and res.status == "exhausted":

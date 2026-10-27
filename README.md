@@ -1,6 +1,12 @@
 # Shishya
 
+[![CI](https://github.com/sanattaori/shishya/actions/workflows/ci.yml/badge.svg)](https://github.com/sanattaori/shishya/actions/workflows/ci.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
+
 **Give any AI model your rules. Shishya returns the most likely answer that follows them, in milliseconds, or tells you it can't.**
+
+On our 60-task benchmark, a small local decision model broke a rule on **38%** of tasks: it was ready to run `rm -rf /`, approve leave beyond the balance, and buy stock while the market guard was on. With Shishya on top, the same model call broke **0%**, and correct answers went from 42% to **73%**, for **11 ms** of extra work on a laptop. ([results](bench/RESULTS.md))
 
 Small decision models (Kev, jev-style and other Jev-compatible servers) are fast and give a probability for every option. But they don't know *your* rules: leave balances, position limits, which shell commands an agent may run on its own. Prompting the rules in doesn't make them reliable, and the usual alternative, asking an LLM for JSON and retrying when a validator fails, costs a full LLM call per retry.
 
@@ -16,7 +22,7 @@ Shishya:      verdict = hr_review       one rule check, 0.03 ms of search
 - **Fast:** rules that name their fields cut whole branches at once. One model call, then microseconds of search; Rego policies are checked in batches.
 - **Honest:** every result says how much of the model's probability the rules removed, which rules fired, and the model's own top answer, plus a receipt (schema digest, rule fingerprints, model, timings).
 - **Any model:** works with any System One–compatible decision server, with OpenAI-compatible chat endpoints that return log-probabilities (including free OpenRouter models), or with a fake backend for tests.
-- **A Guru when stuck:** if no allowed answer is likely enough, Shishya can ask a bigger LLM (the *Guru*), tells it which rules were broken, and checks its answer against the same rules.
+- **A Guru when stuck:** if any field of the best allowed answer is below your confidence bar, Shishya can ask a bigger LLM (the *Guru*), tell it which rules were broken, and check its answer against the same rules.
 
 > *Shishya* (शिष्य) is Sanskrit for "student", one who learns from a *guru*.
 
@@ -100,7 +106,8 @@ d = s.decide("Need 5 days off next week for my sister's wedding", schema,
 
 d.status        # "ok" | "guru" | "unsure" | "none"
 d.answer        # {"verdict": "hr_review", "urgent": False}
-d.probability   # the model's probability for this answer
+d.probability   # the model's joint probability for this answer
+d.confidence    # the weakest field's probability (what min_probability is compared with)
 d.top           # the model's own top answer, before rules
 d.broken_rules  # {"within_balance": 1}
 d.receipt       # schema digest, rule fingerprints, backend, timings
@@ -119,7 +126,8 @@ d.receipt       # schema digest, rule fingerprints, backend, timings
                    Python rules with `uses=[...]` run as soon as those fields are set and cut the
                    whole branch; Rego policies check complete answers in batches.
    4. result       ok      the most likely answer that passes every rule
-                   unsure  an allowed answer exists but is below min_probability (returned as suggestion)
+                   unsure  an allowed answer exists, but some field is below min_probability
+                           (returned as suggestion)
                    guru    a bigger LLM answered, told which rules failed, and its answer passed the rules
                    none    no allowed answer within the search budget
 ```
@@ -171,7 +179,7 @@ Operators: `eq neq gt gte lt lte in contains exists all any not`. A missing fact
 
 ## The Guru
 
-When no allowed answer is likely enough (`min_probability`), Shishya can ask a bigger model, the *Guru*. The Guru is told which rules the earlier answers broke, and its answer must pass the same rules before it's returned.
+When some field of the best allowed answer is below `min_probability`, Shishya can ask a bigger model, the *Guru*. The Guru is told which rules the earlier answers broke, and its answer must pass the same rules before it's returned.
 
 ```bash
 shishya decide ... --min-probability 0.9 --guru claude       # Claude through your own Claude Code login (claude -p)
@@ -203,18 +211,22 @@ curl -s localhost:8700/v1/decide -H 'content-type: application/json' -d '{
 
 ## Benchmark
 
-`bench/` has **rulebench v0**: 60 tasks across three scenarios (leave requests, stock alerts, shell commands). It compares:
+`bench/` has **rulebench v0**: 60 tasks across three scenarios (leave requests, stock alerts, shell commands). Each task has a correct answer, and the model is never shown the rules. Kev-0.8B ran locally on an M2 MacBook (16 GB); the LLM is free Nemotron on OpenRouter.
 
-- **A.** the decision model alone
-- **B.** the same model with Shishya
-- **C.** an LLM that writes JSON and retries with the broken rule as feedback
+| System | Correct | Breaks a rule | p50 | p95 |
+|---|---:|---:|---:|---:|
+| Kev-0.8B alone | 42% | 38% | 184 ms | 250 ms |
+| **Kev-0.8B + Shishya** | **73%** | **0%** | **195 ms** | **252 ms** |
+| LLM writes JSON, retries up to 3× when a rule fails | 83% | 0% | 5,048 ms | 42,685 ms |
+
+The big LLM judges the *text* better (mainly stock news), but it's 26× slower at the median and took up to 43 s. Shishya's job is the rules: it removed every rule break of the small model with no extra model call. Full breakdown, the Guru runs and what we learned: [`bench/RESULTS.md`](bench/RESULTS.md).
 
 ```bash
 python bench/make_tasks.py > bench/tasks.jsonl
-python bench/run.py --backend http://127.0.0.1:8009 --llm 30
+python bench/run.py --backend http://127.0.0.1:8009 --llm 60
 ```
 
-Results are in [`bench/RESULTS.md`](bench/RESULTS.md). The authors wrote this benchmark, so it favours the cases rules are good at. Read it as a demonstration of the mechanism, not as a measure of model quality.
+The authors wrote this benchmark, so it favours the cases rules are good at. Read it as a demonstration of the mechanism, not as a measure of model quality.
 
 ## Compared with
 
@@ -231,7 +243,7 @@ Results are in [`bench/RESULTS.md`](bench/RESULTS.md). The authors wrote this be
 
 ## Roadmap
 
-- **v0.2:** numbers and quoted spans from the input (checked against the source), JSON Schema `if/then`, re-scoring a field given earlier choices.
+- **v0.2:** a small stock-news specialist trained on free Kaggle GPUs (labels from two open-weight teachers that must agree, tested on human-labelled data), numbers and quoted spans from the input (checked against the source), JSON Schema `if/then`, re-scoring a field given earlier choices.
 - **v0.3:** *Shishya learns.* Guru answers and your corrections train a small local model that takes over repeat cases. It trains on free Kaggle GPUs and is only used if it beats the current one on held-out data.
 - MCP server, an agent tool-call guard, a TypeScript client.
 

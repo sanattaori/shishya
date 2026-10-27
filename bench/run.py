@@ -136,12 +136,23 @@ def main(argv=None) -> None:
     ap.add_argument("--label", default=None)
     ap.add_argument("--llm", type=int, default=0, help="also run C (LLM + retry) on the first N tasks")
     ap.add_argument("--llm-model", default=None)
+    ap.add_argument("--guru", choices=["openrouter", "claude"], default=None,
+                    help="B uses Shishya with this Guru for answers below --min-probability")
+    ap.add_argument("--min-probability", type=float, default=0.0)
     args = ap.parse_args(argv)
 
     tasks = [json.loads(line) for line in Path(args.tasks).read_text().splitlines() if line.strip()]
     scen = {name: load_scenario(name) for name in SCENARIOS}
     backend = make_backend(args.backend)
-    engines = {name: Shishya(backend, rules=sc["rules"], rego=sc["rego"]) for name, sc in scen.items()}
+    b_guru = None
+    if args.guru == "openrouter":
+        from shishya.guru import OpenRouterGuru
+        b_guru = OpenRouterGuru(model=args.llm_model) if args.llm_model else OpenRouterGuru()
+    elif args.guru == "claude":
+        from shishya.guru import ClaudeCodeGuru
+        b_guru = ClaudeCodeGuru()
+    engines = {name: Shishya(backend, rules=sc["rules"], rego=sc["rego"], guru=b_guru,
+                             min_probability=args.min_probability) for name, sc in scen.items()}
     guru = None
     if args.llm:
         from shishya.guru import OpenRouterGuru
@@ -159,7 +170,8 @@ def main(argv=None) -> None:
                "A": {"answer": d.top, "field": t["field"], "gold": t["gold"], "broken": broken(sc, d.top, ctx),
                      "ms": model_ms, "calls": 0},
                "B": {"answer": d.answer, "field": t["field"], "gold": t["gold"], "status": d.status,
-                     "broken": broken(sc, d.answer, ctx), "ms": ms, "tried": d.tried, "calls": 0}}
+                     "broken": broken(sc, d.answer, ctx), "ms": ms, "tried": d.tried,
+                     "calls": 1 if d.receipt.get("timings_ms", {}).get("guru_ms") is not None else 0}}
         if guru is not None and i < args.llm:
             c = run_llm_retry(guru, sc, t)
             c.update({"field": t["field"], "gold": t["gold"], "broken": broken(sc, c["answer"], ctx),
@@ -176,7 +188,10 @@ def main(argv=None) -> None:
     summary = {k: summarize(rows, k) for k in ("A", "B", "C")}
     result = {"backend": args.backend, "model": getattr(backend, "model", None), "summary": summary, "rows": rows}
     (out_dir / f"{label}.json").write_text(json.dumps(result, indent=1, default=str))
-    names = {"A": "model only (no rules)", "B": "**Shishya** (model + rule search)", "C": "LLM writes JSON + retry ≤3"}
+    b_name = "**Shishya** (model + rule search)"
+    if args.guru:
+        b_name = f"**Shishya + Guru** (Guru when a field is below p={args.min_probability})"
+    names = {"A": "model only (no rules)", "B": b_name, "C": "LLM writes JSON + retry ≤3"}
     print(f"\nBackend: `{args.backend}` (model `{getattr(backend, 'model', None)}`), {len(tasks)} tasks\n")
     print("| System | Tasks | Correct | Breaks a rule | Answered | p50 ms | p95 ms | LLM calls/task |")
     print("|---|---:|---:|---:|---:|---:|---:|---:|")

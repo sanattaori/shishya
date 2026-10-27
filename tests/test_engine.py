@@ -295,3 +295,15 @@ def test_receipt_has_schema_rules_backend_and_timings():
     assert d.receipt["timings_ms"]["total_ms"] >= 0
     assert "model_ms" in d.receipt["timings_ms"]
     assert "search_ms" in d.receipt["timings_ms"]
+
+
+def test_min_probability_is_per_field_not_joint():
+    schema = {"type": "object", "properties": {
+        "a": {"type": "string", "enum": ["x", "y"]}, "b": {"type": "string", "enum": ["p", "q"]},
+        "c": {"type": "boolean"}}}
+    backend = FakeBackend(fixed={"a": {"x": 0.7, "y": 0.3}, "b": {"p": 0.7, "q": 0.3}, "c": {True: 0.7, False: 0.3}})
+    d = Shishya(backend, min_probability=0.6).decide("text", schema)
+    assert d.status == "ok"                       # joint is 0.343, but every field is 0.7
+    assert abs(d.probability - 0.343) < 1e-9 and abs(d.confidence - 0.7) < 1e-9
+    d = Shishya(backend, min_probability=0.75).decide("text", schema)
+    assert d.status == "unsure" and d.suggestion == {"a": "x", "b": "p", "c": True}
