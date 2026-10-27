@@ -26,8 +26,8 @@ THEMES = {
 # (label, value, value text, series)
 RULE_BREAKS = [("Small model alone", 38, "38%", "base"), ("Small model + Shishya", 0, "0%", "shishya"),
                ("Big LLM, retry until valid", 0, "0%  (5 s each)", "llm")]
-NEWS_F1 = [("Small model (Kev-0.8B)", 0.50, "0.50", "base"), ("Big LLM (free Nemotron)", 0.78, "0.78", "llm"),
-           ("Shishya news specialist", 0.88, "0.88", "shishya")]
+NEWS_F1 = [("Small model (Kev-0.8B)", 0.50, "0.50", "base"), ("FinBERT (2019)", 0.64, "0.64", "base"),
+           ("Big LLM (free Nemotron)", 0.78, "0.78", "llm"), ("Shishya news specialist", 0.88, "0.88", "shishya")]
 SECONDS = [("Small model + Shishya", 0.20, "0.20 s", "shishya"), ("Big LLM, retry until valid", 5.05, "5.05 s", "llm")]
 
 
@@ -67,7 +67,7 @@ def results(theme):
     parts = [f'<rect width="{w}" height="100%" fill="{t["surface"]}"/>']
     # legend (identity is never colour alone: every bar is also labelled)
     lx, ly = 24, 26
-    for name, series in (("small decision model alone", "base"), ("with Shishya", "shishya"),
+    for name, series in (("other small models, no rules", "base"), ("with Shishya", "shishya"),
                          ("big LLM (free)", "llm")):
         parts.append(f'<rect x="{lx}" y="{ly - 10}" width="12" height="12" rx="3" fill="{t[series]}"/>')
         parts.append(text(lx + 18, ly, name, t["text2"], 12))
@@ -84,8 +84,8 @@ def results(theme):
         y += 30
     h = y - 8
     return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" '
-            f'role="img" aria-label="Shishya results: rule breaks 38% to 0%; Indian news macro-F1 0.88 vs 0.78 '
-            f'and 0.50; 0.20 s vs 5.05 s per decision">' + "".join(parts) + "</svg>")
+            f'role="img" aria-label="Shishya results: rule breaks 38% to 0%; Indian news macro-F1 0.88 vs 0.78, 0.64 '
+            f'(FinBERT) and 0.50; 0.20 s vs 5.05 s per decision">' + "".join(parts) + "</svg>")
 
 
 def box(t, x, y, w, h, title, lines, accent=None):

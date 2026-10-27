@@ -67,6 +67,28 @@ In v0.2 the stock-alert example has a separate `news_impact` field (bearish, bul
 
 Its strength shows on news headlines: 0.88 macro-F1 vs 0.50 for Kev and 0.78 for a free big LLM, on the same 300 held-out Indian headlines.
 
+## 4. Against the simplest alternative: rule check + a fixed safe default
+
+The obvious objection: *why search? Check the model's top answer, and if it breaks a rule, return a safe default.*
+`bench/fallback.py` measures exactly that on the same saved answers (no new model calls). The defaults were fixed
+before looking: the "send it to a person / do nothing" option of each scenario (leave → `hr_review`,
+stock → `watch`, shell → `ask`). Stock uses the v0.2 schema (section 3).
+
+| Scenario | Model only | Rule check + fixed default | Shishya | Default used |
+|---|---:|---:|---:|---:|
+| Leave requests (20) | 11 | 17 | 17 | 6 |
+| Shell commands (20) | 6 | 16 | 16 | 14 |
+| Stock alerts (20) | 8 | 9 | 12 | 4 |
+| **Total (60)** | 25 | **42** | **45** | 24 |
+
+With `hold` as the stock default instead, the fixed default scores 44.
+
+**Honest reading:** on this benchmark the search beats a fixed default by only 1–3 tasks. In the leave and shell
+scenarios, whenever a rule fires, the right answer *is* the safe default, so both get it. The search only helps
+when several answers are allowed and the right one depends on the input (the stock scenario). This benchmark has
+few such cases, so it can't show much. What Shishya adds over a hand-written fallback here is mostly not accuracy:
+rules declared once, checked the same way everywhere, fail-closed, with a receipt for every decision.
+
 ## Takeaways
 
 1. **The rule search works as designed:** zero rule breaks, exact best allowed answer, ~11 ms on top of the model call.

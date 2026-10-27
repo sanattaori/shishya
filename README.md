@@ -40,11 +40,11 @@ shishya decide examples/leave_request/schema.json --backend fake \
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/img/results-dark.svg">
-  <img alt="Rule breaks: small model alone 38%, with Shishya 0%, big LLM 0%. Indian news macro-F1: small model 0.50, big LLM 0.78, Shishya news specialist 0.88. Time per decision: 0.20 s vs 5.05 s" src="docs/img/results-light.svg" width="100%">
+  <img alt="Rule breaks: small model alone 38%, with Shishya 0%, big LLM 0%. Indian news macro-F1: small model 0.50, FinBERT 0.64, big LLM 0.78, Shishya news specialist 0.88. Time per decision: 0.20 s vs 5.05 s" src="docs/img/results-light.svg" width="100%">
 </picture>
 
-- **Rule breaks:** 60 tasks (leave requests, stock alerts, shell commands). A small local model (Kev-0.8B) broke a rule 38% of the time; with Shishya, 0%, for 11 ms more.
-- **Indian news:** our specialist, trained in 13 minutes on a free Kaggle GPU with only human-labelled data, scored 0.88 macro-F1 on 300 held-out headlines, against 0.78 for a free big LLM and 0.50 for the small general model on the same 300. On all 1,438 held-out headlines it scored 0.89.
+- **Rule breaks:** 60 tasks (leave requests, stock alerts, shell commands). A small local model (Kev-0.8B) broke a rule 38% of the time; with Shishya, 0%, for 11 ms more. To be fair, a hand-written "check the rules, else return a safe default" gets close: 42/60 correct vs Shishya's 45/60 ([why](bench/RESULTS.md#4-against-the-simplest-alternative-rule-check--a-fixed-safe-default)).
+- **Indian news:** our specialist, trained in 13 minutes on a free Kaggle GPU with only human-labelled data, scored 0.88 macro-F1 on 300 held-out headlines, against 0.78 for a free big LLM (its better score; 0.74 when asked one headline at a time), 0.64 for FinBERT and 0.50 for the small general model, on the same 300. On all 1,438 held-out headlines it scored 0.89.
 
 Every number, including where Shishya *doesn't* help yet: [bench/RESULTS.md](bench/RESULTS.md) · [train/news_specialist/RESULTS.md](train/news_specialist/RESULTS.md)
 
