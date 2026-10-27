@@ -57,6 +57,7 @@ class Decision:
     rejected_mass: float = 0.0     # model probability the rules ruled out
     broken_rules: dict = field(default_factory=dict)  # rule name -> answers it rejected
     reasons: list = field(default_factory=list)       # policy reasons and notes
+    trainable: bool = True         # False when the answer came from a Guru whose outputs must not train models
     receipt: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
@@ -163,6 +164,7 @@ class Shishya:
             if got is not None:
                 got = in_order(got)
                 d.status, d.answer, d.probability, d.suggestion = "guru", got, 0.0, None
+                d.trainable = bool(getattr(self.guru, "trainable", False))
                 d.fields = field_report(got)
         if d.status == "none" and res.status == "exhausted":
             d.reasons.append(f"search budget reached after {res.tried} answers")

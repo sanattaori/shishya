@@ -66,6 +66,8 @@ Or a hosted free model that returns log-probabilities (needs `OPENROUTER_API_KEY
 shishya decide ... --backend openrouter        # liquid/lfm-2.5-2.6b:free by default
 ```
 
+Free hosted models are often rate-limited, and few return log-probabilities, so treat this backend as a way to try Shishya, not as a production setup.
+
 ## In Python
 
 ```python
@@ -166,6 +168,24 @@ Rego needs the [`opa`](https://www.openpolicyagent.org/docs#running-opa) binary 
 ```
 
 Operators: `eq neq gt gte lt lte in contains exists all any not`. A missing fact is *unknown* and never makes a field or option eligible.
+
+## The Guru
+
+When no allowed answer is likely enough (`min_probability`), Shishya can ask a bigger model, the *Guru*. The Guru is told which rules the earlier answers broke, and its answer must pass the same rules before it's returned.
+
+```bash
+shishya decide ... --min-probability 0.9 --guru claude       # Claude through your own Claude Code login (claude -p)
+shishya decide ... --min-probability 0.9 --guru openrouter   # any OpenRouter model (OPENROUTER_API_KEY)
+```
+
+```python
+from shishya.guru import ClaudeCodeGuru, OpenRouterGuru
+Shishya(backend, rules=[...], guru=ClaudeCodeGuru(model="sonnet"), min_probability=0.9)
+```
+
+`ClaudeCodeGuru` runs `claude -p` with no tools, no MCP servers and no saved session, in an empty temporary folder, and checks the reply against a JSON Schema built from your fields.
+
+Guru answers come back with `trainable: False`. Shishya's learning loop (v0.3) will never train on them; provider terms often forbid training on their outputs.
 
 ## HTTP server
 

@@ -25,8 +25,23 @@ SYSTEM = (
 )
 
 
+def build_prompt(text: str, fields: list[dict], feedback: list[str]) -> str:
+    """The user message for a Guru: the text, the fields with their options, then the feedback lines."""
+    parts = [text, "", "Fields to answer:"]
+    for f in fields:
+        parts.append(f"- {f['name']}: {f.get('instructions') or ''}".rstrip())
+        texts = f.get("option_text") or {}
+        for o in f["options"]:
+            shown = json.dumps(o) if isinstance(o, bool) else str(o)
+            parts.append(f"    * {shown}" + (f": {texts[o]}" if texts.get(o) else ""))
+    if feedback:
+        parts += ["", "Feedback:"] + list(feedback)
+    return "\n".join(parts)
+
+
 class OpenRouterGuru:
     name = "openrouter"
+    trainable = False       # set True only for models whose license allows training on their outputs
 
     def __init__(self, model: str | None = None, *, max_tries: int = 3, api_key: str | None = None,
                  base_url: str = "https://openrouter.ai/api/v1", timeout: float = 60,
@@ -38,25 +53,13 @@ class OpenRouterGuru:
         self.timeout = timeout
         self._client = client or httpx.Client(timeout=timeout)
 
-    def _prompt(self, text: str, fields: list[dict], feedback: list[str]) -> str:
-        parts = [text, "", "Fields to answer:"]
-        for f in fields:
-            parts.append(f"- {f['name']}: {f.get('instructions') or ''}".rstrip())
-            texts = f.get("option_text") or {}
-            for o in f["options"]:
-                shown = json.dumps(o) if isinstance(o, bool) else str(o)
-                parts.append(f"    * {shown}" + (f": {texts[o]}" if texts.get(o) else ""))
-        if feedback:
-            parts += ["", "Feedback:"] + list(feedback)
-        return "\n".join(parts)
-
     def propose(self, text: str, fields: list[dict], feedback: list[str]) -> dict:
         if not self.api_key:
             raise RuntimeError("the Guru needs an API key: set OPENROUTER_API_KEY or pass api_key")
         body: dict[str, Any] = {
             "model": self.model,
             "messages": [{"role": "system", "content": SYSTEM},
-                         {"role": "user", "content": self._prompt(text, fields, feedback)}],
+                         {"role": "user", "content": build_prompt(text, fields, feedback)}],
             "response_format": {"type": "json_object"},
             "temperature": 0,
         }
@@ -90,4 +93,65 @@ class OpenRouterGuru:
             raise RuntimeError(f"the Guru did not return JSON: {content[:200]}") from e
         if not isinstance(got, dict):
             raise TypeError("the Guru did not return a JSON object")
+        return got
+
+
+class ClaudeCodeGuru:
+    """A Guru that asks Claude through the local Claude Code CLI (``claude -p``), with your own login.
+
+    Uses whatever account the ``claude`` command is logged in to, so no API key is needed. Claude runs
+    with no tools, no MCP servers and no saved session, and its answer must match a JSON Schema built
+    from the fields. Answers from Claude are marked not trainable: Shishya never learns from them.
+
+        ClaudeCodeGuru(model="sonnet")
+    """
+
+    name = "claude-code"
+    trainable = False
+
+    def __init__(self, model: str | None = None, *, max_tries: int = 2, command: str = "claude",
+                 timeout: float = 120):
+        self.model = model or os.environ.get("SHISHYA_CLAUDE_MODEL") or "sonnet"
+        self.max_tries = max_tries
+        self.command = command
+        self.timeout = timeout
+
+    @staticmethod
+    def _schema(fields: list[dict]) -> dict:
+        props = {}
+        for f in fields:
+            if f["kind"] == "boolean":
+                props[f["name"]] = {"type": "boolean"}
+            else:
+                props[f["name"]] = {"type": "string", "enum": list(f["options"])}
+        return {"type": "object", "properties": props, "required": list(props), "additionalProperties": False}
+
+    def propose(self, text: str, fields: list[dict], feedback: list[str]) -> dict:
+        import shutil
+        import subprocess
+        import tempfile
+
+        exe = shutil.which(self.command)
+        if not exe:
+            raise RuntimeError(f"the Claude Code CLI ({self.command!r}) is not on PATH")
+        cmd = [exe, "-p", "--output-format", "json", "--tools", "", "--no-session-persistence",
+               "--strict-mcp-config", "--model", self.model, "--system-prompt", SYSTEM,
+               "--json-schema", json.dumps(self._schema(fields))]
+        prompt = build_prompt(text, fields, feedback)
+        with tempfile.TemporaryDirectory(prefix="shishya-guru-") as cwd:  # no project files in view
+            proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True, cwd=cwd,
+                                  timeout=self.timeout, check=False)
+        if proc.returncode != 0:
+            raise RuntimeError(f"claude -p failed: {(proc.stderr or proc.stdout).strip()[:300]}")
+        try:
+            data = json.loads(proc.stdout)
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"claude -p did not return JSON: {proc.stdout[:200]}") from e
+        if data.get("is_error"):
+            raise RuntimeError(f"claude -p error: {str(data.get('result'))[:300]}")
+        got = data.get("structured_output")
+        if got is None:
+            got = json.loads(re.sub(r"^\s*```(?:json)?\s*|\s*```\s*$", "", data.get("result") or ""))
+        if not isinstance(got, dict):
+            raise TypeError("Claude did not return a JSON object")
         return got

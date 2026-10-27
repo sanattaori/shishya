@@ -8,3 +8,5 @@ build/
 *.egg-info/
 bench/out/
 .env
+bench/out_*.log
+bench/out_*.md

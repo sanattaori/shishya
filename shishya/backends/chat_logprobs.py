@@ -48,6 +48,8 @@ class ChatLogprobsBackend:
     def _ask(self, prompt: str) -> list[dict]:
         body: dict[str, Any] = {"model": self.model, "messages": [{"role": "user", "content": prompt}],
                                 "max_tokens": 1, "temperature": 0, "logprobs": True, "top_logprobs": 20}
+        if "openrouter.ai" in self.base_url:
+            body["provider"] = {"require_parameters": True}     # only providers that really return logprobs
         headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
         headers.update({"HTTP-Referer": "https://github.com/sanattaori/shishya", "X-Title": "Shishya"})
         try:

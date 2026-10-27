@@ -53,7 +53,10 @@ def _decide(a: argparse.Namespace) -> int:
     facts = _json_arg(a.facts) if a.facts else None
     rego = Path(a.rego).read_text() if a.rego else None
     guru = None
-    if a.guru:
+    if a.guru == "claude":
+        from .guru import ClaudeCodeGuru
+        guru = ClaudeCodeGuru()
+    elif a.guru == "openrouter":
         from .guru import OpenRouterGuru
         guru = OpenRouterGuru()
     engine = Shishya(_backend(a.backend), rules=_load_rules(a.rules) if a.rules else (), rego=rego, guru=guru,
@@ -102,7 +105,9 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument("--rules", help="Python file with shishya rules")
     d.add_argument("--rego", help="Rego policy file")
     d.add_argument("--backend", default=default_backend, help="URL, 'fake' or 'openrouter'")
-    d.add_argument("--guru", action="store_true", help="ask the Guru (OpenRouter) when no allowed answer is found")
+    d.add_argument("--guru", nargs="?", const="claude", choices=["claude", "openrouter"],
+                   help="when no allowed answer is likely enough, ask a Guru: 'claude' (your Claude Code login, "
+                        "the default) or 'openrouter' (OPENROUTER_API_KEY)")
     d.add_argument("--min-probability", type=float, default=0.0)
     d.add_argument("--json", action="store_true", help="print the full result as JSON")
     d.set_defaults(fn=_decide)
