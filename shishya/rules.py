@@ -140,7 +140,7 @@ _CAPS: dict[str, str] = {}
 
 def _capabilities(opa: str) -> str:
     """Path of a capabilities file for ``opa`` without BLOCKED_BUILTINS (made once per binary)."""
-    if opa not in _CAPS:
+    if opa not in _CAPS or not Path(_CAPS[opa]).exists():    # the OS may clean temp files under a long-running server
         proc = subprocess.run([opa, "capabilities", "--current"], capture_output=True, text=True, check=False,
                               timeout=30)
         if proc.returncode != 0:
@@ -213,12 +213,15 @@ class RegoRules:
         with tempfile.TemporaryDirectory(prefix="shishya-rego-") as d:
             Path(d, "policy.rego").write_text(self.policy)
             Path(d, "wrapper.rego").write_text(self._wrapper())
-            proc = subprocess.run(
-                [self.opa, "eval", "--format", "json", "--stdin-input", "--capabilities", _capabilities(self.opa),
-                 "-d", str(Path(d, "policy.rego")), "-d", str(Path(d, "wrapper.rego")),
-                 f"data.{self.BATCH_PACKAGE}"],
-                input=json.dumps({"candidates": cands}), capture_output=True, text=True, check=False,
-                timeout=self.timeout)
+            try:
+                proc = subprocess.run(
+                    [self.opa, "eval", "--format", "json", "--stdin-input", "--capabilities", _capabilities(self.opa),
+                     "-d", str(Path(d, "policy.rego")), "-d", str(Path(d, "wrapper.rego")),
+                     f"data.{self.BATCH_PACKAGE}"],
+                    input=json.dumps({"candidates": cands}), capture_output=True, text=True, check=False,
+                    timeout=self.timeout)
+            except subprocess.TimeoutExpired as e:
+                raise RuleError(f"opa eval timed out after {self.timeout:g} s") from e
         if proc.returncode != 0:
             raise RuleError(f"opa eval failed: {(proc.stderr or proc.stdout).strip()[:500]}")
         try:

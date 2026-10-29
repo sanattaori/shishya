@@ -35,6 +35,9 @@ Issues = "https://github.com/sanattaori/shishya/issues"
 [tool.hatch.build.targets.wheel]
 packages = ["shishya"]
 
+[tool.hatch.build.targets.sdist]
+include = ["shishya", "tests", "examples", "README.md", "CHANGELOG.md", "LICENSE", "NOTICE", "pyproject.toml"]
+
 [tool.ruff]
 line-length = 120
 target-version = "py310"

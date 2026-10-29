@@ -307,3 +307,17 @@ def test_min_probability_is_per_field_not_joint():
     assert abs(d.probability - 0.343) < 1e-9 and abs(d.confidence - 0.7) < 1e-9
     d = Shishya(backend, min_probability=0.75).decide("text", schema)
     assert d.status == "unsure" and d.suggestion == {"a": "x", "b": "p", "c": True}
+
+
+def test_guru_number_for_a_boolean_is_rejected():
+    schema = {"type": "object", "properties": {"urgent": {"type": "boolean"}}}
+
+    class Guru:
+        name, model, max_tries, trainable = "g", "m", 1, False
+
+        def propose(self, text, fields, feedback):
+            return {"urgent": 1}
+
+    d = Shishya(FakeBackend(), guru=Guru(), min_probability=1.0).decide("hi", schema)
+    assert d.status == "unsure"
+    assert "the Guru could not find an allowed answer" in d.reasons

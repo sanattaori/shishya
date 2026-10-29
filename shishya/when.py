@@ -56,11 +56,16 @@ def _is_number(v: Any) -> bool:
     return isinstance(v, (int, float)) and not isinstance(v, bool)
 
 
+def same(a: Any, b: Any) -> bool:
+    """Equal without coercion: true is not 1 and false is not 0 (Python's == says they are)."""
+    return isinstance(a, bool) == isinstance(b, bool) and a == b
+
+
 def _compare(op: str, left: Any, right: Any) -> bool | None:
     if op == "eq":
-        return left == right
+        return same(left, right)
     if op == "neq":
-        return left != right
+        return not same(left, right)
     if op in ("gt", "gte", "lt", "lte"):
         # numbers with numbers, strings with strings; anything else is unknown (no coercion)
         if not ((_is_number(left) and _is_number(right)) or (isinstance(left, str) and isinstance(right, str))):
@@ -69,10 +74,10 @@ def _compare(op: str, left: Any, right: Any) -> bool | None:
     if op == "in":
         if not isinstance(right, list):
             raise ConditionError("'in' needs a list value")
-        return left in right
+        return any(same(left, v) for v in right)
     if op == "contains":
         if isinstance(left, list):
-            return right in left
+            return any(same(v, right) for v in left)
         if isinstance(left, str) and isinstance(right, str):
             return right in left
         return None
