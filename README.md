@@ -10,6 +10,11 @@
 what always needs a person. Everything else stays out of your way, and the Gate stops asking about calls you keep
 approving. A learned model takes over only after it proves it is better on your own labels.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/demo-dark.svg">
+  <img alt="Shishya Gate in Claude Code: rm -rf ~ denied, bash -c rm -rf / denied, cat .env piped to curl denied, git push --force origin main asks, npm test no opinion, then after three approvals npm test is allowed" src="docs/img/demo-light.svg" width="100%">
+</picture>
+
 ```text
 /plugin install shishya-gate --marketplace sanattaori/shishya
 ```
@@ -29,7 +34,7 @@ approving. A learned model takes over only after it proves it is better on your 
   wrappers and `find -exec`. Anything it can't follow asks. 28 known bypasses are in the test suite.
 - **Learns, and must prove it.** Approvals and rejections become labels. Memory learns an exact call after a few
   approvals. A small model learns the pattern, and is used only when it beats the prior on held-out labels you gave.
-- **Local and fast.** No network, no API key. About 55 ms per call. Every decision has a receipt.
+- **Local and fast.** No network, no API key. About 50 ms per call. Every decision has a receipt.
 
 Check any command without installing the plugin: `pip install shishya && shishya gate test "git push -f origin main"`.
 
@@ -42,7 +47,6 @@ answer that breaks no rule** in milliseconds, or says it can't.
 - 🧠 **Learns from corrections.** `s.correct(decision, {...})`: one correction fixes that exact case; a small head
   learns the pattern and is promoted only when it wins on held-out human labels.
 - ✍️ **Rules your way.** Plain English (drafted by an LLM, reviewed by you), JSON, Python or OPA/Rego.
-- 🎯 **Specialists for one field.** Our free-GPU news model beats a big LLM on Indian news and runs in 17 ms.
 - 📏 **Honest confidence.** Calibrate on your own labels and see how much you can automate, and with what error.
 - 🧑‍🏫 **A Guru when unsure.** Hand the hard cases to Claude (your own login) or any OpenRouter model, still checked
   against your rules.
@@ -67,30 +71,29 @@ shishya correct /tmp/leave <decision id printed above> '{"verdict": "deny"}'    
 
 ## Results
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/img/results-dark.svg">
-  <img alt="Rule breaks: small model alone 38%, with Shishya 0%, big LLM 0%. Indian news macro-F1: small model 0.50, FinBERT 0.64, big LLM 0.78, Shishya news specialist 0.88. Time per decision: 0.20 s vs 5.05 s" src="docs/img/results-light.svg" width="100%">
-</picture>
+- **Rule breaks:** 60 tasks (leave requests, stock alerts, shell commands). A small local model (Kev-0.8B) broke a
+  rule 38% of the time; with Shishya, 0%, for 11 ms more. To be fair, a hand-written "check the rules, else return a
+  safe default" gets close: 42/60 correct vs Shishya's 45/60
+  ([why](bench/RESULTS.md#4-against-the-simplest-alternative-rule-check--a-fixed-safe-default)). Learning is what
+  should open that gap, and the Gate benchmark is how we will show it.
+- **Learning:** on a synthetic test where the base model is always confidently wrong in one pattern, accuracy on
+  requests it was never corrected on went from 46% to 94% after 40 corrections. Each correction is learned in
+  1–30 ms on a laptop. Real data is noisier; the Gate benchmark will say more.
 
-- **Rule breaks:** 60 tasks (leave requests, stock alerts, shell commands). A small local model (Kev-0.8B) broke a rule 38% of the time; with Shishya, 0%, for 11 ms more. To be fair, a hand-written "check the rules, else return a safe default" gets close: 42/60 correct vs Shishya's 45/60 ([why](bench/RESULTS.md#4-against-the-simplest-alternative-rule-check--a-fixed-safe-default)).
-- **Indian news:** our specialist, trained in 13 minutes on a free Kaggle GPU with only human-labelled data, scored 0.88 macro-F1 on 300 held-out headlines, against 0.78 for a free big LLM (its better score; 0.74 when asked one headline at a time), 0.64 for FinBERT and 0.50 for the small general model, on the same 300. On all 1,438 held-out headlines it scored 0.89.
-
-Every number, including where Shishya *doesn't* help yet: [bench/RESULTS.md](bench/RESULTS.md) · [train/news_specialist/RESULTS.md](train/news_specialist/RESULTS.md)
+Every number, including where Shishya *doesn't* help yet: [bench/RESULTS.md](bench/RESULTS.md)
 
 ## Use a real model
 
-Any server speaking the System One decision API works, for example [Kev](https://github.com/jaredpalmer/kev) on a laptop:
+Any server speaking the System One decision API works, for example [Kev](https://github.com/jaredpalmer/kev) on a
+laptop, or llama.cpp's `/v1/systemone`:
 
 ```bash
 uv run --extra serve python -m kev.serve --run jaredpalmer/kev-0.8b --port 8009     # in the Kev repo
 
-shishya decide examples/stock_alert/schema.json --backend http://127.0.0.1:8009 \
-  --input "ACMEIND: Quarterly profit up 64% year on year" \
-  --facts examples/stock_alert/facts.json --rules examples/stock_alert/rules.py \
-  --route news_impact=shishya:news-base        # this field goes to our news specialist
+shishya decide examples/leave_request/schema.json --backend http://127.0.0.1:8009 \
+  --input "Need 5 days off next week for my sister's wedding" \
+  --facts examples/leave_request/facts.json --rules examples/leave_request/rules.py --learner ~/.shishya/leave
 ```
-
-`pip install "shishya[local]"` adds what `--route` needs (PyTorch). The model (276 MB) downloads once and its checksum is verified.
 
 <details>
 <summary><b>Python</b></summary>
@@ -184,7 +187,7 @@ Guru answers come back with `trainable: false`, so Shishya never trains on them.
 <summary><b>How it works</b></summary>
 
 1. **Conditions** (plain code) remove fields and options the facts rule out.
-2. **One model call** gives a probability for every allowed option of every field; `--route` sends a field to a specialist.
+2. **One model call** gives a probability for every allowed option of every field; `--route` sends a field to a local classifier.
 3. **A\* search** over the fields. Priority is the probability so far × the best possible rest, so complete answers come out most-likely-first. Rules that name their fields prune whole branches; Rego checks batches of complete answers.
 4. **Result:** `ok` (the best allowed answer), `unsure` (below `min_probability`, returned as `suggestion`), `guru`, or `none`.
 
@@ -202,15 +205,6 @@ curl -s localhost:8700/v1/decide -d '{"input": "...", "schema": {...}, "facts": 
 
 Over HTTP only JSON and Rego rules are accepted, never Python code.
 </details>
-
-## Train your own specialist (free)
-
-```bash
-export KAGGLE_API_TOKEN=...                                      # free account
-train/news_specialist/run_kaggle.sh YOUR_KAGGLE_USERNAME base    # ~13 min on Kaggle's free T4
-```
-
-The data is human-labelled and split so no headline leaks into the test. Checkpoints and the calibration temperature are chosen on a dev split only, and results are reported on held-out tests. A model ships only if it beats the general model there. Write-up: [train/news_specialist/RESULTS.md](train/news_specialist/RESULTS.md).
 
 ## Roadmap
 

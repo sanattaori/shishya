@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "shishya"
-version = "0.2.0"
+version = "0.3.0"
 description = "Give any AI model your rules: Shishya returns the most likely answer that follows them, or says it can't."
 readme = "README.md"
 license = "Apache-2.0"
@@ -27,6 +27,7 @@ dev = ["pytest>=8", "ruff>=0.6", "fastapi>=0.110", "uvicorn>=0.29"]
 
 [project.scripts]
 shishya = "shishya.cli:main"
+shishya-gate-hook = "shishya.gate.hook:main"
 
 [project.urls]
 Homepage = "https://github.com/sanattaori/shishya"

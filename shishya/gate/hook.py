@@ -223,3 +223,8 @@ def run(stdin: Any = None, stdout: Any = None) -> int:
     if out:
         print(out, file=stdout)
     return 0
+
+
+def main() -> None:
+    """Console entry point ``shishya-gate-hook``: the fast path Claude Code runs on every tool call."""
+    sys.exit(run())
