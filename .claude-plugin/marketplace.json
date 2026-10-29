@@ -1,0 +1,13 @@
+{
+  "name": "shishya",
+  "owner": {
+    "name": "Sanat Taori"
+  },
+  "plugins": [
+    {
+      "name": "shishya-gate",
+      "source": "./plugins/claude-code",
+      "description": "Hard rules your coding agent can't break, and fewer prompts as it learns what you approve."
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit|NotebookEdit|Read|mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'command -v shishya >/dev/null 2>&1 && exec shishya gate hook || exec uvx --from shishya shishya gate hook'",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit|NotebookEdit|Read|mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'command -v shishya >/dev/null 2>&1 && exec shishya gate hook || exec uvx --from shishya shishya gate hook'",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'command -v shishya >/dev/null 2>&1 && exec shishya gate hook || exec uvx --from shishya shishya gate hook'",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'command -v shishya >/dev/null 2>&1 && exec shishya gate hook || exec uvx --from shishya shishya gate hook'",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "description": "Shishya Gate: hard rules for tool calls, and fewer prompts as it learns what you approve."
+}

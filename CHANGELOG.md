@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Shishya Gate for Claude Code** (`shishya gate hook|test|status|correct`, plugin `shishya-gate` in `plugins/claude-code`, marketplace file `.claude-plugin/marketplace.json`). A PreToolUse hook that allows, asks or denies a tool call; what the person approves or rejects becomes learner labels.
 - **Learn from corrections** (`shishya.Learner`, `Shishya(..., learner=DIR)`, `s.correct(d, {...})`, `shishya correct`, `shishya learn status|train|rollback`). Memory: the exact case a person corrected gets that answer next time (one correction moves it to at least 0.8, two in a row to 0.89). Head: a small per-field model on the base model's probabilities and the text, retrained in well under a second after each correction, and used only while it beats the base model on a frozen, human-labelled held-out split (paired bootstrap, at least two different answers). Rules still always win. Rollback is saved as a new version, so a version in a receipt always names one model. A broken learner store falls back to the base model and says so in `reasons`.
 - Every receipt has an `id`; with a learner, also the model version and whether memory or the head shaped each field.
 - **Rego policies fail closed:** opa missing, a timeout or a broken policy blocks the answer and is listed in `rule_errors` (before, the decision crashed).
