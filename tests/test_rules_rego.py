@@ -123,3 +123,13 @@ def test_engine_takes_next_best_when_rego_rejects_top():
     assert d.rejected_mass == pytest.approx(0.56)
     assert "destructive command" in d.reasons
     assert any(r["name"] == "rego:shell_guard" for r in d.receipt["rules"])
+
+
+def test_failing_policy_blocks_and_is_reported():
+    """opa missing, a timeout or a broken policy must block, never crash the decision or allow."""
+    r = RegoRules(POLICY, opa="/nonexistent/opa")
+    s = Shishya(FakeBackend(fixed={"action": {"run": 0.9, "ask": 0.1}, "destructive": {True: 0.5, False: 0.5}}),
+                rego=r)
+    d = s.decide("rm -rf /", SHELL_SCHEMA)
+    assert d.status == "none" and d.answer is None
+    assert d.rule_errors and d.rule_errors[0].startswith("rego:shell_guard:")

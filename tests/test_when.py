@@ -189,3 +189,13 @@ def test_check_accepts_good_conditions():
 
 def test_contains_with_non_string_value_on_string_path():
     assert evaluate({"path": "facts.name", "contains": 1}, CTX) is None
+
+
+@pytest.mark.parametrize("cond", [
+    {"path": "facts.x", "eq": True},
+    {"path": "facts.x", "in": [True, "a"]},
+    {"path": "facts.xs", "contains": True},
+])
+def test_booleans_are_not_numbers(cond):
+    assert evaluate(cond, {"facts": {"x": 1, "xs": [1, 0]}}) is False
+    assert evaluate({"path": "facts.x", "neq": True}, {"facts": {"x": 1}}) is True
