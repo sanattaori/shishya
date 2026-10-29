@@ -1,4 +1,5 @@
-"""Command line: ``shishya decide``, ``serve``, ``calibrate``, ``rules`` and ``version``."""
+"""Command line: ``shishya decide``, ``serve``, ``calibrate``, ``rules``, ``correct``, ``learn``,
+``gate`` and ``version``."""
 from __future__ import annotations
 
 import argparse
@@ -97,11 +98,12 @@ def _decide(a: argparse.Namespace) -> int:
     guru = _guru(a.guru)
     backend = _calibrated(_routed(_backend(a.backend), a.route), a.calibration)
     engine = Shishya(backend, rules=_load_rules(a.rules) if a.rules else (), rego=rego, guru=guru,
-                     min_probability=a.min_probability)
+                     min_probability=a.min_probability, learner=a.learner)
     d = engine.decide(text, schema, facts=facts)
     if a.json:
         print(json.dumps(d.to_dict(), indent=2, ensure_ascii=False, default=str))
     else:
+        print(f"decision id: {d.receipt['id']}")
         print(f"status: {d.status}")
         shown = d.answer or d.suggestion
         if shown is not None:
@@ -166,6 +168,76 @@ def _calibrate(a: argparse.Namespace) -> int:
     return 0
 
 
+def _print_train(rep: dict | None) -> None:
+    if not rep:
+        return
+    print(f"model version {rep['version']}" + (" (changed)" if rep["changed"] else " (unchanged)")
+          + f", trained in {rep['train_ms']:.0f} ms")
+    for name, r in rep["fields"].items():
+        state = "head used" if r["promoted"] else "base model used"
+        print(f"  {name}: {state}; {r['n_train']} train / {r['n_test']} test labels; {r['why']}")
+
+
+def _correct(a: argparse.Namespace) -> int:
+    from .learn import Learner
+    res = Learner(a.dir).correct(a.decision_id, _json_arg(a.answer), source=a.source, train=not a.no_train)
+    print("recorded: " + (", ".join(res["recorded"]) or "nothing"))
+    for name, why in res["skipped"].items():
+        print(f"skipped {name}: {why}")
+    _print_train(res["train"])
+    return 0 if res["recorded"] else 1
+
+
+def _learn(a: argparse.Namespace) -> int:
+    from .learn import Learner
+    learner = Learner(a.dir)
+    if a.action == "train":
+        _print_train(learner.train())
+    elif a.action == "rollback":
+        print(f"now using model version {learner.rollback()}")
+    else:
+        st = learner.status()
+        print(f"model version {st['version']}, {st['decisions']} decisions logged")
+        print(f"{'field':<24}{'train':>7}{'test':>6}{'memory':>8}  head")
+        for name, f in st["fields"].items():
+            print(f"{name:<24}{f['train']:>7}{f['test']:>6}{f['memory']:>8}  {'used' if f['promoted'] else 'not used'}")
+        if st["last_report"]:
+            print("last train:")
+            _print_train(st["last_report"])
+    return 0
+
+
+def _gate(a: argparse.Namespace) -> int:
+    from .gate import hook
+    if a.action == "hook":
+        return hook.run()
+    if a.action == "test":
+        cmd = " ".join(a.args)
+        if not cmd:
+            raise ValueError("give the command (or path) to test")
+        key = "file_path" if a.tool in ("Edit", "Write", "Read", "MultiEdit") else "command"
+        res = hook.gate_decide(a.tool, {key: cmd}, a.cwd or os.getcwd())
+        if a.json:
+            print(json.dumps(res, indent=2, ensure_ascii=False, default=str))
+        else:
+            print(f"decision: {res.get('decision') or 'no opinion (Claude Code decides)'}")
+            print(f"reason: {res.get('reason')}")
+        return 0
+    if a.action == "correct":
+        if len(a.args) != 2 or a.args[1] not in ("allow", "ask"):
+            raise ValueError("usage: shishya gate correct DECISION_ID allow|ask")
+        from .learn import Learner
+        res = Learner(hook.default_dir()).correct(a.args[0], {"decision": a.args[1]}, source="human")
+        print("recorded: " + (", ".join(res["recorded"]) or "nothing"))
+        for name, why in res["skipped"].items():
+            print(f"skipped {name}: {why}")
+        _print_train(res["train"])
+        return 0 if res["recorded"] else 1
+    _learn(argparse.Namespace(action="status", dir=str(hook.default_dir())))
+    print(f"{hook.pending_count(hook.default_dir())} calls waiting for a label")
+    return 0
+
+
 def _rules(a: argparse.Namespace) -> int:
     from .draft import draft_rules, examples
     schema = json.loads(Path(a.schema).read_text())
@@ -205,6 +277,7 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument("--calibration", help="calibration file made by 'shishya calibrate'")
     d.add_argument("--route", action="append", metavar="FIELD=MODEL",
                    help="answer FIELD with a local classifier, e.g. news_impact=shishya:news-base (repeatable)")
+    d.add_argument("--learner", metavar="DIR", help="learn from corrections kept in DIR (created if missing)")
     d.add_argument("--json", action="store_true", help="print the full result as JSON")
     d.set_defaults(fn=_decide)
     s = sub.add_parser("serve", help="run the HTTP server")
@@ -228,6 +301,24 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--guru", choices=["claude", "openrouter"], default="claude")
     r.add_argument("--out", help="write {\"rules\": [...]} to this file (the schema is never edited)")
     r.set_defaults(fn=_rules)
+    co = sub.add_parser("correct", help="give the right answer for a decision, so the learner learns from it")
+    co.add_argument("dir", help="learner directory (as in decide --learner)")
+    co.add_argument("decision_id", help="the 'decision id' printed by decide")
+    co.add_argument("answer", help="JSON file path or JSON string: {\"field\": value}")
+    co.add_argument("--source", default="human", help="who says so: 'human' or 'approval' may form the test split")
+    co.add_argument("--no-train", action="store_true", help="only record the labels")
+    co.set_defaults(fn=_correct)
+    le = sub.add_parser("learn", help="inspect, retrain or roll back a learner")
+    le.add_argument("action", choices=["status", "train", "rollback"])
+    le.add_argument("dir", help="learner directory")
+    le.set_defaults(fn=_learn)
+    g = sub.add_parser("gate", help="Shishya Gate for Claude Code: hook, test, status, correct")
+    g.add_argument("action", choices=["hook", "test", "status", "correct"])
+    g.add_argument("args", nargs="*", help="test: the command (or path); correct: DECISION_ID allow|ask")
+    g.add_argument("--tool", default="Bash", help="test: the tool name (default Bash)")
+    g.add_argument("--cwd", help="test: working directory (default: here)")
+    g.add_argument("--json", action="store_true", help="test: print the full result as JSON")
+    g.set_defaults(fn=_gate)
     v = sub.add_parser("version", help="print the version")
     v.set_defaults(fn=lambda a: print(__version__) or 0)
     args = ap.parse_args(argv)

@@ -1,0 +1,57 @@
+name: release
+on:
+  push:
+    tags:
+      - "v*"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install OPA
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL -o "$HOME/.local/bin/opa" https://openpolicyagent.org/downloads/latest/opa_linux_amd64_static
+          chmod +x "$HOME/.local/bin/opa"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: pip install -e ".[dev]"
+      - run: ruff check .
+      - run: pytest -q
+      - name: Check tag matches package versions
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pyproject_version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          package_version=$(python -c "import shishya; print(shishya.__version__)")
+          if [ "$tag" != "$pyproject_version" ] || [ "$tag" != "$package_version" ]; then
+            echo "::error::Tag v$tag does not match pyproject.toml version ($pyproject_version) or shishya.__version__ ($package_version)"
+            exit 1
+          fi
+      - name: Build sdist and wheel
+        run: |
+          pip install build
+          python -m build
+      - name: Check distributions
+        run: |
+          pip install twine
+          twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/shishya
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

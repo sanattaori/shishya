@@ -18,11 +18,7 @@ answers only and are checked in batches with one ``opa eval`` call per batch.
 from __future__ import annotations
 
 import hashlib
-import inspect
 import json
-import shutil
-import subprocess
-import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -47,6 +43,7 @@ class Rule:
     def fingerprint(self) -> str:
         if self.spec is not None:
             return hashlib.sha256(json.dumps(self.spec, sort_keys=True).encode()).hexdigest()[:16]
+        import inspect
         try:
             src = inspect.getsource(self.fn)
         except (OSError, TypeError):
@@ -58,6 +55,7 @@ def rule(fn: Callable | None = None, *, uses: list[str] | tuple[str, ...] | None
          name: str | None = None, message: str | None = None):
     """Decorator (``@rule`` or ``@rule(uses=[...])``) turning a function into a Rule."""
     def wrap(f: Callable) -> Rule:
+        import inspect
         if uses is not None and (not uses or not all(isinstance(u, str) for u in uses)):
             raise RuleError("uses must be a non-empty list of field names")
         doc = (inspect.getdoc(f) or "").strip().splitlines()
@@ -140,7 +138,9 @@ _CAPS: dict[str, str] = {}
 
 def _capabilities(opa: str) -> str:
     """Path of a capabilities file for ``opa`` without BLOCKED_BUILTINS (made once per binary)."""
-    if opa not in _CAPS:
+    import subprocess
+    import tempfile
+    if opa not in _CAPS or not Path(_CAPS[opa]).exists():    # the OS may clean temp files under a long-running server
         proc = subprocess.run([opa, "capabilities", "--current"], capture_output=True, text=True, check=False,
                               timeout=30)
         if proc.returncode != 0:
@@ -190,6 +190,7 @@ class RegoRules:
         if not self.query.startswith("data."):
             raise RuleError("query must start with 'data.'")
         self.reasons_ref = self.query.rsplit(".", 1)[0] + ".why_not"
+        import shutil
         self.opa = opa or shutil.which("opa")
         self.timeout = timeout
         self.name = f"rego:{pkg}"
@@ -205,6 +206,9 @@ class RegoRules:
                 f"  r := {self.reasons_ref} with input as c\n}}\n")
 
     def check_batch(self, answers: list[dict], ctx: dict) -> list[tuple[bool, list[str]]]:
+        import subprocess
+        import tempfile
+
         if not answers:
             return []
         if not self.opa:
@@ -213,12 +217,15 @@ class RegoRules:
         with tempfile.TemporaryDirectory(prefix="shishya-rego-") as d:
             Path(d, "policy.rego").write_text(self.policy)
             Path(d, "wrapper.rego").write_text(self._wrapper())
-            proc = subprocess.run(
-                [self.opa, "eval", "--format", "json", "--stdin-input", "--capabilities", _capabilities(self.opa),
-                 "-d", str(Path(d, "policy.rego")), "-d", str(Path(d, "wrapper.rego")),
-                 f"data.{self.BATCH_PACKAGE}"],
-                input=json.dumps({"candidates": cands}), capture_output=True, text=True, check=False,
-                timeout=self.timeout)
+            try:
+                proc = subprocess.run(
+                    [self.opa, "eval", "--format", "json", "--stdin-input", "--capabilities", _capabilities(self.opa),
+                     "-d", str(Path(d, "policy.rego")), "-d", str(Path(d, "wrapper.rego")),
+                     f"data.{self.BATCH_PACKAGE}"],
+                    input=json.dumps({"candidates": cands}), capture_output=True, text=True, check=False,
+                    timeout=self.timeout)
+            except subprocess.TimeoutExpired as e:
+                raise RuleError(f"opa eval timed out after {self.timeout:g} s") from e
         if proc.returncode != 0:
             raise RuleError(f"opa eval failed: {(proc.stderr or proc.stdout).strip()[:500]}")
         try:
