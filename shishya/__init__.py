@@ -1,5 +1,5 @@
 """Shishya: give any AI model your rules; get the most likely answer that follows them."""
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 from .engine import Decision, Shishya
 from .learn import Learner

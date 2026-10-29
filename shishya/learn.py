@@ -21,7 +21,6 @@ import hashlib
 import json
 import math
 import os
-import random
 import re
 import time
 import zlib
@@ -106,6 +105,8 @@ def train_head(rows: list[dict]) -> dict:
     w: dict[int, list[float]] = {}
     g_w: dict[int, list[float]] = {}
     order = list(range(len(data)))
+    import random
+
     rng = random.Random(0)
     sqrt = math.sqrt
     for _ in range(EPOCHS):
@@ -163,6 +164,8 @@ def _evaluate(head: dict | None, rows: list[dict]) -> tuple[float, float, list[f
 
 def _bootstrap(diffs: list[float]) -> tuple[float, float]:
     """95% interval of the mean of ``diffs`` (2,000 resamples)."""
+    import random
+
     rng = random.Random(0)
     n = len(diffs)
     means = sorted(sum(rng.choices(diffs, k=n)) / n for _ in range(BOOTSTRAP))

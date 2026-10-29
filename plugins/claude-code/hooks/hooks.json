@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh -c 'command -v shishya >/dev/null 2>&1 && exec shishya gate hook || exec uvx --from shishya shishya gate hook'",
+            "command": "sh -c 'command -v shishya-gate-hook >/dev/null 2>&1 && exec shishya-gate-hook || exec uvx --from shishya shishya-gate-hook'",
             "timeout": 60
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh -c 'command -v shishya >/dev/null 2>&1 && exec shishya gate hook || exec uvx --from shishya shishya gate hook'",
+            "command": "sh -c 'command -v shishya-gate-hook >/dev/null 2>&1 && exec shishya-gate-hook || exec uvx --from shishya shishya-gate-hook'",
             "timeout": 10
           }
         ]
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh -c 'command -v shishya >/dev/null 2>&1 && exec shishya gate hook || exec uvx --from shishya shishya gate hook'",
+            "command": "sh -c 'command -v shishya-gate-hook >/dev/null 2>&1 && exec shishya-gate-hook || exec uvx --from shishya shishya-gate-hook'",
             "timeout": 10
           }
         ]
@@ -40,7 +40,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh -c 'command -v shishya >/dev/null 2>&1 && exec shishya gate hook || exec uvx --from shishya shishya gate hook'",
+            "command": "sh -c 'command -v shishya-gate-hook >/dev/null 2>&1 && exec shishya-gate-hook || exec uvx --from shishya shishya-gate-hook'",
             "timeout": 10
           }
         ]
