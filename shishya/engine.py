@@ -20,16 +20,19 @@ passes or confidence is too low, ask the Guru (an LLM) with the broken rules as 
 """
 from __future__ import annotations
 
+import os
 import time
+import uuid
 from dataclasses import asdict, dataclass, field
 from typing import Any, Protocol
 
 from . import __version__
 from .backends.base import Backend, render
+from .learn import Learner
 from .rules import RegoRules, Rule, as_rules
 from .schema import Compiled, compile_schema, digest
 from .search import normalize, search
-from .when import holds, unknown_facts
+from .when import holds, same, unknown_facts
 
 
 def fact_notes(rules: list[Rule], ctx: dict) -> tuple[list[str], list[str]]:
@@ -64,6 +67,21 @@ def _fail_closed(rule: Rule, errors: list[str]) -> Rule:
             errors.append(f"{rule.name}: {type(e).__name__}: {e}")
             return False
     return Rule(fn, rule.uses, rule.name, rule.message, rule.spec)
+
+
+class _FailClosedChecker:
+    """The same batch checker, except that a failure (opa missing, timeout, bad policy) blocks the batch."""
+
+    def __init__(self, checker: Any, errors: list[str]):
+        self.checker, self.errors, self.name = checker, errors, checker.name
+
+    def check_batch(self, answers: list[dict], ctx: dict) -> list[tuple[bool, list[str]]]:
+        try:
+            return self.checker.check_batch(answers, ctx)
+        except Exception as e:  # noqa: BLE001 - any failure inside a checker means "not allowed"
+            self.errors.append(f"{self.name}: {type(e).__name__}: {e}")
+            return [(False, [])] * len(answers)
+
 
 STATUSES = ("ok", "guru", "unsure", "none")
 
@@ -104,7 +122,7 @@ class Decision:
 class Shishya:
     def __init__(self, backend: Backend, *, rules: Any = (), rego: RegoRules | str | None = None,
                  guru: Guru | None = None, max_candidates: int = 64, min_probability: float = 0.0,
-                 show_facts: bool = True):
+                 show_facts: bool = True, learner: Learner | str | os.PathLike | None = None):
         self.backend = backend
         self.rules: list[Rule] = as_rules(rules)
         self.rego = RegoRules(rego) if isinstance(rego, str) else rego
@@ -112,6 +130,7 @@ class Shishya:
         self.max_candidates = max_candidates
         self.min_probability = min_probability
         self.show_facts = show_facts
+        self.learner = Learner(learner) if isinstance(learner, (str, os.PathLike)) else learner
         self._cache: dict[str, Compiled] = {}
 
     def compile(self, schema: dict) -> Compiled:
@@ -119,6 +138,12 @@ class Shishya:
         if key not in self._cache:
             self._cache[key] = compile_schema(schema)
         return self._cache[key]
+
+    def correct(self, decision: Decision, answer: dict, *, source: str = "human", train: bool = True) -> dict:
+        """Tell the learner the right answer for fields of a decision; it learns from it right away."""
+        if self.learner is None:
+            raise ValueError("this Shishya has no learner: create it with Shishya(..., learner=DIRECTORY)")
+        return self.learner.correct(decision.receipt["id"], answer, source=source, train=train)
 
     def decide(self, input: Any, schema: dict, *, facts: Any = None, rules: Any = None,
                rego: RegoRules | str | None = None) -> Decision:
@@ -129,7 +154,8 @@ class Shishya:
         user_rules = list(comp.rules) + (as_rules(rules) if rules is not None else self.rules)
         rule_list = [_fail_closed(r, errors) for r in user_rules]
         rego_obj = (RegoRules(rego) if isinstance(rego, str) else rego) if rego is not None else self.rego
-        checkers = [rego_obj] if rego_obj is not None else []
+        policies = [rego_obj] if rego_obj is not None else []
+        checkers = [_FailClosedChecker(c, errors) for c in policies]
         ctx = {"input": input, "facts": facts}
 
         # 1. conditions (plain code): which fields are asked, which options are allowed
@@ -151,8 +177,22 @@ class Shishya:
         # 2. the model scores every allowed option, in one call
         text = render(input, facts, self.show_facts)
         t = time.perf_counter()
-        probs = self.backend.score(text, active, options) if active else {}
+        scorer = self.learner.wrap(self.backend) if self.learner is not None else self.backend
+        probs = scorer.score(text, active, options) if active else {}
         timings["model_ms"] = (time.perf_counter() - t) * 1000
+        decision_id = uuid.uuid4().hex
+        learn_error, learn_receipt = None, None
+        if self.learner is not None and active:
+            last = scorer.last
+            learn_receipt = {"version": last["version"], "used": last["used"]}
+            if "error" in last:
+                learn_error = f"learner error (base model used): {last['error']}"
+            try:
+                self.learner.log(decision_id, comp.digest, text, last)
+            except Exception as e:  # noqa: BLE001 - a learner failure must not break the decision
+                learn_error = f"learner error: {e}"
+        elif self.learner is not None:
+            learn_receipt = {"version": None, "used": {}}     # nothing was asked of the model
         probs = {name: normalize(p) for name, p in probs.items()}
 
         def in_order(ans: dict | None) -> dict | None:
@@ -189,6 +229,8 @@ class Shishya:
                      reasons=list(res.reasons))
         d.missing_facts, notes = fact_notes(list(comp.rules), ctx)
         d.reasons.extend(notes)
+        if learn_error:
+            d.reasons.append(learn_error)
         best = in_order(res.answer)
         d.top_allowed = best is not None and best == top
         if best is not None:
@@ -217,15 +259,18 @@ class Shishya:
         d.rule_errors = sorted(set(errors))
         timings["total_ms"] = (time.perf_counter() - t0) * 1000
         d.receipt = {
+            "id": decision_id,
             "shishya": __version__,
             "schema_digest": comp.digest,
             "rules": [{"name": r.name, "fingerprint": r.fingerprint()} for r in user_rules]
-                     + [{"name": c.name, "fingerprint": c.fingerprint()} for c in checkers],
+                     + [{"name": c.name, "fingerprint": c.fingerprint()} for c in policies],
             "backend": {"name": self.backend.name, "model": getattr(self.backend, "model", None)},
             "guru": ({"name": self.guru.name, "model": self.guru.model} if self.guru else None),
             "search": {"status": res.status, "expanded": res.expanded, "tried": res.tried},
             "timings_ms": {k: round(v, 2) for k, v in timings.items()},
         }
+        if learn_receipt is not None:
+            d.receipt["learner"] = learn_receipt
         return d
 
     # -- guru ---------------------------------------------------------------------------------------
@@ -250,7 +295,7 @@ class Shishya:
             for name in sorted(names):
                 if name not in got:
                     problems.append(f"missing field {name!r}")
-                elif got[name] not in options[name]:
+                elif not any(same(got[name], o) for o in options[name]):     # no 1 for true
                     problems.append(f"{name!r} must be one of {list(options[name])}")
             extra = set(got) - names
             if extra:
