@@ -40,15 +40,25 @@ class BrainConfig:
     # where the lasting memory is addressed. "neurons" (v1): BDH's ReLU neurons. "window" (v2): a fixed sparse
     # code of the last key_window bytes, each byte bound to how many steps ago it was (random ±1 codes multiplied
     # together, fading by key_decay per step), keeping the key_active strongest of key_size units.
+    # "words" (studied for v3): the same kind of code, but over the last key_window words instead of bytes, so a
+    # name four words back counts as much as the word just read. See ``Brain.word_keys``.
     key: str = "neurons"
     key_size: int = 16384
     key_window: int = 32
     key_decay: float = 0.9
     key_active: int = 40
+    key_sentence: bool = True      # "words" only: the address starts at the sentence, like a question would
+    # write gate (studied for v3): a step is written only if its surprise is at least this. 0 writes every step.
+    write_min_surprise: float = 0.0
 
     @property
     def neurons(self) -> int:
         return self.mult * self.n_embd // self.n_head
+
+    @property
+    def sparse_key(self) -> bool:
+        """True when the lasting memory is addressed by a fixed sparse code (v2 and later), not by the neurons."""
+        return self.lasting and self.key in ("window", "words")
 
 
 @dataclass
@@ -89,6 +99,9 @@ def _rope(phases: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
     return (v * torch.cos(phases)).to(v.dtype) + (v_rot * torch.sin(phases)).to(v.dtype)
 
 
+MAX_WORD = 16                      # bytes of a word that get their own place code; later bytes share the last
+
+
 class Brain(nn.Module):
     """BDH-GPU, with optional lasting synapses."""
 
@@ -106,12 +119,9 @@ class Brain(nn.Module):
         self.register_buffer("freqs", _freqs(N, 2**16).view(1, 1, 1, N), persistent=False)
         if cfg.lasting:
             m, L = cfg.mem_dim, cfg.n_layer
-            if cfg.key == "window":
-                g = torch.Generator().manual_seed(1234)          # fixed: the same code in every run
-                rand = lambda n: torch.randint(0, 2, (n, cfg.key_size), generator=g).float() * 2 - 1  # noqa: E731
-                self.register_buffer("key_byte", rand(cfg.vocab_size))
-                self.register_buffer("key_pos", rand(cfg.key_window))
-            mh = 1 if cfg.key == "window" else nh
+            if cfg.sparse_key:
+                self.window_code()
+            mh = 1 if cfg.sparse_key else nh
             self.mem_in = nn.Parameter(torch.zeros((mh, D, m)).normal_(std=0.02))
             self.mem_out = nn.Parameter(torch.zeros((nh, m, D)).normal_(std=1 / math.sqrt(m)))
             self.mem_gain = nn.Parameter(torch.ones(L))
@@ -120,11 +130,23 @@ class Brain(nn.Module):
             self.register_buffer("loss_ref", torch.tensor(1.0))
         self.life_rate = 1.0                                          # write-rate multiplier, chosen on the dev stream
 
+    def window_code(self):
+        """(Re)make v2's fixed random code from the config: the same seed, so the same code in every run."""
+        c = self.cfg
+        g = torch.Generator().manual_seed(1234)
+        rand = lambda n: torch.randint(0, 2, (n, c.key_size), generator=g).float() * 2 - 1  # noqa: E731
+        dev = self.lm_head.device
+        self.register_buffer("key_byte", rand(c.vocab_size).to(dev))
+        self.register_buffer("key_pos", rand(c.key_window).to(dev))
+        if c.key == "words":                                  # where a byte sits in its word; "just after a space"
+            self.register_buffer("key_inword", rand(MAX_WORD).to(dev), persistent=False)
+            self.register_buffer("key_space", rand(1)[0].to(dev), persistent=False)
+
     # -- memory ---------------------------------------------------------------------------------------------------
     def new_memory(self, batch: int = 1, device=None) -> list[torch.Tensor]:
         c = self.cfg
         dev = device or self.lm_head.device
-        if c.key == "window":
+        if c.sparse_key:
             return [torch.zeros(batch, 1, c.key_size, c.mem_dim, device=dev) for _ in range(c.n_layer)]
         return [torch.zeros(batch, c.n_head, c.neurons, c.mem_dim, device=dev) for _ in range(c.n_layer)]
 
@@ -132,15 +154,65 @@ class Brain(nn.Module):
     def window_keys(self, idx: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """v2 keys: (indices [B, T, active], values [B, T, active]), unit length. Fixed, never trained."""
         c = self.cfg
-        W = c.key_window
-        # pre[t] = Σ_j decay^j · key_byte[byte t-j] ⊙ key_pos[j], as one causal depthwise convolution over time
-        fade = c.key_decay ** torch.arange(W, device=idx.device, dtype=torch.float32)
-        kernel = (self.key_pos * fade[:, None]).flip(0).T.unsqueeze(1).contiguous()     # units, 1, W
-        x = self.key_byte[idx].transpose(1, 2)                                          # B, units, T
-        pre = F.conv1d(F.pad(x, (W - 1, 0)), kernel, groups=c.key_size).transpose(1, 2)  # B, T, units
+        if c.key == "words":
+            pre = self.word_code(idx)
+        else:
+            W = c.key_window
+            # pre[t] = Σ_j decay^j · key_byte[byte t-j] ⊙ key_pos[j], as one causal depthwise convolution over time
+            fade = c.key_decay ** torch.arange(W, device=idx.device, dtype=torch.float32)
+            kernel = (self.key_pos * fade[:, None]).flip(0).T.unsqueeze(1).contiguous()     # units, 1, W
+            x = self.key_byte[idx].transpose(1, 2)                                          # B, units, T
+            pre = F.conv1d(F.pad(x, (W - 1, 0)), kernel, groups=c.key_size).transpose(1, 2)  # B, T, units
         top = pre.topk(c.key_active, dim=-1)
         val = F.relu(top.values)
         return top.indices, val / (val.norm(dim=-1, keepdim=True) + 1e-6)
+
+    @torch.no_grad()
+    def word_code(self, idx: torch.Tensor) -> torch.Tensor:
+        """The "words" address before the top-k: [B, T, units]. Fixed, never trained.
+
+        A word is a run of letters; any other byte except a space is a word of its own ("Zubak's" is Zubak, ', s).
+        A word's code is the sum of its bytes' codes, each bound to its place in the word, divided by √length.
+        At step t the address is the word being read so far (or the "just after a space" code), bound to slot 0,
+        plus the key_window − 1 words before it, each bound to its slot and fading by key_decay per word. With
+        ``key_sentence`` the words stop at the last . ! ? or new line: a fact inside a story and the same words
+        asked on their own then get the same address.
+
+            pre[t] = cur(t) ⊙ slot[0] + Σ_d decay^d · word(t, d) ⊙ slot[d]
+        """
+        c = self.cfg
+        B, T = idx.shape
+        U = c.key_size
+        letter = (idx >= 128) | ((idx | 32) >= 97) & ((idx | 32) <= 122)               # a-z, A-Z, UTF-8 bytes
+        space = (idx == 32) | (idx == 9) | (idx == 13)
+        prev = F.pad(letter[:, :-1], (1, 0))
+        start = (letter & ~prev) | (~letter & ~space)                                   # a word starts here
+        n = start.long().cumsum(1)                                                      # its number (from 1)
+        ar = torch.arange(T, device=idx.device).expand(B, T)
+        first = torch.where(start, ar, torch.zeros_like(ar)).cummax(1).values           # where it started
+        pos = (ar - first).clamp(max=MAX_WORD - 1)
+        e = self.key_byte[idx] * self.key_inword[pos] * (~space)[..., None]             # B, T, U
+        # whole words: C[b, j] = Σ codes of word j's bytes / √length (row 0: no word)
+        rows = (n + (T + 1) * torch.arange(B, device=idx.device)[:, None]).flatten()
+        C = torch.zeros(B * (T + 1), U, device=idx.device).index_add_(0, rows, e.view(B * T, U))
+        length = torch.zeros(B * (T + 1), device=idx.device).index_add_(0, rows, (~space).float().flatten())
+        C = (C / length.clamp_min(1).sqrt()[:, None]).view(B, T + 1, U)
+        # the word being read, so far
+        cs = F.pad(e.cumsum(1), (0, 0, 1, 0))                                           # B, T+1, U
+        so_far = cs[:, 1:] - cs.gather(1, first[..., None].expand(-1, -1, U))
+        so_far = so_far / (pos + 1).float().sqrt()[..., None]
+        cur = torch.where(space[..., None], self.key_space.expand(B, T, U), so_far)
+        pre = cur * self.key_pos[0]
+        sp = space.long()
+        if c.key_sentence:                  # words before the last . ! ? or new line are not part of the address
+            stop = (idx == 46) | (idx == 33) | (idx == 63) | (idx == 10)
+            last_stop = torch.where(stop, n, torch.zeros_like(n)).cummax(1).values
+        for d in range(1, c.key_window):
+            j = n - d + sp
+            j = torch.where(j > last_stop, j, torch.zeros_like(j)) if c.key_sentence else j.clamp_min(0)  # 0: none
+            word = C.view(B * (T + 1), U)[(j + (T + 1) * torch.arange(B, device=idx.device)[:, None]).flatten()]
+            pre = pre + c.key_decay ** d * word.view(B, T, U) * self.key_pos[d]
+        return pre
 
     # -- forward --------------------------------------------------------------------------------------------------
     def forward(self, idx: torch.Tensor, targets: torch.Tensor | None = None, memory: list | None = None,
@@ -156,7 +228,7 @@ class Brain(nn.Module):
         x = _ln(self.embed(idx).unsqueeze(1))                                 # B, 1, T, D
         phases = torch.arange(T, device=idx.device, dtype=torch.float32).view(1, 1, -1, 1) * self.freqs
         use_mem = c.lasting and memory is not None
-        window = c.lasting and c.key == "window"
+        window = c.sparse_key
         wk = self.window_keys(idx) if window and (use_mem or keep) else None
         trace = []
         for level in range(c.n_layer):
@@ -219,7 +291,9 @@ class Brain(nn.Module):
         nxt = torch.zeros_like(valid)
         nxt[:, :-1] = valid[:, 1:]                                            # step t needs a real step t+1
         out = []
-        if c.key == "window":
+        if c.write_min_surprise > 0:                                         # the write gate: surprising steps only
+            valid = valid * (surprise >= c.write_min_surprise).float()
+        if c.sparse_key:
             return self._write_window(memory, surprise, reward, valid, nxt)
         with torch.autocast(device_type=surprise.device.type, enabled=False):
             for level, (k, v) in enumerate(self.trace):

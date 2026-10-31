@@ -168,3 +168,31 @@ def test_window_keys_are_the_fading_sum():
     assert torch.equal(got_idx.sort(-1).values, want.indices.sort(-1).values)
     v = torch.relu(want.values)
     assert torch.allclose(got_val.sort(-1).values, (v / v.norm(dim=-1, keepdim=True)).sort(-1).values, atol=1e-5)
+
+
+def _word_brain(sentence: bool, window: int = 6) -> Brain:
+    return Brain(BrainConfig(n_layer=1, n_embd=32, n_head=2, mult=8, mem_dim=8, key="words", key_size=512,
+                             key_window=window, key_decay=0.9, key_active=10, key_sentence=sentence))
+
+
+def test_word_code_is_the_fading_sum_of_words():
+    """v3 candidate: pre[t] = cur(t) ⊙ slot[0] + Σ_d decay^d · word(t, d) ⊙ slot[d]."""
+    b = _word_brain(sentence=False)
+    kb, kp, ki = b.key_byte, b.key_pos, b.key_inword
+    w = lambda s: sum(kb[c] * ki[i] for i, c in enumerate(s.encode())) / len(s) ** 0.5  # noqa: E731
+    pre = b.word_code(torch.tensor([list(b"ab cd. ef")]))
+    assert torch.allclose(pre[0, -1], w("ef") * kp[0] + 0.9 * w(".") * kp[1] + 0.81 * w("cd") * kp[2]
+                          + 0.729 * w("ab") * kp[3], atol=1e-4)
+    assert torch.allclose(pre[0, 6], b.key_space * kp[0] + 0.9 * w(".") * kp[1] + 0.81 * w("cd") * kp[2]
+                          + 0.729 * w("ab") * kp[3], atol=1e-4)             # just after a space
+    assert torch.allclose(pre[0, 3], kb[ord("c")] * ki[0] * kp[0] + 0.9 * w("ab") * kp[1], atol=1e-4)
+
+
+def test_word_code_starts_at_the_sentence():
+    """With key_sentence, a fact inside a story and the bare question get the same address."""
+    b = _word_brain(sentence=True, window=8)          # Zubak is 6 words back: ␠, called, is, cat, s, ', Zubak
+    story = b.word_code(torch.tensor([list(b"The sun was up. Zubak's cat is called ")]))[0, -1]
+    question = b.word_code(torch.tensor([list(b"Zubak's cat is called ")]))[0, -1]
+    assert torch.allclose(story, question, atol=1e-5)
+    other = b.word_code(torch.tensor([list(b"Kipos's cat is called ")]))[0, -1]
+    assert not torch.allclose(story, other, atol=1e-3)
