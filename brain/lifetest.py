@@ -202,10 +202,12 @@ def verdict(test: dict, resources: dict) -> dict:
     return {"rules": rules, "L3_detail": l3, "pass": all(rules.values())}
 
 
-def resources_check(run_dir: Path, small: bool, smoke: bool, data_dir: str, life_rate: float) -> dict:
+def resources_check(run_dir: Path, small: bool, smoke: bool, data_dir: str, life_rate: float,
+                    brain: str = "brain") -> dict:
     """The Brain's test life on the CPU in a fresh process: peak memory and time per write."""
     cmd = [sys.executable, "-m", "brain.lifetest", "--resources", "--runs", str(run_dir), "--data-dir", data_dir,
-           "--life-rate", str(life_rate)] + (["--small"] if small else []) + (["--smoke"] if smoke else [])
+           "--life-rate", str(life_rate), "--brain", brain]
+    cmd += (["--small"] if small else []) + (["--smoke"] if smoke else [])
     root = Path(__file__).resolve().parent.parent
     out = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=root)
     return json.loads(out.stdout.strip().splitlines()[-1])
@@ -228,6 +230,7 @@ def main(argv=None):
     p.add_argument("--device", default="auto")
     p.add_argument("--val-stories", type=int, default=300)
     p.add_argument("--out")
+    p.add_argument("--brain", default="brain", help="the Brain's run folder inside --runs (brain2 for v2)")
     p.add_argument("--resources", action="store_true", help=argparse.SUPPRESS)
     p.add_argument("--life-rate", type=float, default=1.0, help=argparse.SUPPRESS)
     args = p.parse_args(argv)
@@ -238,7 +241,7 @@ def main(argv=None):
     if args.resources:
         torch.set_num_threads(4)
         EVAL_BATCH.update(loglik=10, bpb=2)
-        brain = load(runs / "brain", torch.device("cpu"))
+        brain = load(runs / args.brain, torch.device("cpu"))
         lr = Hebbian(brain, args.life_rate)
         res = live(lr, streams["test"], val[:50])
         print(json.dumps({"peak_rss_mb": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024,
@@ -246,7 +249,7 @@ def main(argv=None):
         return
 
     dev = device_of(args.device)
-    models = {k: load(runs / k, dev) for k in ("brain", "gpt", "bdh")}
+    models = {k: load(runs / (args.brain if k == "brain" else k), dev) for k in ("brain", "gpt", "bdh")}
     report = {"dev": {}, "chosen": {}, "test": {}, "no_learning": {}}
     for kind, model in models.items():
         grid = RATE_GRID if kind == "brain" else LR_GRID
@@ -265,10 +268,11 @@ def main(argv=None):
         print(f"TEST {kind} ({best}): recall3 {t['recall_main']:.2f} recall1 {t['recall_once']:.2f} "
               f"reward {t['recall_reward']:.2f} change {t['change_new_wins']:.2f} "
               f"retention {t['retention']:.2f} rise {t['bpb_rise']:+.3f}", flush=True)
-    resources = resources_check(runs, args.small, args.smoke, args.data_dir, report["chosen"]["brain"])
+    resources = resources_check(runs, args.small, args.smoke, args.data_dir, report["chosen"]["brain"], args.brain)
     report["resources"] = resources
     report["verdict"] = verdict(report["test"], resources)
-    report["setup"] = {"small": args.small, "smoke": args.smoke, "sessions": len(streams["test"].sessions),
+    report["setup"] = {"small": args.small, "smoke": args.smoke, "brain": args.brain,
+                       "sessions": len(streams["test"].sessions),
                        "facts_main": len(streams["test"].facts["main"]), "device": str(dev)}
     for k in report["test"]:
         report["test"][k]["main_correct"] = [bool(x) for x in report["test"][k]["main_correct"]]

@@ -101,6 +101,31 @@ is reported. If it fails, we still run the life test and say so.
 
 **If it fails,** we write down what failed and why, and decide with you what's next. No tuning on the test stream.
 
+## Amendment, 31 Oct 2026 (before any v2 result): v2 addresses the memory differently
+
+**Why.** The v1 Kaggle run had started. Meanwhile the CPU diagnostics on a tiny v1 Brain (15M bytes, dev names
+only, never the test stream) showed:
+- **Its memory barely helps recall a name two texts later:** 3.21 → 3.19 bits per byte.
+- **The cause is the addresses.** At the step where a fact's name should be recalled, the addresses of different
+  facts are 0.94–0.99 alike. A question finds its own fact 14–22% of the time, out of 100 facts.
+- **Storage is not the problem:** inside one text it reads back fine.
+
+**The change, v2 (`--model brain2`).**
+- **Lasting memory addressed by recent input:** a fixed sparse code of the last 32 bytes. Each byte's random ±1
+  code is multiplied by a random code for "how many steps ago", fading by 0.9 per step. The 40 strongest of
+  16,384 units are kept (pattern separation, as in the hippocampus).
+- **Not trained:** like the random projections that index memories in the dentate gyrus.
+- **Everything else is the same as v1:** the BDH core, the values, the read path, the surprise- and
+  reward-weighted delta rule, the training recipe, the life stream.
+- **Evidence for it:** on the same 100 dev facts, untrained, a question finds its own fact 96% of the time. The
+  window and fading were chosen there, on dev names only.
+
+**Rules.**
+- v2 is judged by **the same pass rules**, on the same test stream, against the same GPT and BDH runs.
+- v1's verdict is reported as it comes, whatever v2 does.
+- Prediction, written now: questions phrased differently (reported, not a rule) will do worse in v2. The address
+  is the wording.
+
 ## Sizes and compute
 
 | Preset | Where | Brain | GPT | Childhood |

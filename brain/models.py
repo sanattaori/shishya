@@ -37,6 +37,14 @@ class BrainConfig:
     mem_dim: int = 64
     max_surprise: float = 4.0      # surprise weights are capped here
     max_beta: float = 1.0          # a single step never writes more than the full value (keeps the rule stable)
+    # where the lasting memory is addressed. "neurons" (v1): BDH's ReLU neurons. "window" (v2): a fixed sparse
+    # code of the last key_window bytes, each byte bound to how many steps ago it was (random ±1 codes multiplied
+    # together, fading by key_decay per step), keeping the key_active strongest of key_size units.
+    key: str = "neurons"
+    key_size: int = 16384
+    key_window: int = 32
+    key_decay: float = 0.9
+    key_active: int = 40
 
     @property
     def neurons(self) -> int:
@@ -98,7 +106,13 @@ class Brain(nn.Module):
         self.register_buffer("freqs", _freqs(N, 2**16).view(1, 1, 1, N), persistent=False)
         if cfg.lasting:
             m, L = cfg.mem_dim, cfg.n_layer
-            self.mem_in = nn.Parameter(torch.zeros((nh, D, m)).normal_(std=0.02))
+            if cfg.key == "window":
+                g = torch.Generator().manual_seed(1234)          # fixed: the same code in every run
+                rand = lambda n: torch.randint(0, 2, (n, cfg.key_size), generator=g).float() * 2 - 1  # noqa: E731
+                self.register_buffer("key_byte", rand(cfg.vocab_size))
+                self.register_buffer("key_pos", rand(cfg.key_window))
+            mh = 1 if cfg.key == "window" else nh
+            self.mem_in = nn.Parameter(torch.zeros((mh, D, m)).normal_(std=0.02))
             self.mem_out = nn.Parameter(torch.zeros((nh, m, D)).normal_(std=1 / math.sqrt(m)))
             self.mem_gain = nn.Parameter(torch.ones(L))
             self.mem_rate = nn.Parameter(torch.full((L,), -1.0))     # rate = sigmoid(.): about 0.27 at birth
@@ -110,7 +124,21 @@ class Brain(nn.Module):
     def new_memory(self, batch: int = 1, device=None) -> list[torch.Tensor]:
         c = self.cfg
         dev = device or self.lm_head.device
+        if c.key == "window":
+            return [torch.zeros(batch, 1, c.key_size, c.mem_dim, device=dev) for _ in range(c.n_layer)]
         return [torch.zeros(batch, c.n_head, c.neurons, c.mem_dim, device=dev) for _ in range(c.n_layer)]
+
+    @torch.no_grad()
+    def window_keys(self, idx: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """v2 keys: (indices [B, T, active], values [B, T, active]), unit length. Fixed, never trained."""
+        c = self.cfg
+        B, T = idx.shape
+        pre = torch.zeros(B, T, c.key_size, device=idx.device)
+        for j in range(min(c.key_window, T)):
+            pre[:, j:] += (c.key_decay ** j) * self.key_byte[idx[:, : T - j]] * self.key_pos[j]
+        top = pre.topk(c.key_active, dim=-1)
+        val = F.relu(top.values)
+        return top.indices, val / (val.norm(dim=-1, keepdim=True) + 1e-6)
 
     # -- forward --------------------------------------------------------------------------------------------------
     def forward(self, idx: torch.Tensor, targets: torch.Tensor | None = None, memory: list | None = None,
@@ -126,6 +154,8 @@ class Brain(nn.Module):
         x = _ln(self.embed(idx).unsqueeze(1))                                 # B, 1, T, D
         phases = torch.arange(T, device=idx.device, dtype=torch.float32).view(1, 1, -1, 1) * self.freqs
         use_mem = c.lasting and memory is not None
+        window = c.lasting and c.key == "window"
+        wk = self.window_keys(idx) if window and (use_mem or keep) else None
         trace = []
         for level in range(c.n_layer):
             x_sparse = F.relu(x @ self.encoder)                               # B, nh, T, N
@@ -134,16 +164,19 @@ class Brain(nn.Module):
             # equals LayerNorm(y, eps) exactly, so this is still BDH (checked against third_party/bdh.py).
             yKV = ((qr @ qr.mT) * (1.0 / N)).tril(diagonal=-1) @ x
             yKV = _ln(yKV, eps=1e-5 / N**2)
-            if use_mem or keep:
+            if (use_mem or keep) and not window:
                 k = x_sparse / (x_sparse.norm(dim=-1, keepdim=True) + 1e-6)
             if use_mem:
                 with torch.autocast(device_type=idx.device.type, enabled=False):
-                    read = k.float() @ memory[level]                          # B, nh, T, m (always fp32)
+                    if window:
+                        read = _sparse_read(memory[level], *wk)               # B, 1, T, m
+                    else:
+                        read = k.float() @ memory[level]                      # B, nh, T, m (always fp32)
                 read = read.to(yKV.dtype) @ self.mem_out                      # B, nh, T, D
                 yKV = _ln(yKV + self.mem_gain[level] * read)
             if keep:
-                v = _ln(x @ self.mem_in)                                       # B, nh, T, m (x broadcasts)
-                trace.append((k, v))
+                v = _ln(x @ self.mem_in)                                       # B, nh or 1, T, m
+                trace.append((wk if window else k, v))
             y_sparse = F.relu(yKV @ self.encoder_v)
             xy_sparse = self.drop(x_sparse * y_sparse)                        # B, nh, T, N
             yMLP = xy_sparse.transpose(1, 2).reshape(B, 1, T, N * nh) @ self.decoder
@@ -184,6 +217,8 @@ class Brain(nn.Module):
         nxt = torch.zeros_like(valid)
         nxt[:, :-1] = valid[:, 1:]                                            # step t needs a real step t+1
         out = []
+        if c.key == "window":
+            return self._write_window(memory, surprise, reward, valid, nxt)
         with torch.autocast(device_type=surprise.device.type, enabled=False):
             for level, (k, v) in enumerate(self.trace):
                 rate = torch.sigmoid(self.mem_rate[level]) * self.life_rate
@@ -198,6 +233,44 @@ class Brain(nn.Module):
                 E = torch.linalg.solve_triangular(A, err0, upper=False, unitriangular=True)
                 out.append(M0 + k.mT @ (b * E))
         return out
+
+    def _write_window(self, memory, surprise, reward, valid, nxt) -> list[torch.Tensor]:
+        """The same delta rule with v2's sparse keys: the Gram matrix once, then per layer a solve and a
+        scatter-add into the rows of the active units."""
+        c = self.cfg
+        B = surprise.shape[0]
+        out = []
+        with torch.autocast(device_type=surprise.device.type, enabled=False):
+            kidx, kval = self.trace[0][0]
+            kidx, kval = kidx[:, :-1], kval[:, :-1].float()                   # B, T-1, active
+            T1 = kidx.size(1)
+            dense = torch.zeros(B, T1, c.key_size, device=kidx.device).scatter_(-1, kidx, kval)
+            G = dense @ dense.mT                                              # B, T-1, T-1
+            del dense
+            rows = (kidx + (torch.arange(B, device=kidx.device) * c.key_size).view(B, 1, 1)).reshape(-1)
+            for level, (_, v) in enumerate(self.trace):
+                rate = torch.sigmoid(self.mem_rate[level]) * self.life_rate
+                beta = (rate * surprise * reward[:, None] * valid * nxt).clamp(max=c.max_beta)[:, :-1]
+                M0 = memory[level]
+                if M0.size(0) != B:
+                    M0 = M0.expand(B, -1, -1, -1)
+                err0 = v[:, 0, 1:].float() - _sparse_read(M0, kidx, kval)[:, 0]   # B, T-1, m
+                A = torch.tril(G * beta[:, None, :], diagonal=-1)             # A[t, s] = β_s k_t·k_s
+                E = torch.linalg.solve_triangular(A, err0, upper=False, unitriangular=True)
+                upd = kval[..., None] * (beta[..., None] * E)[:, :, None, :]  # B, T-1, active, m
+                new = M0.reshape(B * c.key_size, -1).index_add(0, rows, upd.reshape(-1, upd.size(-1)))
+                out.append(new.view_as(M0))
+        return out
+
+
+def _sparse_read(M: torch.Tensor, kidx: torch.Tensor, kval: torch.Tensor) -> torch.Tensor:
+    """k_t · M for sparse keys. M [B or 1, 1, units, m]; kidx, kval [B, T, active] → [B, 1, T, m]."""
+    B, T, a = kidx.shape
+    Mf = M[:, 0].float()
+    if Mf.size(0) != B:
+        Mf = Mf.expand(B, -1, -1)
+    rows = torch.gather(Mf, 1, kidx.reshape(B, T * a, 1).expand(-1, -1, Mf.size(-1)))
+    return (rows.view(B, T, a, -1) * kval[..., None].float()).sum(2).unsqueeze(1)
 
 
 def masked_loss(logits: torch.Tensor, targets: torch.Tensor, mask: torch.Tensor | None) -> torch.Tensor:
@@ -265,7 +338,7 @@ class GPT(nn.Module):
 
 
 def build(kind: str, preset: str) -> nn.Module:
-    """kind: gpt | bdh | brain."""
+    """kind: gpt | bdh | brain (v1) | brain2 (v2: window keys)."""
     bcfg, gcfg = PRESETS[preset]
     if kind == "gpt":
         return GPT(gcfg)
@@ -273,6 +346,8 @@ def build(kind: str, preset: str) -> nn.Module:
         return Brain(BrainConfig(**{**asdict(bcfg), "lasting": False}))
     if kind == "brain":
         return Brain(bcfg)
+    if kind == "brain2":
+        return Brain(BrainConfig(**{**asdict(bcfg), "key": "window"}))
     raise ValueError(f"unknown model {kind!r}")
 
 
