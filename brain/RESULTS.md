@@ -1,6 +1,6 @@
 # Shishya Brain: results
 
-**Status, 31 Oct 2026, 16:00 UTC: v1's verdict is in (section 3: FAIL). v2's runs are still on Kaggle.** Sections 1–2 are checks, not verdicts. The pass
+**Status, 31 Oct 2026, 17:15 UTC: both verdicts are in (section 3). v1 FAIL; v2 FAIL on L1, L2 and L4, passes L3 by a wide margin.** Sections 1–2 are checks, not verdicts. The pass
 rules are in [docs/PLAN.md](../docs/PLAN.md) and did not change. Sections 1 and 2 are checks of the code and of the
 design, run on this CPU (tiny models, trained on part of the TinyStories *validation* file) and in a 15-minute Kaggle
 canary.
@@ -190,4 +190,70 @@ So L4 fails on speed only: the 50 ms target is about 7–11× too fast for BDH a
 **Childhood, done 15:59 UTC** (code 0b0964d, 100M bytes, 6.2 h at 4,511 bytes/s): held-out **0.544** bits/byte.
 That is 7.5% better than GPT (0.588); v1 Brain 0.561, BDH 0.532.
 
-**Life test: running** (kernel `shishya-brain-life2`, pushed 16:01 UTC).
+**Life test, done 17:10 UTC** (kernel `shishya-brain-life2`, code 09f8841; the output's `commit.txt` wrongly
+shows v1's, copied from the mounted v1 run, fixed since): **FAIL**, but far ahead of v1 and of gradient learning.
+
+#### Childhood (same bytes for every model)
+
+| Model | Parameters | Bytes | Held-out bits/byte | Hours | Bytes/s |
+|---|---:|---:|---:|---:|---:|
+| gpt | 12,706,304 | 100,007,936 | 0.588 | 0.4 | 62,058 |
+| bdh | 12,713,984 | 100,007,936 | 0.532 | 3.4 | 8,240 |
+| brain | 12,795,916 | 100,007,936 | 0.544 | 6.2 | 4,511 |
+
+Stage 1 (within 5% of GPT): BDH -9.5%, Brain -7.4%.
+
+#### Life (test stream, fresh-context questions, chance = 20%)
+
+| Learner | Setting (dev) | Recall, 3 exposures | 1 exposure | 1 correction (reward 3) | Changed fact: new wins | Paraphrased | Early facts kept | Bits/byte change |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| **Shishya Brain** (local rule only) | 0.5 | 67% | 66% | 58% | 53% | 28% | 0.45 of 0.90 | -2.7% |
+| GPT + fine-tuning | 3e-05 | 21% | 14% | 20% | 30% | 22% | 0.15 of 0.45 | +1.9% |
+| BDH + fine-tuning | 3e-05 | 22% | 16% | 18% | 30% | 20% | 0.15 of 0.35 | +1.8% |
+| No learning (as after childhood) | | brain 18% / gpt 17% / bdh 25% | | | | | | |
+
+#### Verdict (rules fixed in docs/PLAN.md before the run)
+
+| Rule | Result |
+|---|---|
+| L1_learns | **fail** |
+| L2_no_forgetting | **fail** |
+| L4_small_machine | **fail** |
+| L3_beats_gradient | pass |
+
+L3 detail: vs gpt: recall difference lower 95% bound +0.33, vs bdh: recall difference lower 95% bound +0.32
+L4 measured: 529 ms per 256-byte write, peak 1247 MB.
+
+**Overall: FAIL**
+
+
+Memory diagnostic (`diagnose.json`, a made-up name two texts later, dev names): 3.52 bits/byte
+with an empty memory → **0.08** with its memory (GPT 3.16, BDH 3.16).
+
+The Brain's dev runs (the rule picked the rate with the highest dev recall):
+
+| Write-rate multiplier | Dev recall, 3 exposures | Held-out bits/byte change |
+|---:|---:|---:|
+| 0.5 | 80% | -2.8% |
+| 1.0 | 76% | -2.8% |
+| 2.0 | 73% | -2.7% |
+| 4.0 | 72% | -2.7% |
+
+**What happened, in plain words**
+
+- **v2 learns facts from reading alone, three times better than learning by gradients.** It recalls 67 of 100
+  facts after 3 exposures, and 66% after a single one. GPT and BDH fine-tuned on every session: 21–22% and
+  14–16%. Its reading got better (−2.7% bits/byte), not worse.
+- **It misses the strict bar.** 80% after 3 exposures is needed; it got 67% (exactly 80% on the dev stream).
+- **It still forgets over a long life.** The 20 earliest facts: 90% at the 30% mark, 45% at the end (v1: 80% → 5%).
+- **Why, most likely: interference.**
+  - Every step of every text is written (β ≈ rate × surprise).
+  - Over 636 sessions that is about 160,000 writes into 16,384 units with 40 active each. Each unit is touched by
+    hundreds of later writes.
+  - The dev trend points the same way: the lower the write rate, the higher the recall (80%, 76%, 73%, 72%). The
+    lowest rate tried was the best.
+- **Questions in other words: 28%,** close to chance, as predicted when v2 was designed. Its addresses are the
+  wording.
+- **On a CPU:** 529 ms per session (Kaggle's CPU) at a 1.25 GB peak. Memory is within L4, speed is not.
+
+**v1 → v2:** recall after 3 exposures 35% → 67%; after one exposure 24% → 66%; early facts kept 6% → 50%.
