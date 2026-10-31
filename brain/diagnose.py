@@ -70,13 +70,14 @@ def main(argv=None):
     p.add_argument("--smoke", action="store_true")
     p.add_argument("--n", type=int, default=200)
     p.add_argument("--device", default="auto")
+    p.add_argument("--brain", default="brain", help="the Brain's run folder (brain2 for v2)")
     args = p.parse_args(argv)
     dev = device_of(args.device)
     sp = data.splits(args.data_dir, smoke=args.smoke, need_train=False)
     eps = drills(sp, args.n, data.SESSION_BYTES)
     res = {}
     for kind in ("gpt", "bdh", "brain"):
-        model = load(Path(args.runs) / kind, dev)
+        model = load(Path(args.runs) / (args.brain if kind == "brain" else kind), dev)
         res[kind] = object_bits(model, eps, data.SESSION_BYTES, dev, use_memory=True)
         if kind == "brain":
             res["brain_empty_memory"] = object_bits(model, eps, data.SESSION_BYTES, dev, use_memory=False)

@@ -128,7 +128,7 @@ def train(args) -> dict:
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--model", choices=["gpt", "bdh", "brain"], required=True)
+    p.add_argument("--model", choices=["gpt", "bdh", "brain", "brain2"], required=True)
     p.add_argument("--preset", choices=["tiny", "bee"], default="tiny")
     p.add_argument("--data-dir", default="brain/out/data")
     p.add_argument("--smoke", action="store_true", help="train on part of the validation file (CPU check only)")

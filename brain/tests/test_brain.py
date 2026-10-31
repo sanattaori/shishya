@@ -110,3 +110,45 @@ def test_life_stream_is_deterministic_and_complete():
     for f in a.facts["once"] + a.facts["reward"]:
         assert seen[f.sentence] == 1
     assert all(len(s.text.encode()) <= data.SESSION_BYTES for s in a.sessions)
+
+
+def test_window_write_is_the_sequential_delta_rule():
+    """v2: sparse keys, one memory per layer; the write must equal the delta rule step by step."""
+    torch.manual_seed(3)
+    cfg = BrainConfig(n_layer=2, n_embd=32, n_head=2, mult=8, mem_dim=8, dropout=0.0, key="window",
+                      key_size=256, key_window=8, key_active=6)
+    brain = Brain(cfg).eval()
+    idx = torch.randint(0, 256, (2, 15))
+    mem = [torch.randn_like(m) * 0.1 for m in brain.new_memory(2)]
+    with torch.no_grad():
+        brain(idx, memory=mem, keep=True)
+        s = torch.rand(2, 15) * 2
+        new = brain.write(mem, s, reward=1.5)
+        kidx, kval = brain.trace[0][0]
+        dense = torch.zeros(2, 15, cfg.key_size).scatter_(-1, kidx, kval)[:, None]      # B, 1, T, units
+        for level, (_, v) in enumerate(brain.trace):
+            rate = torch.sigmoid(brain.mem_rate[level])
+            nxt = torch.ones(2, 15)
+            nxt[:, -1] = 0
+            beta = (rate * s * 1.5 * nxt).clamp(max=cfg.max_beta)
+            want = _sequential_delta(mem[level], dense[:, :, :-1], v[:, :, 1:], beta[:, :-1])
+            assert torch.allclose(new[level], want, atol=1e-4)
+
+
+def test_window_keys_depend_only_on_the_recent_bytes():
+    cfg = BrainConfig(n_layer=1, n_embd=32, n_head=2, mult=8, mem_dim=8, key="window", key_size=512,
+                      key_window=8, key_active=10)
+    brain = Brain(cfg)
+    a = torch.tensor([list(b"xxxxxxxxxxxxZubak's cat is")])
+    b = torch.tensor([list(b"yyyyyyyyyyyyZubak's cat is")])
+    ka, kb = (brain.window_keys(t) for t in (a, b))
+    assert torch.equal(ka[0][0, -1], kb[0][0, -1])               # same last 8 bytes: the same key
+    assert not torch.equal(ka[0][0, -10], kb[0][0, -10])         # here the window reaches the different prefix
+    texts = (b"the cat of Zubak's", b"the cat of Kipos's")
+    z, k = (brain.window_keys(torch.tensor([list(t)]))[0][0, -1] for t in texts)
+    assert len(set(z.tolist()) & set(k.tolist())) < 5            # a different name in the window: a different key
+
+
+def test_v1_checkpoints_still_load_as_v1():
+    cfg = {k: v for k, v in BrainConfig().__dict__.items() if not k.startswith("key")}
+    assert BrainConfig(**cfg).key == "neurons"
