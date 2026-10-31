@@ -17,7 +17,9 @@ def pct(x: float) -> str:
 
 def report(run: Path) -> str:
     life = json.loads((run / "life.json").read_text())
-    met = {k: json.loads((run / k / "metrics.json").read_text()) for k in ("gpt", "bdh", "brain")}
+    brain_dir = life.get("setup", {}).get("brain", "brain")          # "brain2" for the v2 run
+    met = {k: json.loads((run / (brain_dir if k == "brain" else k) / "metrics.json").read_text())
+           for k in ("gpt", "bdh", "brain")}
     out = ["### Childhood (same bytes for every model)", "",
            "| Model | Parameters | Bytes | Held-out bits/byte | Hours | Bytes/s |", "|---|---:|---:|---:|---:|---:|"]
     for k, m in met.items():
