@@ -26,7 +26,8 @@
 | What | Where | Expected |
 |---|---|---|
 | v1 verdict run: **done 15:51 UTC, FAIL** (L1, L2, L4; L3 passes), see brain/RESULTS.md; output downloaded to brain/out/kaggle-shishya-brain-life (not in git) | Kaggle kernel `sanattaori/shishya-brain-life` | done |
-| v2 Brain training | Kaggle kernel `sanattaori/shishya-brain-v2` | before or around then |
+| v2 Brain training: **done 15:59 UTC** (held-out 0.544 bits/byte) | Kaggle kernel `sanattaori/shishya-brain-v2` | done |
+| v2 life test (`run.sh … --life2`, pushed 16:01 UTC) | Kaggle kernel `sanattaori/shishya-brain-life2` | about an hour |
 | tiny v2 Brain: done (memory saves 3.41 bits/byte on names, v1 0.02; see brain/RESULTS.md); its short CPU life test running | this session's CPU (`brain/out/tiny-long/`, not in git) | ~15:00 UTC; only a check |
 
 Kaggle runs on the owner's account (`sanattaori`). The code reaches Kaggle as the private dataset

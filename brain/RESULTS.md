@@ -145,7 +145,13 @@ L4 measured: 562 ms per 256-byte write, peak 9208 MB.
 
 
 The L4 memory figure (9.2 GB) is wrong: it is the measurement bug from section 1 (the parent's memory counted).
-v1's real CPU peak is re-measured with the fixed code below. Its speed, 562 ms per session, fails L4 either way.
+
+| | Kaggle's CPU (old code) | This 4-core CPU (fixed code, same test life) |
+|---|---:|---:|
+| Peak memory | 9.2 GB (wrong) | **996 MB** (L4's 2 GB: OK) |
+| Speed per 256-byte session | 562 ms | 373 ms |
+
+So L4 fails on speed only: the 50 ms target is about 7–11× too fast for BDH at this size.
 
 **What happened, in plain words**
 
@@ -181,4 +187,7 @@ v1's real CPU peak is re-measured with the fixed code below. Its speed, 562 ms p
 
 ### v2 (Kaggle `sanattaori/shishya-brain-v2` training, then `sanattaori/shishya-brain-life2`)
 
-Pending. Same rules, same test stream, against v1's GPT and BDH above.
+**Childhood, done 15:59 UTC** (code 0b0964d, 100M bytes, 6.2 h at 4,511 bytes/s): held-out **0.544** bits/byte.
+That is 7.5% better than GPT (0.588); v1 Brain 0.561, BDH 0.532.
+
+**Life test: running** (kernel `shishya-brain-life2`, pushed 16:01 UTC).
