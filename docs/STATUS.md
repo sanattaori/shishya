@@ -51,16 +51,10 @@ rules and the dated amendments), then [brain/RESULTS.md](../brain/RESULTS.md). H
 and write its lasting memory. The settings are in `brain/models.py` (`V3`); `brain/make_v3.py` builds it from the
 v2 run.
 
-**Why** (brain/RESULTS.md sections 4–5, dev stream only):
-- v2 learns every fact and loses them later, because facts of the same kind share most of their address.
-- v3's address is the words of the current sentence, each counting by how new it is. Same-kind facts then share
-  13% of their address instead of 61%.
-- On the dev life this takes recall from 80% to 99%, and the earliest facts kept from 0.50 to 0.95 of their
-  mid-life level.
-
-**Outputs** are not in git. They are in `brain/out/` in the session that ran them. Re-download with
-`kaggle kernels output sanattaori/<kernel> -p brain/out/kaggle-<kernel>`. The study lives are in
-`brain/out/study/*.json`; compare them with `python -m brain.study --table brain/out/study/*.json`.
+The small outputs (`life.json`, `diagnose.json`, metrics, logs) are committed in `brain/results/`. The trained
+models are not in git. Re-download them with `kaggle kernels output sanattaori/<kernel> -p brain/out/kaggle-<kernel>` and a
+token from the owner. The Kaggle code dataset is `sanattaori/shishya-brain-code` (private). The GitHub repo is
+private, which is why Kaggle gets the code that way.
 
 **Credentials:** a session needs `KAGGLE_API_TOKEN` from the owner. Never write it into the repo or a log. The
 owner deletes temporary tokens after use.
