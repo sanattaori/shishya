@@ -54,7 +54,8 @@ KAGGLE=.venv/bin/kaggle brain/kaggle/run.sh sanattaori --life2
 .venv/bin/python -m brain.report brain/out/kaggle-shishya-brain-life/out      # v1 verdict
 .venv/bin/python -m brain.report brain/out/kaggle-shishya-brain-life2/out     # v2 verdict
 
-# 4. v1's CPU memory with the fixed (chunked) scoring: the life rate is life.json["chosen"]["brain"]
+# 4. v1's CPU memory, re-measured: its kernel ran before two fixes (chunked scoring; VmHWM instead of ru_maxrss,
+#    which counted the parent's memory). The life rate is life.json["chosen"]["brain"]
 .venv/bin/python -m brain.lifetest --resources --runs brain/out/kaggle-shishya-brain-life/out --life-rate <rate>
 ```
 

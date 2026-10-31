@@ -73,6 +73,27 @@ In plain words: v2 recalls the made-up names almost perfectly two texts later; v
 drill, like childhood. It is not the life test, where facts must survive about 500 sessions and are asked about in
 a fresh context.
 
+**The short CPU life test** (76 sessions, 12 main facts, so noisy; the tiny GPT and BDH here had 6× less training,
+so only the Brain's own numbers mean much):
+
+| | Brain v2 (local rule) | GPT + fine-tuning | BDH + fine-tuning | Brain v2, no learning |
+|---|---:|---:|---:|---:|
+| Recalled after 3 exposures | **58%** (7 of 12) | 33% | 42% | 25% |
+| After 1 exposure | 83% (5 of 6) | 17% | 33% | |
+| After 1 correction (reward) | 83% | 17% | 50% | |
+| Changed fact: the new name wins | 100% (4 of 4) | 75% | 25% | |
+| Early facts kept to the end | 3 of 4 | | | |
+| Held-out bits/byte over the life | **−1.8%** (better) | +5.4% | +0.5% | |
+| Asked in other words (reported only) | 17%: no better than chance, as predicted | | | |
+
+- The dev choice of write rate made no difference: 67% at every rate. The writes are already at full strength,
+  capped at 1.
+- On this CPU the tiny v2 takes 77 ms per session at a peak of 519 MB. L4's 50 ms fails even for the tiny model.
+
+**A measurement bug, fixed (b0e2b6c and later).** The CPU check ran in a child process and read its peak memory
+from `ru_maxrss`. On Linux that also counts the parent's memory at the fork. The first reading here was 2.7 GB, and
+the canary's 5.5 GB below was inflated the same way. The check now reads the child's own peak (`VmHWM`).
+
 ## 2. Kaggle canary (2× T4, 20 steps per model, full `bee` size)
 
 | | GPT | BDH | Brain v1 |
@@ -81,8 +102,9 @@ a fresh context.
 | Parameters | 12,706,304 | 12,713,984 | 12,845,068 |
 
 On a CPU (Kaggle's), the `bee` Brain v1 takes **625 ms** per 256-byte session. Rule L4 says ≤ 50 ms, so L4 fails as
-written. The 5.5 GB peak memory measured there was mostly the evaluation scoring 256 questions at once. That was
-fixed in 0484c13; v1's memory is re-measured with the fixed code after its run.
+written. The 5.5 GB peak memory measured there is wrong. Part of it was the evaluation scoring 256 questions at once
+(fixed in 0484c13). Part of it was the parent's memory counted by `ru_maxrss` (see above). v1's memory is
+re-measured with the fixed code after its run.
 
 ## 3. The verdict runs
 

@@ -38,6 +38,20 @@ T = data.SESSION_BYTES
 EVAL_BATCH = {"loglik": 256, "bpb": 32}
 
 
+def peak_rss_mb() -> float:
+    """This process's peak memory. On Linux VmHWM: ru_maxrss would also count the parent's memory at the fork.
+    Elsewhere ru_maxrss (in bytes on macOS)."""
+    try:
+        with open("/proc/self/status") as f:
+            for line in f:
+                if line.startswith("VmHWM:"):
+                    return int(line.split()[1]) / 1024
+    except OSError:
+        pass
+    r = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    return r / 2**20 if sys.platform == "darwin" else r / 1024
+
+
 def load(run_dir: Path, device) -> torch.nn.Module:
     ck = torch.load(run_dir / "model.pt", map_location=device, weights_only=False)
     m = from_config(ck["kind"], ck["config"]).to(device)
@@ -244,8 +258,7 @@ def main(argv=None):
         brain = load(runs / args.brain, torch.device("cpu"))
         lr = Hebbian(brain, args.life_rate)
         res = live(lr, streams["test"], val[:50])
-        print(json.dumps({"peak_rss_mb": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024,
-                          "ms_per_write": res["ms_per_write_median"]}))
+        print(json.dumps({"peak_rss_mb": peak_rss_mb(), "ms_per_write": res["ms_per_write_median"]}))
         return
 
     dev = device_of(args.device)
