@@ -309,7 +309,7 @@ was ordinary story text.
 (the new name wins), questions in other words 21% (chance 20%), held-out bits/byte −3.1%, 471 ms per session on
 this 4-core CPU.
 
-**What it can do, shown** ([DEMO.md](DEMO.md), dev names, v2 as trained): after reading "Naros's cat is called
+**What it can do, shown** ([DEMO.md](DEMO.md), last section; dev names, v2 as trained): after reading "Naros's cat is called
 Fugez." once inside a story and then 30 other stories, asked "Naros's cat is called", v2 *writes* "Fugez." (with
 an empty memory: "Saram."). It takes a correction ("Danat.") and forgets on request (`forget`). After forgetting
 the correction it writes "Sugez.": the first letter is gone, the rest of the old name is still stored under the
