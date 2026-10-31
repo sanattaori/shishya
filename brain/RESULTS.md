@@ -1,6 +1,6 @@
 # Shishya Brain: results
 
-**Status, 31 Oct 2026, 17:15 UTC: both verdicts are in (section 3). v1 FAIL; v2 FAIL on L1, L2 and L4, passes L3 by a wide margin.** Sections 1–2 are checks, not verdicts. The pass
+**Status, 31 Oct 2026, 23:30 UTC: three verdicts are in. v1 FAIL; v2 FAIL on L1, L2 and L4 (section 3). v3 passes L1, L2 and L3 and fails only L4, on CPU speed (section 6).** Sections 4–5 are the analysis behind v3 (dev stream only). Sections 1–2 are checks, not verdicts. The pass
 rules are in [docs/PLAN.md](../docs/PLAN.md) and did not change. Sections 1 and 2 are checks of the code and of the
 design, run on this CPU (tiny models, trained on part of the TinyStories *validation* file) and in a 15-minute Kaggle
 canary.
@@ -372,3 +372,81 @@ combination was better at changed facts (93% against 83%) and after one reading 
 candidate for v4, not part of v3.
 
 Reconsolidation does what it was meant to: with it, metaplasticity's changed facts go from 3% to 90–93%.
+
+## 6. The v3 verdict (Kaggle `sanattaori/shishya-brain-v3`, code b085a07, finished 23:20 UTC)
+
+v3 is v2's trained network with v3's memory address (docs/PLAN.md, amendment of 31 Oct, committed in 543e43c
+before this run). Same test stream, same GPT and BDH (their numbers are exactly those of the v1 and v2 runs), same
+rules. The "brain" childhood row is v2's network.
+
+#### Childhood (same bytes for every model)
+
+| Model | Parameters | Bytes | Held-out bits/byte | Hours | Bytes/s |
+|---|---:|---:|---:|---:|---:|
+| gpt | 12,706,304 | 100,007,936 | 0.588 | 0.4 | 62,058 |
+| bdh | 12,713,984 | 100,007,936 | 0.532 | 3.4 | 8,240 |
+| brain | 12,795,916 | 100,007,936 | 0.544 | 6.2 | 4,511 |
+
+Stage 1 (within 5% of GPT): BDH -9.5%, Brain -7.4%.
+
+#### Life (test stream, fresh-context questions, chance = 20%)
+
+| Learner | Setting (dev) | Recall, 3 exposures | 1 exposure | 1 correction (reward 3) | Changed fact: new wins | Paraphrased | Early facts kept | Bits/byte change |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| **Shishya Brain** (local rule only) | 0.5 | 99% | 96% | 90% | 77% | 34% | 0.95 of 1.00 | -2.7% |
+| GPT + fine-tuning | 3e-05 | 21% | 14% | 20% | 30% | 22% | 0.15 of 0.45 | +1.9% |
+| BDH + fine-tuning | 3e-05 | 22% | 16% | 18% | 30% | 20% | 0.15 of 0.35 | +1.8% |
+| No learning (as after childhood) | | brain 18% / gpt 17% / bdh 25% | | | | | | |
+
+#### Verdict (rules fixed in docs/PLAN.md before the run)
+
+| Rule | Result |
+|---|---|
+| L1_learns | pass |
+| L2_no_forgetting | pass |
+| L4_small_machine | **fail** |
+| L3_beats_gradient | pass |
+
+L3 detail: vs gpt: recall difference lower 95% bound +0.70, vs bdh: recall difference lower 95% bound +0.69
+L4 measured: 665 ms per 256-byte write, peak 1218 MB.
+
+**Overall: FAIL**
+
+L4 in detail:
+- **Memory: within the rule** (1.2 GB of 2 GB).
+- **Speed on Kaggle's CPU: fails.** 665 ms per session; the rule asks for 50 ms.
+- On the GPU the same life took 38 ms per session.
+
+**What happened, in plain words**
+
+- **v3 passes the learning rules.**
+  - It recalls 99 of the 100 main facts after 3 readings, and 96% after a single reading. It learns these from
+    reading alone: no gradients, no optimiser.
+  - The 20 earliest facts: 100% at the 30% mark, 95% at the end (L2 needs 80%).
+  - Its reading got better, not worse: held-out bits/byte −2.7%.
+- **It beats learning by gradients by about 4×.** GPT and BDH, fine-tuned on every session, recall 21–22%. The
+  95% lower bound of the difference is +69 to +70 points (L3 needs > 0).
+- **It still fails L4 on speed.** The BDH forward pass at this size takes about 50 billion operations per
+  256-byte session (estimated from its sizes). The 50 ms target was too fast for it from the start; v1 and v2
+  failed it the same way.
+- **The test was not harder than dev this time:** dev 99%, test 99%. v2 had 80% and 67%.
+- **Reported, not rules:**
+  - Corrections (reward 3): 90%.
+  - Changed facts: the new name wins 77%.
+  - Questions in other words: 34%, against chance 20%. Still the weak spot.
+
+**Against the predictions written before the run (docs/PLAN.md):** L1, L2 and L3 pass, as predicted. L4 fails on
+speed, as predicted. Questions in other words came out a little above chance (34%), as predicted. The test was
+not harder than dev, against the prediction that it might be.
+
+| | v1 | v2 | **v3** |
+|---|---:|---:|---:|
+| Recall after 3 readings (L1: ≥ 80%) | 35% | 67% | **99%** |
+| After 1 reading | 24% | 66% | **96%** |
+| Correction (reward 3) | 24% | 58% | **90%** |
+| Changed fact: new wins | 43% | 53% | **77%** |
+| In other words | 25% | 28% | 34% |
+| Early facts kept (L2: ≥ 0.80 of the 30% mark) | 0.05 of 0.80 | 0.45 of 0.90 | **0.95 of 1.00** |
+| Held-out bits/byte change (L2: ≤ +5%) | −5.5% | −2.7% | −2.7% |
+| CPU ms per session (L4: ≤ 50) | 562 | 529 | 665 |
+| Verdict | FAIL (L1, L2, L4) | FAIL (L1, L2, L4) | **FAIL (L4 only)** |
