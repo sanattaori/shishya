@@ -340,7 +340,15 @@ write rule changed (`python -m brain.study … --set …`). The test stream was 
 
 ### The dev lives
 
-__LIVES__
+| Dev life (v2's network) | Recall, 3 readings | 1 reading | Correction | Changed fact: new wins | In other words | Early facts kept | Oldest facts kept (400+ sessions) | Bits/byte change |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| v2 (32 bytes) | 80% | 56% | 40% | 63% | 21% | 0.50 of 0.90 | 52% | -3.1% |
+| Words of the sentence | 91% | 80% | 72% | 67% | 19% | 0.65 of 1.00 | 70% | -3.0% |
+| … + write gate | 92% | 86% | 74% | 70% | 15% | 0.80 of 1.00 | 83% | -2.9% |
+| … + metaplasticity | 100% | 96% | 92% | 3% | 21% | 1.00 of 1.00 | 100% | -3.0% |
+| **… + novelty (v3)** | 99% | 98% | 100% | 83% | 28% | 0.95 of 1.00 | 96% | -2.8% |
+| … + metaplasticity + reconsolidation | 96% | 74% | 92% | 90% | 23% | 0.95 of 1.00 | 96% | -2.9% |
+| … + novelty + metaplasticity + reconsolidation | 99% | 100% | 100% | 93% | 27% | 0.95 of 1.00 | 96% | -2.8% |
 
 - **Words** alone: recall 80% → 91%, and every kind of fact gains. The oldest facts still fade (70% kept).
 - **The write gate** (only steps with surprise ≥ 2): a little better, 92%, early facts 0.80.
@@ -357,3 +365,10 @@ __LIVES__
 v3 is words + sentence + novelty. Metaplasticity with reconsolidation is added only if, on the dev life, it keeps
 more of the early facts than novelty alone (0.95), changed facts drop no more than 5 points below novelty's 83%,
 and L1 and L2 still pass on dev. Otherwise v3 stays simpler.
+
+**The result of that rule:** novelty + metaplasticity + reconsolidation kept the same share of the early facts
+as novelty alone (0.95), so it is not added. v3 is **words of the sentence + novelty** (`models.V3`). The
+combination was better at changed facts (93% against 83%) and after one reading (100% against 98%). It is a
+candidate for v4, not part of v3.
+
+Reconsolidation does what it was meant to: with it, metaplasticity's changed facts go from 3% to 90–93%.

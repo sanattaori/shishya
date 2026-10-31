@@ -126,6 +126,66 @@ only, never the test stream) showed:
 - Prediction, written now: questions phrased differently (reported, not a rule) will do worse in v2. The address
   is the wording.
 
+## Amendment, 31 Oct 2026 (after v2's verdict, before any v3 run): v3 addresses the memory by the sentence's words, the least familiar counting most
+
+**Why.** v2 failed L1 (67% after 3 exposures), L2 (the 20 earliest facts kept 0.45 of their 0.90) and L4 (speed).
+The analysis behind v3 used the dev stream only. The test stream was not looked at again; see
+[brain/RESULTS.md](../brain/RESULTS.md) section 4.
+- **v2 learns every fact and then loses some.** All 100 main facts were recalled right after each reading. At the
+  end, 80% were (dev).
+- **The cause is the address.**
+  - v2 addresses its memory by the last 32 bytes, each counting 0.9× the one after it. In "Pimev lives in a town
+    called", the name counts about 0.1.
+  - Two facts of the same kind have addresses 61% alike (86% for "… lives in a town called"), so each new fact
+    overwrites part of the older ones.
+  - The kind with the least overlap kept 96%; the most overlapped, 60%.
+
+**The change, v3 (`--model brain3`, settings in `models.V3`).**
+
+1. **Address by words, not bytes.** The address is the last 8 words, each word's code built from its bytes, and
+   every word counts the same. A name four words back counts as much as the word just read.
+2. **The address starts at the sentence.** Words before the last `.`, `!`, `?` or new line are left out (in the
+   brain: event boundaries). A fact inside a story and the same words asked on their own get the same address.
+3. **Each word counts by how new it is.**
+   - The weight is log((1+N)/(1+count)) / log(1+N), from the words of the first 20,000 childhood stories (4.0M
+     words), counted once and then fixed (in the brain: the novelty signal).
+   - A made-up name counts 1.0; "called" 0.52; "the" 0.22.
+   - Two facts of the same kind then share 13% of their address, not 61%.
+4. **The same memory as v2.** Same 16,384 units, 40 active; same delta rule, values and read path.
+
+- **Everything else is v2's.** The network is v2's, as trained in childhood (no new childhood): the BDH core, the
+  read path, the values, the learned write rates. So are the delta rule, surprise and reward, the life stream,
+  the dev choice of the write-rate multiplier from {0.5, 1, 2, 4}, and the GPT and BDH runs it is compared with.
+  `brain/make_v3.py` builds it from the v2 run.
+- **`forget` is new, not a rule.** It erases a text on request (Larimar's forgetting, done with the local rule)
+  and is shown in [brain/DEMO.md](../brain/DEMO.md).
+
+**Evidence (dev stream only, v2's network, one life each, `python -m brain.study`).**
+
+| Dev life, v2's network | Recall, 3 readings | 1 reading | Correction | Changed fact | In other words | Early facts kept | Bits/byte |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| v2's memory | 80% | 56% | 40% | 63% | 21% | 0.50 of 0.90 | −3.1% |
+| **v3's memory** | **99%** | **98%** | **100%** | **83%** | 28% | **0.95 of 1.00** | −2.8% |
+
+Six other lives were tried, with a write gate, metaplasticity (Larimar's protection, done locally) and
+reconsolidation. They are all in brain/RESULTS.md section 5, with the rule for the last choice, which was
+committed before its result (1cf73cf).
+
+**Rules.**
+- v3 is judged by the same pass rules, on the same test stream, against the same GPT and BDH. L4 stays as written.
+- v1's and v2's verdicts stand.
+- Stage 1 (childhood) is v2's: held-out 0.544 bits/byte.
+
+**Predictions, written now:**
+- L1, L2 and L3 pass. The test stream has been harder than dev: v2 got 80% on dev and 67% on test. So L1 and
+  L2's early-facts part may land nearer their bars than on dev.
+- L4 fails on speed (about 0.5 s per session; the rule asks for 50 ms).
+- Questions in other words: a little above chance (dev 28%), far below Larimar's 83–88%.
+
+**Decision point (agreed with the owner, 31 Oct).**
+- If v3 passes L1 and L2, the next steps are a meaning-based address for questions in other words, and sleep.
+- If it doesn't, v1–v3 are written up as a finished study.
+
 ## Sizes and compute
 
 | Preset | Where | Brain | GPT | Childhood |
