@@ -46,6 +46,13 @@ def val_bpb(model, stories: list[str], T: int, device, batch: int = 32) -> float
     return tot / cnt / LN2
 
 
+def save(model, args) -> Path:
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    torch.save({"kind": args.model, "config": config_of(model), "state_dict": model.state_dict()}, out / "model.pt")
+    return out
+
+
 def train(args) -> dict:
     torch.manual_seed(args.seed)
     rng = random.Random(args.seed)
@@ -109,19 +116,18 @@ def train(args) -> dict:
                    "seconds": round(time.time() - t0, 1)}
             if args.eval_every and (step % args.eval_every == 0 or step == steps - 1):
                 row["val_bpb"] = val_bpb(model, val, T, dev)
+                save(model, args)                     # so a stopped run keeps its latest model
             hist.append(row)
             print(json.dumps(row), flush=True)
     secs = time.time() - t0
     final = val_bpb(model, sp.val[: args.final_val_stories], T, dev)
-    out = Path(args.out)
-    out.mkdir(parents=True, exist_ok=True)
-    torch.save({"kind": args.model, "config": config_of(model), "state_dict": model.state_dict()}, out / "model.pt")
+    save(model, args)
     metrics = {"kind": args.model, "preset": args.preset, "params": n_params(model), "bytes": seen, "steps": steps,
                "val_bpb": final, "seconds": round(secs, 1), "bytes_per_s": round(seen / secs), "device": str(dev),
                "smoke": sp.smoke, "args": vars(args), "history": hist}
     if lasting:
         metrics["loss_ref"] = float(model.loss_ref)
-    (out / "metrics.json").write_text(json.dumps(metrics, indent=1))
+    (Path(args.out) / "metrics.json").write_text(json.dumps(metrics, indent=1))
     print(f"done: val {final:.3f} bits/byte, {secs / 60:.1f} min, {seen / secs:,.0f} bytes/s", flush=True)
     return metrics
 
