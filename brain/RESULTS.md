@@ -90,7 +90,7 @@ so only the Brain's own numbers mean much):
   capped at 1.
 - On this CPU the tiny v2 takes 77 ms per session at a peak of 519 MB. L4's 50 ms fails even for the tiny model.
 
-**A measurement bug, fixed (b0e2b6c and later).** The CPU check ran in a child process and read its peak memory
+**A measurement bug, fixed in e3a29b4.** The CPU check ran in a child process and read its peak memory
 from `ru_maxrss`. On Linux that also counts the parent's memory at the fork. The first reading here was 2.7 GB, and
 the canary's 5.5 GB below was inflated the same way. The check now reads the child's own peak (`VmHWM`).
 
