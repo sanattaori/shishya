@@ -1,6 +1,6 @@
 # Shishya Brain: results
 
-**Status, 31 Oct 2026, 14:30 UTC: the verdict runs are still on Kaggle. Nothing below is the verdict.** The pass
+**Status, 31 Oct 2026, 16:00 UTC: v1's verdict is in (section 3: FAIL). v2's runs are still on Kaggle.** Sections 1–2 are checks, not verdicts. The pass
 rules are in [docs/PLAN.md](../docs/PLAN.md) and did not change. Sections 1 and 2 are checks of the code and of the
 design, run on this CPU (tiny models, trained on part of the TinyStories *validation* file) and in a 15-minute Kaggle
 canary.
@@ -108,10 +108,77 @@ re-measured with the fixed code after its run.
 
 ## 3. The verdict runs
 
-| Run | Kaggle kernel | State |
-|---|---|---|
-| v1: GPT, BDH, Brain v1 (100M bytes each), then the life test | `sanattaori/shishya-brain-life` | running since 07:32 UTC |
-| v2: Brain v2 (100M bytes) | `sanattaori/shishya-brain-v2` | running since 09:48 UTC |
-| v2 life test, against v1's GPT and BDH | `sanattaori/shishya-brain-life2` | after both |
+### v1 (Kaggle `sanattaori/shishya-brain-life`, code ba36374, 2× T4, finished 15:51 UTC): **FAIL**
 
-Tables will come from `python -m brain.report <run>/out`.
+#### Childhood (same bytes for every model)
+
+| Model | Parameters | Bytes | Held-out bits/byte | Hours | Bytes/s |
+|---|---:|---:|---:|---:|---:|
+| gpt | 12,706,304 | 100,007,936 | 0.588 | 0.4 | 62,058 |
+| bdh | 12,713,984 | 100,007,936 | 0.532 | 3.4 | 8,240 |
+| brain | 12,845,068 | 100,007,936 | 0.561 | 7.8 | 3,548 |
+
+Stage 1 (within 5% of GPT): BDH -9.5%, Brain -4.5%.
+
+#### Life (test stream, fresh-context questions, chance = 20%)
+
+| Learner | Setting (dev) | Recall, 3 exposures | 1 exposure | 1 correction (reward 3) | Changed fact: new wins | Paraphrased | Early facts kept | Bits/byte change |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| **Shishya Brain** (local rule only) | 0.5 | 35% | 24% | 24% | 43% | 25% | 0.05 of 0.80 | -5.5% |
+| GPT + fine-tuning | 3e-05 | 21% | 14% | 20% | 30% | 22% | 0.15 of 0.45 | +1.9% |
+| BDH + fine-tuning | 3e-05 | 22% | 16% | 18% | 30% | 20% | 0.15 of 0.35 | +1.8% |
+| No learning (as after childhood) | | brain 21% / gpt 17% / bdh 25% | | | | | | |
+
+#### Verdict (rules fixed in docs/PLAN.md before the run)
+
+| Rule | Result |
+|---|---|
+| L1_learns | **fail** |
+| L2_no_forgetting | **fail** |
+| L4_small_machine | **fail** |
+| L3_beats_gradient | pass |
+
+L3 detail: vs gpt: recall difference lower 95% bound +0.03, vs bdh: recall difference lower 95% bound +0.00
+L4 measured: 562 ms per 256-byte write, peak 9208 MB.
+
+**Overall: FAIL**
+
+
+The L4 memory figure (9.2 GB) is wrong: it is the measurement bug from section 1 (the parent's memory counted).
+v1's real CPU peak is re-measured with the fixed code below. Its speed, 562 ms per session, fails L4 either way.
+
+**What happened, in plain words**
+
+- **Childhood worked for all three.** BDH reads held-out text 9.5% better than GPT at the same size and bytes, as
+  Pathway reports. The Brain is 4.5% better than GPT.
+- **The Brain learned facts by itself, then lost them.**
+  - Learned: 80% of the 20 earliest facts were recalled at the 30% mark, from its local rule alone.
+  - Lost: at the end, only 5% were. Later writes overwrote them.
+  - This is the address problem found on the CPU (section 1): different facts' addresses are too alike. It is what
+    v2 changes.
+- **Its reading never suffered from its memory:** held-out bits/byte 5.5% better after the life.
+- **It beat learning by gradients (L3 passes), but far from the 80% L1 asks.** 35 of 100 facts, against 21 (GPT)
+  and 22 (BDH).
+  - Against GPT, by higher recall: the 95% lower bound is +3 points.
+  - Against BDH, by the rule's other branch: the recall lower bound is exactly 0. But it forgets less: bits/byte
+    −5.5% against +1.8%, a gap of 7.3 points where 2 are needed, and recall is not lower.
+- The test life had 636 sessions (the plan said "about 520").
+- **Gradient learning shows the classic trade-off.** The dev runs: rates high enough to learn more facts destroy
+  the model's English. So the pre-registered rule picked the gentlest rate, which barely learns.
+
+| Model | Learning rate | Dev recall, 3 exposures | Held-out bits/byte change |
+|---|---:|---:|---:|
+| gpt | 3e-05 | 20% | +2% |
+| gpt | 0.0001 | 22% | +12% |
+| gpt | 0.0003 | 23% | +48% |
+| gpt | 0.001 | 23% | +153% |
+| gpt | 0.003 | 17% | +334% |
+| bdh | 3e-05 | 20% | +2% |
+| bdh | 0.0001 | 22% | +11% |
+| bdh | 0.0003 | 27% | +44% |
+| bdh | 0.001 | 23% | +118% |
+| bdh | 0.003 | 21% | +204% |
+
+### v2 (Kaggle `sanattaori/shishya-brain-v2` training, then `sanattaori/shishya-brain-life2`)
+
+Pending. Same rules, same test stream, against v1's GPT and BDH above.
