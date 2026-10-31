@@ -314,3 +314,46 @@ Fugez." once inside a story and then 30 other stories, asked "Naros's cat is cal
 an empty memory: "Saram."). It takes a correction ("Danat.") and forgets on request (`forget`). After forgetting
 the correction it writes "Sugez.": the first letter is gone, the rest of the old name is still stored under the
 addresses that follow it.
+
+## 5. Choosing v3 (dev stream only, v2's network)
+
+Each idea was tried on the same dev life as section 4, with v2's trained network and only the memory's address or
+write rule changed (`python -m brain.study … --set …`). The test stream was not used. Several lives shared the
+4 CPU cores, so their "ms per session" are too high; speed is measured alone in the life test.
+
+### The address (`python -m brain.probes`, 100 dev facts, untrained codes)
+
+| Address | Question finds its own fact | Two facts of the same kind alike | Other kinds alike | A question in other words finds its fact |
+|---|---:|---:|---:|---:|
+| v2: last 32 bytes, fading 0.9 | 98% | 61% | 15% | 0% |
+| Last 8 words, fading 0.9 | 100% | 32% | 7% | 5% |
+| The words of the sentence (up to 8) | 100% | 30% | 7% | 7% |
+| … each word counting by how new it is | 100% | **13%** | 3% | **41%** |
+
+- **Words, not bytes:** a name four words back counts as much as the word just read.
+- **The sentence:** the address starts after the last `.`, `!`, `?` or new line. A fact inside a story and the same
+  words asked on their own get exactly the same address (own similarity 1.00 instead of 0.62). In the brain:
+  event boundaries.
+- **Novelty:** each earlier word counts by log((1+N)/(1+count)) / log(1+N). The counts come from the words of
+  20,000 childhood stories (4.0M words), counted once and then fixed. A made-up name counts 1.0, "secret" 0.6,
+  "called" 0.52, "is" 0.38, "the" 0.22. In the brain: the novelty signal.
+
+### The dev lives
+
+__LIVES__
+
+- **Words** alone: recall 80% → 91%, and every kind of fact gains. The oldest facts still fade (70% kept).
+- **The write gate** (only steps with surprise ≥ 2): a little better, 92%, early facts 0.80.
+- **Metaplasticity** (ρ = 1 / (1 + use/τ), τ = 1, the local form of Larimar's least-squares write): nothing is
+  forgotten (100%, early facts 1.00). But **a changed fact can no longer be learned: the new name wins 3% of the
+  time.** The protected synapses refuse the correction.
+- **Novelty:** 99% recall, 98% after one reading, 100% of corrections, the new name wins 83%, early facts 0.95,
+  and questions in other words 28%. It passes L1 and L2 on dev with margin, and it can still change its mind.
+- **Reconsolidation** (`meta_reopen`): a correction (reward > 1) writes with full plasticity, as a recalled
+  memory becomes changeable again in the brain. It is meant to keep metaplasticity's protection without its
+  refusal to update.
+
+**The rule for the last choice, written before the reconsolidation lives finished (31 Oct, 21:58 UTC).**
+v3 is words + sentence + novelty. Metaplasticity with reconsolidation is added only if, on the dev life, it keeps
+more of the early facts than novelty alone (0.95), changed facts drop no more than 5 points below novelty's 83%,
+and L1 and L2 still pass on dev. Otherwise v3 stays simpler.

@@ -270,3 +270,20 @@ def test_novelty_makes_the_name_count_more():
     shared = [len(set(m.window_keys(torch.tensor([list(a)]))[0][0, -1].tolist())
                   & set(m.window_keys(torch.tensor([list(b)]))[0][0, -1].tolist())) for m in (plain, novel)]
     assert shared[1] < shared[0]
+
+
+def test_a_correction_reopens_protected_synapses():
+    """With meta_reopen, a write with reward > 1 ignores the protection; reward 1 does not."""
+    torch.manual_seed(6)
+    cfg = BrainConfig(n_layer=1, n_embd=32, n_head=2, mult=8, mem_dim=8, dropout=0.0, key="window",
+                      key_size=256, key_window=8, key_active=6, meta_tau=0.1, meta_reopen=True)
+    brain = Brain(cfg).eval()
+    idx = torch.randint(0, 256, (1, 12))
+    mem = brain.new_memory(1)
+    mem[-1] += 100.0                                                   # every unit heavily used: ρ ≈ 0.001
+    with torch.no_grad():
+        brain(idx, keep=True)
+        plain = brain.write(mem, torch.ones(1, 12), reward=1.0)
+        brain(idx, keep=True)
+        corrected = brain.write(mem, torch.ones(1, 12), reward=3.0)
+    assert plain[0].abs().max() < 0.01 * corrected[0].abs().max()
