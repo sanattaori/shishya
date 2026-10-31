@@ -151,4 +151,8 @@ The Brain's lasting synapses at `bee` size are 6 × 4 × 4,096 × 64 numbers, ab
 - Multi-speed memory: Behrouz et al., *Nested Learning / HOPE* (Google, NeurIPS 2025); *Titans* (2025).
 - Sleep consolidation: Lee et al., *Language Models Need Sleep* (arXiv 2605.26099, 2026).
 - Learning facts without forgetting: Lin et al., *Continual Learning via Sparse Memory Finetuning* (Meta, 2025).
+- One-shot episodic memory for facts: Das et al., *Larimar: Large Language Models with Episodic Memory Control*
+  (IBM, ICML 2024; github.com/IBM/larimar, Apache-2.0). A BERT encoder, a memory matrix written by least squares,
+  and a GPT-2/GPT-J decoder. It edits facts in one shot and can forget on request. Unlike us, it is an add-on to an
+  LLM, learns only through explicit edits, and its write is global, not local.
 - TinyStories: Eldan and Li (2023).

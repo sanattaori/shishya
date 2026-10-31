@@ -64,6 +64,17 @@ Then:
   `life.json` and `diagnose.json`.
 - Tell the owner in plain words. If a rule failed, decide the next step *with* them; don't tune on the test stream.
 
+## Ideas for a v3 (only after tonight's verdict, and with the owner)
+
+1. **Less forgetting over long lives.**
+   - What: each synapse gets harder to change the more it has stored (metaplasticity). It's a local, diagonal form
+     of Larimar's recursive least-squares write, which protects memory directions already in use.
+   - Why: aims at rule L2.
+2. **Forgetting on request:** a `forget` call (Larimar writes with α = −1) for wrong or private facts.
+3. **Questions in other words.**
+   - What: a second, meaning-based address beside v2's wording-based one.
+   - Why: v2 is at chance on paraphrases (17%); Larimar gets 83–88% with BERT addresses.
+
 ## Open questions for the owner
 
 - **Rule L4 says ≤ 50 ms per session on a CPU. The `bee` Brain takes about 625 ms**, which is still faster than a
