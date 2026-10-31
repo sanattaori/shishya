@@ -1,0 +1,36 @@
+dev brain 0.5: recall 0.17 rise -0.041
+dev brain 1.0: recall 0.33 rise -0.038
+dev brain 2.0: recall 0.25 rise -0.036
+dev brain 4.0: recall 0.33 rise -0.036
+TEST brain (1.0): recall3 0.25 recall1 0.17 reward 0.17 change 0.25 retention 1.00 rise -0.037
+dev gpt 3e-05: recall 0.25 rise -0.230
+dev gpt 0.0001: recall 0.17 rise -0.289
+dev gpt 0.0003: recall 0.17 rise -0.295
+dev gpt 0.001: recall 0.17 rise -0.106
+dev gpt 0.003: recall 0.17 rise -0.144
+TEST gpt (3e-05): recall3 0.08 recall1 0.17 reward 0.00 change 0.00 retention 0.00 rise -0.227
+dev bdh 3e-05: recall 0.25 rise -0.218
+dev bdh 0.0001: recall 0.25 rise -0.359
+dev bdh 0.0003: recall 0.25 rise -0.418
+dev bdh 0.001: recall 0.08 rise -0.414
+dev bdh 0.003: recall 0.17 rise -0.387
+TEST bdh (0.0003): recall3 0.17 recall1 0.17 reward 0.00 change 0.25 retention 0.00 rise -0.407
+{
+ "rules": {
+  "L1_learns": false,
+  "L2_no_forgetting": true,
+  "L4_small_machine": false,
+  "L3_beats_gradient": false
+ },
+ "L3_detail": {
+  "gpt": {
+   "recall_diff_lower95": 0.0,
+   "pass": false
+  },
+  "bdh": {
+   "recall_diff_lower95": 0.0,
+   "pass": false
+  }
+ },
+ "pass": false
+}

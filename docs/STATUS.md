@@ -36,8 +36,8 @@
 - It keeps only half of the early facts over 636 sessions. The likely cause is interference from writing every step.
 - It takes about 0.5 s per session on a CPU.
 
-The outputs (models, logs, `life.json`, `diagnose.json`) are in `brain/out/kaggle-*` in the session that ran them
-(not in git). Re-download them with `kaggle kernels output sanattaori/<kernel> -p brain/out/kaggle-<kernel>` and a
+The small outputs (`life.json`, `diagnose.json`, metrics, logs) are committed in `brain/results/`. The trained
+models are not in git. Re-download them with `kaggle kernels output sanattaori/<kernel> -p brain/out/kaggle-<kernel>` and a
 token from the owner. The Kaggle code dataset is `sanattaori/shishya-brain-code` (private). The GitHub repo is
 private, which is why Kaggle gets the code that way.
 

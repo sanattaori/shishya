@@ -1,0 +1,55 @@
+{
+ "kind": "brain",
+ "preset": "bee",
+ "params": 12845068,
+ "bytes": 344064,
+ "steps": 21,
+ "val_bpb": 6.310095269586057,
+ "seconds": 108.8,
+ "bytes_per_s": 3162,
+ "device": "cuda",
+ "smoke": false,
+ "args": {
+  "model": "brain",
+  "preset": "bee",
+  "data_dir": "/kaggle/working/data",
+  "smoke": false,
+  "train_file_bytes": 400000000.0,
+  "bytes": 330000.0,
+  "batch": 4,
+  "accum": 4,
+  "seq": 256,
+  "segments": 4,
+  "p_drill": 0.3,
+  "lr": 0.001,
+  "wd": 0.1,
+  "warmup": 200,
+  "seed": 0,
+  "device": "auto",
+  "threads": 0,
+  "log_every": 100,
+  "eval_every": 500,
+  "val_stories": 200,
+  "final_val_stories": 2000,
+  "out": "/kaggle/working/out/brain"
+ },
+ "history": [
+  {
+   "step": 0,
+   "bytes": 16384,
+   "loss_bits": 8.112855037478857,
+   "lr": 5e-06,
+   "seconds": 5.7,
+   "val_bpb": 8.158011792909466
+  },
+  {
+   "step": 20,
+   "bytes": 344064,
+   "loss_bits": 6.154328992204055,
+   "lr": 1.1027743460862678e-05,
+   "seconds": 102.9,
+   "val_bpb": 6.310837552210625
+  }
+ ],
+ "loss_ref": 1.730116367340088
+}

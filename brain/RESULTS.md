@@ -5,6 +5,8 @@ rules are in [docs/PLAN.md](../docs/PLAN.md) and did not change. Sections 1 and 
 design, run on this CPU (tiny models, trained on part of the TinyStories *validation* file) and in a 15-minute Kaggle
 canary.
 
+The raw output files of every run are in [results/](results/README.md).
+
 ## 1. What the CPU checks showed
 
 ### Tiny models, 2.5M bytes each (≈0.9M parameters)

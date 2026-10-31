@@ -1,0 +1,337 @@
+{
+ "dev": {
+  "brain": {
+   "0.5": {
+    "recall_main": 0.16666666666666666,
+    "recall_once": 0.0,
+    "recall_reward": 0.3333333333333333,
+    "change_new_wins": 0.0,
+    "recall_paraphrase": 0.16666666666666666,
+    "early_mid": 0.25,
+    "early_end": 0.25,
+    "retention": 1.0,
+    "bpb_before": 6.312549472103517,
+    "bpb_after": 6.055497377852377,
+    "bpb_rise": -0.04072080470610284,
+    "seconds": 12.9,
+    "ms_per_write_median": 42.196027999978014
+   },
+   "1.0": {
+    "recall_main": 0.3333333333333333,
+    "recall_once": 0.0,
+    "recall_reward": 0.3333333333333333,
+    "change_new_wins": 0.0,
+    "recall_paraphrase": 0.16666666666666666,
+    "early_mid": 0.25,
+    "early_end": 0.25,
+    "retention": 1.0,
+    "bpb_before": 6.312549472103517,
+    "bpb_after": 6.070558013243534,
+    "bpb_rise": -0.038334980173920785,
+    "seconds": 13.2,
+    "ms_per_write_median": 43.204360499998984
+   },
+   "2.0": {
+    "recall_main": 0.25,
+    "recall_once": 0.0,
+    "recall_reward": 0.3333333333333333,
+    "change_new_wins": 0.0,
+    "recall_paraphrase": 0.25,
+    "early_mid": 0.25,
+    "early_end": 0.25,
+    "retention": 1.0,
+    "bpb_before": 6.312549472103517,
+    "bpb_after": 6.08267505778938,
+    "bpb_rise": -0.03641546340824742,
+    "seconds": 13.5,
+    "ms_per_write_median": 44.34992500006274
+   },
+   "4.0": {
+    "recall_main": 0.3333333333333333,
+    "recall_once": 0.0,
+    "recall_reward": 0.3333333333333333,
+    "change_new_wins": 0.0,
+    "recall_paraphrase": 0.25,
+    "early_mid": 0.25,
+    "early_end": 0.25,
+    "retention": 1.0,
+    "bpb_before": 6.312549472103517,
+    "bpb_after": 6.082482473910045,
+    "bpb_rise": -0.036445971506470776,
+    "seconds": 13.9,
+    "ms_per_write_median": 45.33992249997709
+   }
+  },
+  "gpt": {
+   "3e-05": {
+    "recall_main": 0.25,
+    "recall_once": 0.0,
+    "recall_reward": 0.3333333333333333,
+    "change_new_wins": 0.0,
+    "recall_paraphrase": 0.25,
+    "early_mid": 0.0,
+    "early_end": 0.0,
+    "retention": 0.0,
+    "bpb_before": 4.938485653592113,
+    "bpb_after": 3.800458273120161,
+    "bpb_rise": -0.23044055613367698,
+    "seconds": 2.2
+   },
+   "0.0001": {
+    "recall_main": 0.16666666666666666,
+    "recall_once": 0.0,
+    "recall_reward": 0.3333333333333333,
+    "change_new_wins": 0.0,
+    "recall_paraphrase": 0.25,
+    "early_mid": 0.0,
+    "early_end": 0.0,
+    "retention": 0.0,
+    "bpb_before": 4.938485653592113,
+    "bpb_after": 3.5108512297494903,
+    "bpb_rise": -0.2890834405490683,
+    "seconds": 2.0
+   },
+   "0.0003": {
+    "recall_main": 0.16666666666666666,
+    "recall_once": 0.0,
+    "recall_reward": 0.16666666666666666,
+    "change_new_wins": 0.0,
+    "recall_paraphrase": 0.16666666666666666,
+    "early_mid": 0.0,
+    "early_end": 0.0,
+    "retention": 0.0,
+    "bpb_before": 4.938485653592113,
+    "bpb_after": 3.4794731189270798,
+    "bpb_rise": -0.2954372325864284,
+    "seconds": 2.0
+   },
+   "0.001": {
+    "recall_main": 0.16666666666666666,
+    "recall_once": 0.16666666666666666,
+    "recall_reward": 0.3333333333333333,
+    "change_new_wins": 0.25,
+    "recall_paraphrase": 0.16666666666666666,
+    "early_mid": 0.0,
+    "early_end": 0.0,
+    "retention": 0.0,
+    "bpb_before": 4.938485653592113,
+    "bpb_after": 4.41300745897498,
+    "bpb_rise": -0.10640472231298581,
+    "seconds": 2.1
+   },
+   "0.003": {
+    "recall_main": 0.16666666666666666,
+    "recall_once": 0.0,
+    "recall_reward": 0.3333333333333333,
+    "change_new_wins": 0.5,
+    "recall_paraphrase": 0.16666666666666666,
+    "early_mid": 0.25,
+    "early_end": 0.25,
+    "retention": 1.0,
+    "bpb_before": 4.938485653592113,
+    "bpb_after": 4.229427160344339,
+    "bpb_rise": -0.14357812151018912,
+    "seconds": 2.0
+   }
+  },
+  "bdh": {
+   "3e-05": {
+    "recall_main": 0.25,
+    "recall_once": 0.0,
+    "recall_reward": 0.5,
+    "change_new_wins": 0.0,
+    "recall_paraphrase": 0.3333333333333333,
+    "early_mid": 0.25,
+    "early_end": 0.0,
+    "retention": 0.0,
+    "bpb_before": 5.954749097115403,
+    "bpb_after": 4.657506984401434,
+    "bpb_rise": -0.217850003678976,
+    "seconds": 16.0
+   },
+   "0.0001": {
+    "recall_main": 0.25,
+    "recall_once": 0.0,
+    "recall_reward": 0.5,
+    "change_new_wins": 0.0,
+    "recall_paraphrase": 0.25,
+    "early_mid": 0.0,
+    "early_end": 0.0,
+    "retention": 0.0,
+    "bpb_before": 5.954749097115403,
+    "bpb_after": 3.8192858880821046,
+    "bpb_rise": -0.3586151446864082,
+    "seconds": 16.1
+   },
+   "0.0003": {
+    "recall_main": 0.25,
+    "recall_once": 0.0,
+    "recall_reward": 0.5,
+    "change_new_wins": 0.25,
+    "recall_paraphrase": 0.25,
+    "early_mid": 0.0,
+    "early_end": 0.0,
+    "retention": 0.0,
+    "bpb_before": 5.954749097115403,
+    "bpb_after": 3.466392191881719,
+    "bpb_rise": -0.4178777081370386,
+    "seconds": 16.1
+   },
+   "0.001": {
+    "recall_main": 0.08333333333333333,
+    "recall_once": 0.0,
+    "recall_reward": 0.16666666666666666,
+    "change_new_wins": 0.25,
+    "recall_paraphrase": 0.08333333333333333,
+    "early_mid": 0.0,
+    "early_end": 0.0,
+    "retention": 0.0,
+    "bpb_before": 5.954749097115403,
+    "bpb_after": 3.490580152933346,
+    "bpb_rise": -0.4138157467248702,
+    "seconds": 16.1
+   },
+   "0.003": {
+    "recall_main": 0.16666666666666666,
+    "recall_once": 0.16666666666666666,
+    "recall_reward": 0.5,
+    "change_new_wins": 0.25,
+    "recall_paraphrase": 0.16666666666666666,
+    "early_mid": 0.25,
+    "early_end": 0.0,
+    "retention": 0.0,
+    "bpb_before": 5.954749097115403,
+    "bpb_after": 3.6481493551719084,
+    "bpb_rise": -0.3873546482522424,
+    "seconds": 16.1
+   }
+  }
+ },
+ "chosen": {
+  "brain": 1.0,
+  "gpt": 3e-05,
+  "bdh": 0.0003
+ },
+ "test": {
+  "brain": {
+   "recall_main": 0.25,
+   "recall_once": 0.16666666666666666,
+   "recall_reward": 0.16666666666666666,
+   "change_new_wins": 0.25,
+   "recall_paraphrase": 0.25,
+   "early_mid": 0.25,
+   "early_end": 0.25,
+   "retention": 1.0,
+   "bpb_before": 6.312549472103517,
+   "bpb_after": 6.0764111836451224,
+   "bpb_rise": -0.03740775252565376,
+   "main_correct": [
+    true,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false
+   ],
+   "seconds": 13.6,
+   "ms_per_write_median": 45.70819700001039
+  },
+  "gpt": {
+   "recall_main": 0.08333333333333333,
+   "recall_once": 0.16666666666666666,
+   "recall_reward": 0.0,
+   "change_new_wins": 0.0,
+   "recall_paraphrase": 0.25,
+   "early_mid": 0.0,
+   "early_end": 0.0,
+   "retention": 0.0,
+   "bpb_before": 4.938485653592113,
+   "bpb_after": 3.816151419425355,
+   "bpb_rise": -0.22726283174486983,
+   "main_correct": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false
+   ],
+   "seconds": 1.9
+  },
+  "bdh": {
+   "recall_main": 0.16666666666666666,
+   "recall_once": 0.16666666666666666,
+   "recall_reward": 0.0,
+   "change_new_wins": 0.25,
+   "recall_paraphrase": 0.16666666666666666,
+   "early_mid": 0.0,
+   "early_end": 0.0,
+   "retention": 0.0,
+   "bpb_before": 5.954749097115403,
+   "bpb_after": 3.5311649215734167,
+   "bpb_rise": -0.407000217140302,
+   "main_correct": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false
+   ],
+   "seconds": 15.6
+  }
+ },
+ "no_learning": {
+  "brain": 0.16666666666666666,
+  "gpt": 0.25,
+  "bdh": 0.16666666666666666
+ },
+ "resources": {
+  "peak_rss_mb": 5495.06640625,
+  "ms_per_write": 624.9754249999455
+ },
+ "verdict": {
+  "rules": {
+   "L1_learns": false,
+   "L2_no_forgetting": true,
+   "L4_small_machine": false,
+   "L3_beats_gradient": false
+  },
+  "L3_detail": {
+   "gpt": {
+    "recall_diff_lower95": 0.0,
+    "pass": false
+   },
+   "bdh": {
+    "recall_diff_lower95": 0.0,
+    "pass": false
+   }
+  },
+  "pass": false
+ },
+ "setup": {
+  "small": true,
+  "smoke": false,
+  "sessions": 76,
+  "facts_main": 12,
+  "device": "cuda"
+ }
+}

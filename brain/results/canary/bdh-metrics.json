@@ -1,0 +1,54 @@
+{
+ "kind": "bdh",
+ "preset": "bee",
+ "params": 12713984,
+ "bytes": 344064,
+ "steps": 21,
+ "val_bpb": 5.9512919981780446,
+ "seconds": 50.1,
+ "bytes_per_s": 6864,
+ "device": "cuda",
+ "smoke": false,
+ "args": {
+  "model": "bdh",
+  "preset": "bee",
+  "data_dir": "/kaggle/working/data",
+  "smoke": false,
+  "train_file_bytes": 400000000.0,
+  "bytes": 330000.0,
+  "batch": 4,
+  "accum": 4,
+  "seq": 256,
+  "segments": 4,
+  "p_drill": 0.3,
+  "lr": 0.001,
+  "wd": 0.1,
+  "warmup": 200,
+  "seed": 0,
+  "device": "auto",
+  "threads": 0,
+  "log_every": 100,
+  "eval_every": 500,
+  "val_stories": 200,
+  "final_val_stories": 2000,
+  "out": "/kaggle/working/out/bdh"
+ },
+ "history": [
+  {
+   "step": 0,
+   "bytes": 16384,
+   "loss_bits": 8.164162965676061,
+   "lr": 5e-06,
+   "seconds": 2.3,
+   "val_bpb": 8.025891913759795
+  },
+  {
+   "step": 20,
+   "bytes": 344064,
+   "loss_bits": 6.035116122070784,
+   "lr": 1.1027743460862678e-05,
+   "seconds": 45.3,
+   "val_bpb": 5.952075908859289
+  }
+ ]
+}
