@@ -9,7 +9,9 @@ a local Hebbian rule. The plan, and the pass rules fixed before any run, are in 
   the life stream.
 - `childhood.py`: trains one model. Every model sees the same bytes.
 - `lifetest.py`: the life test and the verdict.
-- `kaggle/`: the full run on Kaggle's free GPU.
+- `diagnose.py`: does the Brain use its memory at all (short gaps, dev names)? A diagnostic, not a rule.
+- `report.py`: the tables for `RESULTS.md`.
+- `kaggle/`: the full run on Kaggle's free GPU (`--canary` first: a 15-minute GPU check).
 
 This is research code outside the `shishya` package. It needs PyTorch: `pip install torch numpy`.
 
