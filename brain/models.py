@@ -54,6 +54,9 @@ class BrainConfig:
     # metaplasticity (studied for v3, window and words keys only): a unit's plasticity falls as 1 / (1 + use/tau).
     # 0 turns it off.
     meta_tau: float = 0.0
+    # reconsolidation (with meta_tau): a correction (reward > 1) writes with full plasticity, so a protected memory
+    # can still be changed when you correct it
+    meta_reopen: bool = False
 
     @property
     def neurons(self) -> int:
@@ -373,7 +376,8 @@ class Brain(nn.Module):
         ρ_i = 1 / (1 + use_i / meta_tau), where use_i is how much has been written through it so far
         (Σ β k_i², over its life). The sequential rule becomes M ← M + β (ρ ⊙ k) (v − Mᵀk)ᵀ: a well-used synapse
         changes less, so what it holds lasts. A local, diagonal form of Larimar's least-squares write. ``use``
-        is kept as one more tensor at the end of the memory list, shared by the layers.
+        is kept as one more tensor at the end of the memory list, shared by the layers. With ``meta_reopen`` a
+        correction (reward > 1) writes with ρ = 1 (reconsolidation): protected memories can still be corrected.
         """
         c = self.cfg
         B = surprise.shape[0]
@@ -389,6 +393,8 @@ class Brain(nn.Module):
                 if use.size(0) != B:
                     use = use.expand(B, -1)
                 rho = 1.0 / (1.0 + torch.gather(use, 1, kidx.reshape(B, -1)).view_as(kval) / c.meta_tau)
+                if c.meta_reopen:                                             # reconsolidation: corrections reopen
+                    rho = torch.where(reward.view(B, 1, 1) > 1, torch.ones_like(rho), rho)
                 kw = kval * rho                                               # the key a write goes through
                 G = dense @ torch.zeros_like(dense).scatter_(-1, kidx, kw).mT  # G[t, s] = k_t·(ρ ⊙ k_s)
             else:
@@ -514,8 +520,12 @@ class GPT(nn.Module):
         return logits, loss
 
 
+# v3 (docs/PLAN.md, amendment of 31 Oct 2026): v2 with these settings, chosen on the dev stream
+V3 = {"key": "words", "key_window": 8, "key_decay": 1.0}
+
+
 def build(kind: str, preset: str) -> nn.Module:
-    """kind: gpt | bdh | brain (v1) | brain2 (v2: window keys)."""
+    """kind: gpt | bdh | brain (v1) | brain2 (v2: window keys) | brain3 (v3: see V3)."""
     bcfg, gcfg = PRESETS[preset]
     if kind == "gpt":
         return GPT(gcfg)
@@ -525,6 +535,8 @@ def build(kind: str, preset: str) -> nn.Module:
         return Brain(bcfg)
     if kind == "brain2":
         return Brain(BrainConfig(**{**asdict(bcfg), "key": "window"}))
+    if kind == "brain3":
+        return Brain(BrainConfig(**{**asdict(bcfg), **V3}))
     raise ValueError(f"unknown model {kind!r}")
 
 
