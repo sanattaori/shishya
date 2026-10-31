@@ -48,8 +48,12 @@ class BrainConfig:
     key_decay: float = 0.9
     key_active: int = 40
     key_sentence: bool = True      # "words" only: the address starts at the sentence, like a question would
+    key_novelty: bool = False      # "words" only: earlier words count by how new they are (see Brain.novelty)
     # write gate (studied for v3): a step is written only if its surprise is at least this. 0 writes every step.
     write_min_surprise: float = 0.0
+    # metaplasticity (studied for v3, window and words keys only): a unit's plasticity falls as 1 / (1 + use/tau).
+    # 0 turns it off.
+    meta_tau: float = 0.0
 
     @property
     def neurons(self) -> int:
@@ -100,6 +104,7 @@ def _rope(phases: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
 
 
 MAX_WORD = 16                      # bytes of a word that get their own place code; later bytes share the last
+NOVELTY_BUCKETS = 1 << 20          # word-count hash buckets for key_novelty
 
 
 class Brain(nn.Module):
@@ -141,13 +146,18 @@ class Brain(nn.Module):
         if c.key == "words":                                  # where a byte sits in its word; "just after a space"
             self.register_buffer("key_inword", rand(MAX_WORD).to(dev), persistent=False)
             self.register_buffer("key_space", rand(1)[0].to(dev), persistent=False)
+            if c.key_novelty and not hasattr(self, "key_count"):     # word counts, learned once from childhood text
+                self.register_buffer("key_count", torch.zeros(NOVELTY_BUCKETS, device=dev))
 
     # -- memory ---------------------------------------------------------------------------------------------------
     def new_memory(self, batch: int = 1, device=None) -> list[torch.Tensor]:
         c = self.cfg
         dev = device or self.lm_head.device
         if c.sparse_key:
-            return [torch.zeros(batch, 1, c.key_size, c.mem_dim, device=dev) for _ in range(c.n_layer)]
+            mem = [torch.zeros(batch, 1, c.key_size, c.mem_dim, device=dev) for _ in range(c.n_layer)]
+            if c.meta_tau > 0:                                    # how much has been written through each unit
+                mem.append(torch.zeros(batch, c.key_size, device=dev))
+            return mem
         return [torch.zeros(batch, c.n_head, c.neurons, c.mem_dim, device=dev) for _ in range(c.n_layer)]
 
     @torch.no_grad()
@@ -176,27 +186,24 @@ class Brain(nn.Module):
         At step t the address is the word being read so far (or the "just after a space" code), bound to slot 0,
         plus the key_window − 1 words before it, each bound to its slot and fading by key_decay per word. With
         ``key_sentence`` the words stop at the last . ! ? or new line: a fact inside a story and the same words
-        asked on their own then get the same address.
+        asked on their own then get the same address. With ``key_novelty`` each earlier word also counts by how
+        new it is (see ``learn_familiarity``): "is" and "called" count little, a name never seen counts fully.
 
-            pre[t] = cur(t) ⊙ slot[0] + Σ_d decay^d · word(t, d) ⊙ slot[d]
+            pre[t] = cur(t) ⊙ slot[0] + Σ_d decay^d · novelty(word) · word(t, d) ⊙ slot[d]
         """
         c = self.cfg
         B, T = idx.shape
         U = c.key_size
-        letter = (idx >= 128) | ((idx | 32) >= 97) & ((idx | 32) <= 122)               # a-z, A-Z, UTF-8 bytes
-        space = (idx == 32) | (idx == 9) | (idx == 13)
-        prev = F.pad(letter[:, :-1], (1, 0))
-        start = (letter & ~prev) | (~letter & ~space)                                   # a word starts here
-        n = start.long().cumsum(1)                                                      # its number (from 1)
-        ar = torch.arange(T, device=idx.device).expand(B, T)
-        first = torch.where(start, ar, torch.zeros_like(ar)).cummax(1).values           # where it started
-        pos = (ar - first).clamp(max=MAX_WORD - 1)
+        space, n, first, pos = _words(idx)
         e = self.key_byte[idx] * self.key_inword[pos] * (~space)[..., None]             # B, T, U
         # whole words: C[b, j] = Σ codes of word j's bytes / √length (row 0: no word)
         rows = (n + (T + 1) * torch.arange(B, device=idx.device)[:, None]).flatten()
         C = torch.zeros(B * (T + 1), U, device=idx.device).index_add_(0, rows, e.view(B * T, U))
         length = torch.zeros(B * (T + 1), device=idx.device).index_add_(0, rows, (~space).float().flatten())
-        C = (C / length.clamp_min(1).sqrt()[:, None]).view(B, T + 1, U)
+        scale = length.clamp_min(1).rsqrt()
+        if c.key_novelty:
+            scale = scale * self.novelty(_word_hash(idx, space, n, pos)).flatten()
+        C = (C * scale[:, None]).view(B, T + 1, U)
         # the word being read, so far
         cs = F.pad(e.cumsum(1), (0, 0, 1, 0))                                           # B, T+1, U
         so_far = cs[:, 1:] - cs.gather(1, first[..., None].expand(-1, -1, U))
@@ -213,6 +220,28 @@ class Brain(nn.Module):
             word = C.view(B * (T + 1), U)[(j + (T + 1) * torch.arange(B, device=idx.device)[:, None]).flatten()]
             pre = pre + c.key_decay ** d * word.view(B, T, U) * self.key_pos[d]
         return pre
+
+    def novelty(self, h: torch.Tensor) -> torch.Tensor:
+        """How new a word is, from 0 (the most common) to 1 (never seen in childhood): log((1+N)/(1+count))
+        divided by log(1+N), where N is the number of words counted."""
+        total = self.key_count.sum()
+        return torch.log((1 + total) / (1 + self.key_count[h])) / torch.log(1 + total).clamp_min(1e-6)
+
+    @torch.no_grad()
+    def learn_familiarity(self, texts: list[str], chunk: int = 256) -> None:
+        """Count how often each word occurs in ``texts`` (hashed, like a count-min sketch with one row). Done once
+        from childhood text, then fixed. Made-up names never occur there, so they count as new."""
+        raw = "\n".join(texts).encode("utf-8")
+        n_rows = len(raw) // chunk
+        idx = torch.frombuffer(bytearray(raw[: n_rows * chunk]), dtype=torch.uint8).long().view(n_rows, chunk)
+        counts = torch.zeros_like(self.key_count)
+        for i in range(0, n_rows, 4096):
+            part = idx[i:i + 4096].to(counts.device)
+            space, n, _, pos = _words(part)
+            h = _word_hash(part, space, n, pos)                                      # B, T+1 (row 0: no word)
+            counts.index_add_(0, h[:, 1:].flatten(), (h[:, 1:] >= 0).float().flatten() *
+                              (torch.arange(1, part.size(1) + 1, device=counts.device) <= n[:, -1:]).flatten())
+        self.key_count.copy_(counts)
 
     # -- forward --------------------------------------------------------------------------------------------------
     def forward(self, idx: torch.Tensor, targets: torch.Tensor | None = None, memory: list | None = None,
@@ -310,33 +339,105 @@ class Brain(nn.Module):
                 out.append(M0 + k.mT @ (b * E))
         return out
 
+    @torch.no_grad()
+    def forget(self, memory: list, mask: torch.Tensor | None = None, passes: int = 8) -> list[torch.Tensor]:
+        """Erase the text of the last ``forward(..., keep=True)`` from the lasting synapses; returns the new memory.
+
+        The same delta rule, with 0 as the value to store and full strength at every step: afterwards the text's
+        addresses read back (close to) nothing, so the model answers as if it had never read it. This is Larimar's
+        forgetting (a write with α = −1), done with the local rule. One pass leaves a little behind where the
+        text's addresses overlap; each further pass removes most of the rest. Other memories that share those
+        addresses lose a little too.
+        """
+        assert self.trace is not None, "call forward(..., keep=True) first"
+        trace = [(k, torch.zeros_like(v)) for k, v in self.trace]
+        k0 = trace[0][0]
+        B, T = (k0[0] if isinstance(k0, tuple) else k0[:, 0, :, 0]).shape[:2]
+        full = torch.full((B, T), 1e6, device=self.lm_head.device)           # β = rate · 1e6, capped at max_beta
+        gate, life = self.cfg.write_min_surprise, self.life_rate
+        self.cfg.write_min_surprise, self.life_rate = 0.0, 1.0
+        try:
+            for _ in range(passes):
+                self.trace = trace
+                memory = self.write(memory, full, 1.0, mask)
+        finally:
+            self.cfg.write_min_surprise, self.life_rate = gate, life
+            self.trace = None
+        return memory
+
     def _write_window(self, memory, surprise, reward, valid, nxt) -> list[torch.Tensor]:
         """The same delta rule with v2's sparse keys: the Gram matrix once, then per layer a solve and a
-        scatter-add into the rows of the active units."""
+        scatter-add into the rows of the active units.
+
+        With ``meta_tau`` > 0 (metaplasticity, studied for v3) each unit i writes with plasticity
+        ρ_i = 1 / (1 + use_i / meta_tau), where use_i is how much has been written through it so far
+        (Σ β k_i², over its life). The sequential rule becomes M ← M + β (ρ ⊙ k) (v − Mᵀk)ᵀ: a well-used synapse
+        changes less, so what it holds lasts. A local, diagonal form of Larimar's least-squares write. ``use``
+        is kept as one more tensor at the end of the memory list, shared by the layers.
+        """
         c = self.cfg
         B = surprise.shape[0]
+        L = c.n_layer
         out = []
         with torch.autocast(device_type=surprise.device.type, enabled=False):
             kidx, kval = self.trace[0][0]
             kidx, kval = kidx[:, :-1], kval[:, :-1].float()                   # B, T-1, active
             T1 = kidx.size(1)
             dense = torch.zeros(B, T1, c.key_size, device=kidx.device).scatter_(-1, kidx, kval)
-            G = dense @ dense.mT                                              # B, T-1, T-1
+            if c.meta_tau > 0:
+                use = memory[L]
+                if use.size(0) != B:
+                    use = use.expand(B, -1)
+                rho = 1.0 / (1.0 + torch.gather(use, 1, kidx.reshape(B, -1)).view_as(kval) / c.meta_tau)
+                kw = kval * rho                                               # the key a write goes through
+                G = dense @ torch.zeros_like(dense).scatter_(-1, kidx, kw).mT  # G[t, s] = k_t·(ρ ⊙ k_s)
+            else:
+                kw = kval
+                G = dense @ dense.mT                                          # B, T-1, T-1
             del dense
             rows = (kidx + (torch.arange(B, device=kidx.device) * c.key_size).view(B, 1, 1)).reshape(-1)
+            beta_sum = 0
             for level, (_, v) in enumerate(self.trace):
                 rate = torch.sigmoid(self.mem_rate[level]) * self.life_rate
                 beta = (rate * surprise * reward[:, None] * valid * nxt).clamp(max=c.max_beta)[:, :-1]
+                beta_sum = beta_sum + beta
                 M0 = memory[level]
                 if M0.size(0) != B:
                     M0 = M0.expand(B, -1, -1, -1)
                 err0 = v[:, 0, 1:].float() - _sparse_read(M0, kidx, kval)[:, 0]   # B, T-1, m
-                A = torch.tril(G * beta[:, None, :], diagonal=-1)             # A[t, s] = β_s k_t·k_s
+                A = torch.tril(G * beta[:, None, :], diagonal=-1)             # A[t, s] = β_s k_t·(ρ ⊙ k_s)
                 E = torch.linalg.solve_triangular(A, err0, upper=False, unitriangular=True)
-                upd = kval[..., None] * (beta[..., None] * E)[:, :, None, :]  # B, T-1, active, m
+                upd = kw[..., None] * (beta[..., None] * E)[:, :, None, :]    # B, T-1, active, m
                 new = M0.reshape(B * c.key_size, -1).index_add(0, rows, upd.reshape(-1, upd.size(-1)))
                 out.append(new.view_as(M0))
+            if c.meta_tau > 0:
+                used = (beta_sum / L)[..., None] * kval ** 2                  # B, T-1, active
+                out.append(use.reshape(-1).index_add(0, rows, used.reshape(-1)).view_as(use))
         return out
+
+
+def _words(idx: torch.Tensor):
+    """Split bytes into words, as ``Brain.word_code`` does: (space [B, T], word number n from 1, where the word
+    started, the byte's place in its word)."""
+    B, T = idx.shape
+    letter = (idx >= 128) | ((idx | 32) >= 97) & ((idx | 32) <= 122)                   # a-z, A-Z, UTF-8 bytes
+    space = (idx == 32) | (idx == 9) | (idx == 13)
+    prev = F.pad(letter[:, :-1], (1, 0))
+    start = (letter & ~prev) | (~letter & ~space)                                       # a word starts here
+    n = start.long().cumsum(1)
+    ar = torch.arange(T, device=idx.device).expand(B, T)
+    first = torch.where(start, ar, torch.zeros_like(ar)).cummax(1).values
+    return space, n, first, (ar - first).clamp(max=MAX_WORD - 1)
+
+
+def _word_hash(idx, space, n, pos) -> torch.Tensor:
+    """A hash in [0, NOVELTY_BUCKETS) for each word: [B, T+1], indexed by word number (row 0: no word)."""
+    B, T = idx.shape
+    mult = torch.tensor([pow(257, i, NOVELTY_BUCKETS) for i in range(MAX_WORD)], device=idx.device)
+    term = (idx * mult[pos]) % NOVELTY_BUCKETS * (~space)
+    rows = (n + (T + 1) * torch.arange(B, device=idx.device)[:, None]).flatten()
+    h = torch.zeros(B * (T + 1), dtype=torch.long, device=idx.device).index_add_(0, rows, term.flatten())
+    return (h % NOVELTY_BUCKETS).view(B, T + 1)
 
 
 def _sparse_read(M: torch.Tensor, kidx: torch.Tensor, kval: torch.Tensor) -> torch.Tensor:

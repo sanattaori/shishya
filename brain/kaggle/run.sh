@@ -2,17 +2,19 @@
 # Run the life test on Kaggle's free GPU with your own account.
 #
 #   export KAGGLE_API_TOKEN=...            # or ~/.kaggle/kaggle.json
-#   brain/kaggle/run.sh YOUR_KAGGLE_USERNAME [--canary | --brain2 | --life2]
+#   brain/kaggle/run.sh YOUR_KAGGLE_USERNAME [--canary | --brain2 | --life2 | --v3 | --canary3]
 #
 # (no flag)  GPT, BDH and the v1 Brain on the same 100M bytes, then the life test   kernel shishya-brain-life
 # --canary   the same, 20 steps each and a short life: GPU-only bugs in minutes     kernel shishya-brain-canary
 # --brain2   train the v2 Brain only                                                 kernel shishya-brain-v2
 # --life2    life test of v2 against the first run's GPT and BDH (needs both done)  kernel shishya-brain-life2
+# --v3       train the v3 Brain, then its life test against the first run's GPT, BDH   kernel shishya-brain-v3
+# --canary3  the same, 20 steps and a short life: GPU-only bugs in minutes            kernel shishya-brain-canary3
 #
 # Uploads brain/ (code only) as a PRIVATE dataset <user>/shishya-brain-code, pushes a private GPU kernel, waits,
 # and downloads its output to brain/out/kaggle-<kernel>/.
 set -euo pipefail
-user=${1:?usage: run.sh KAGGLE_USERNAME [--canary | --brain2 | --life2]}
+user=${1:?usage: run.sh KAGGLE_USERNAME [--canary | --brain2 | --life2 | --v3 | --canary3]}
 flag=${2:-}
 here="$(cd "$(dirname "$0")" && pwd)"
 root="$(cd "$here/../.." && pwd)"
@@ -24,6 +26,8 @@ case "$flag" in
   --canary) mode=canary; slug=shishya-brain-canary ;;
   --brain2) mode=brain2; slug=shishya-brain-v2 ;;
   --life2) mode=life2; slug=shishya-brain-life2; sources="\"$user/shishya-brain-life\", \"$user/shishya-brain-v2\"" ;;
+  --v3) mode=v3; slug=shishya-brain-v3; sources="\"$user/shishya-brain-life\"" ;;
+  --canary3) mode=canary3; slug=shishya-brain-canary3; sources="\"$user/shishya-brain-life\"" ;;
   *) echo "unknown flag $flag" >&2; exit 2 ;;
 esac
 

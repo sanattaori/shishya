@@ -9,6 +9,8 @@ It lives the same dev life as the life test (same seed), with the Brain's local 
 - every ``--every`` sessions: recall of every fact taught so far
 - at the end: recall, recall by relation and by age, how many steps were written and how strongly
 
+    python -m brain.study --table brain/out/study/*.json            # compare lives
+
 ``--set name=value`` changes a setting of the Brain's config for this life only (for example the write gate, or a
 bigger window code). This is for choosing what v3 changes. It never touches the test stream.
 """
@@ -16,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -24,15 +27,21 @@ import numpy as np
 import torch
 
 from . import data
-from .lifetest import SEEDS, Hebbian, _batch, load
+from .lifetest import EVAL_BATCH, SEEDS, Hebbian, _batch, load
 
 
 def apply_settings(brain, settings: dict) -> None:
     for k, v in settings.items():
         old = getattr(brain.cfg, k)
-        setattr(brain.cfg, k, type(old)(v))
-    if brain.cfg.sparse_key and {"key", "key_size", "key_window"} & set(settings):
+        setattr(brain.cfg, k, v.lower() in ("1", "true", "yes") if isinstance(old, bool) else type(old)(v))
+    if brain.cfg.sparse_key and {"key", "key_size", "key_window", "key_novelty"} & set(settings):
         brain.window_code()
+
+
+def familiar(brain, sp: data.Splits) -> None:
+    """A Brain with novelty-weighted words that has no word counts yet gets them from childhood text."""
+    if getattr(brain.cfg, "key_novelty", False) and float(brain.key_count.sum()) == 0:
+        brain.learn_familiarity(sp.train[:20000])
 
 
 def margins(learner, stream: data.LifeStream, facts: list[data.Fact], paraphrase: bool = False) -> np.ndarray:
@@ -83,12 +92,15 @@ class Recorder(Hebbian):
                 self.beta_fact += float(beta[max(a - 1, 0):a - 1 + len(f.encode())].sum())
 
 
-def study(run: Path, settings: dict, life_rate: float, every: int, data_dir: str, val_n: int) -> dict:
-    torch.set_num_threads(4)
+def study(run: Path, settings: dict, life_rate: float, every: int, data_dir: str, val_n: int,
+          threads: int = 4) -> dict:
+    torch.set_num_threads(threads)
+    EVAL_BATCH.update(loglik=64, bpb=16)                 # less memory on a CPU; the results don't depend on it
     sp = data.splits(data_dir, need_train=False)
     stream = data.life_stream(sp.life_dev, sp.names["dev"], SEEDS["dev"])
     brain = load(run, torch.device("cpu"))
     apply_settings(brain, settings)
+    familiar(brain, sp)
     rec = Recorder(brain, life_rate)
     kind_of = {f.sentence: (k, f) for k, fs in stream.facts.items() for f in fs}
     val = sp.val[:val_n]
@@ -147,18 +159,57 @@ def study(run: Path, settings: dict, life_rate: float, every: int, data_dir: str
     return out
 
 
+def table(files: list[str]) -> str:
+    """Markdown tables comparing study results: the headline numbers, then main-fact recall by kind and by age."""
+    rows = [json.loads(Path(f).read_text()) for f in files]
+    name = [Path(f).stem for f in files]
+    out = ["| Life (dev) | Recall, 3 exposures | Margin | 1 exposure | Correction | Changed fact | Paraphrased "
+           "| Early facts kept | Bits/byte change | ms per session |", "|---|" + "---:|" * 9]
+    for n, r in zip(name, rows):
+        out.append(f"| {n} | {r['recall_main']:.0%} | {r['margin_main']:.1f} | {r['recall_once']:.0%} | "
+                   f"{r['recall_reward']:.0%} | {r['change_new_wins']:.0%} | {r['recall_paraphrase']:.0%} | "
+                   f"{r['early_end']:.2f} of {r['early_mid']:.2f} | {r['bpb_rise']:+.1%} | "
+                   f"{r['ms_per_write_median']:.0f} |")
+    kinds = [rel[1].replace("{s}", "…").replace("{pet}", "pet") for rel in data.RELATIONS]
+    out += ["", "| Main facts at the end, by kind | " + " | ".join(kinds) + " |", "|---|" + "---:|" * len(kinds)]
+    for n, r in zip(name, rows):
+        cells = []
+        for k in range(len(kinds)):
+            v = [f["end"] > 0 for f in r["facts"] if f["kind"] == "main" and f["relation"] == k]
+            cells.append(f"{np.mean(v):.0%} ({len(v)})")
+        out.append(f"| {n} | " + " | ".join(cells) + " |")
+    ages = [(0, 100), (100, 200), (200, 400), (400, 700)]
+    out += ["", "| Main facts: right after the 3rd reading → at the end, by sessions since it | "
+            + " | ".join(f"{a}–{b}" for a, b in ages) + " |", "|---|" + "---:|" * len(ages)]
+    for n, r in zip(name, rows):
+        cells = []
+        for a, b in ages:
+            fs = [f for f in r["facts"] if f["kind"] == "main" and a <= f["age_at_end"] < b]
+            if not fs:
+                cells.append("")
+                continue
+            first, last = np.mean([f["immediate"][-1] > 0 for f in fs]), np.mean([f["end"] > 0 for f in fs])
+            cells.append(f"{first:.0%} → {last:.0%} ({len(fs)})")
+        out.append(f"| {n} | " + " | ".join(cells) + " |")
+    return "\n".join(out)
+
+
 def main(argv=None):
+    if argv is None and len(sys.argv) > 1 and sys.argv[1] == "--table":
+        print(table(sys.argv[2:]))
+        return
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("run", help="a Brain's run folder (with model.pt)")
     p.add_argument("--set", nargs="*", default=[], help="config changes for this life, name=value")
     p.add_argument("--life-rate", type=float, default=0.5)
-    p.add_argument("--every", type=int, default=53, help="recall of all taught facts every this many sessions")
+    p.add_argument("--every", type=int, default=106, help="recall of all taught facts every this many sessions")
+    p.add_argument("--threads", type=int, default=4)
     p.add_argument("--data-dir", default="brain/out/data")
-    p.add_argument("--val-stories", type=int, default=300)
+    p.add_argument("--val-stories", type=int, default=100)
     p.add_argument("--out", required=True)
     args = p.parse_args(argv)
     settings = dict(kv.split("=", 1) for kv in args.set)
-    res = study(Path(args.run), settings, args.life_rate, args.every, args.data_dir, args.val_stories)
+    res = study(Path(args.run), settings, args.life_rate, args.every, args.data_dir, args.val_stories, args.threads)
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(res, indent=1))
     print(json.dumps({k: v for k, v in res.items() if k not in ("facts", "curve")}, indent=1))

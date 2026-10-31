@@ -5,6 +5,8 @@ is private), writes MODE below, and pushes this script. Everything lands in /kag
 - canary: the same with 20 steps per model and a short life, to catch GPU-only bugs in minutes
 - brain2: train only the v2 Brain (same recipe and bytes)
 - life2:  the life test of the v2 Brain against the GPT and BDH of the `full` run (both runs' outputs mounted)
+- v3:     train the v3 Brain (same recipe and bytes), then its life test against the `full` run's GPT and BDH
+- canary3: the same as v3 with 20 training steps and a short life, to catch GPU-only bugs in minutes
 """
 import os
 import shutil
@@ -19,7 +21,7 @@ CODE = f"{W}/shishya"
 CHILDHOOD = ["--preset", "bee", "--bytes", "1e8", "--batch", "4", "--accum", "4", "--seq", "256", "--segments",
              "4", "--lr", "1e-3", "--warmup", "200", "--log-every", "100", "--eval-every", "500",
              "--val-stories", "200", "--final-val-stories", "2000", "--data-dir", f"{W}/data"]
-if MODE == "canary":
+if MODE in ("canary", "canary3"):
     CHILDHOOD[CHILDHOOD.index("--bytes") + 1] = "3.3e5"
 
 
@@ -93,6 +95,12 @@ def main():
     if MODE == "life2":
         mount_runs(["gpt", "bdh", "brain2"])
         life("brain2")
+        return
+    if MODE in ("v3", "canary3"):
+        mount_runs(["gpt", "bdh"])
+        wait(train("brain3", 0), "brain3")
+        print(open(f"{OUT}/brain3.log").read()[-2000:])
+        life("brain3", small=MODE == "canary3")
         return
     if gpus >= 2:                                   # the Brain on one GPU, GPT then BDH on the other
         brain = train("brain", 1)

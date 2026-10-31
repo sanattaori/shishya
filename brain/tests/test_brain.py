@@ -196,3 +196,77 @@ def test_word_code_starts_at_the_sentence():
     assert torch.allclose(story, question, atol=1e-5)
     other = b.word_code(torch.tensor([list(b"Kipos's cat is called ")]))[0, -1]
     assert not torch.allclose(story, other, atol=1e-3)
+
+
+def test_metaplastic_write_is_the_sequential_rule():
+    """M ← M + β (ρ ⊙ k)(v − Mᵀk)ᵀ step by step, with ρ = 1 / (1 + use/τ) fixed over the text."""
+    torch.manual_seed(4)
+    cfg = BrainConfig(n_layer=2, n_embd=32, n_head=2, mult=8, mem_dim=8, dropout=0.0, key="window",
+                      key_size=256, key_window=8, key_active=6, meta_tau=0.5)
+    brain = Brain(cfg).eval()
+    idx = torch.randint(0, 256, (2, 15))
+    mem = brain.new_memory(2)
+    mem = [torch.randn_like(m) * 0.1 for m in mem[:2]] + [torch.rand(2, 256)]
+    with torch.no_grad():
+        brain(idx, memory=mem, keep=True)
+        s = torch.rand(2, 15) * 2
+        new = brain.write(mem, s, reward=1.0)
+        kidx, kval = brain.trace[0][0]
+        dense = torch.zeros(2, 15, 256).scatter_(-1, kidx, kval)
+        rho = 1 / (1 + mem[2] / 0.5)                                    # B, units
+        betas = []
+        for level, (_, v) in enumerate(brain.trace):
+            rate = torch.sigmoid(brain.mem_rate[level])
+            nxt = torch.ones(2, 15)
+            nxt[:, -1] = 0
+            beta = (rate * s * nxt).clamp(max=cfg.max_beta)[:, :-1]
+            betas.append(beta)
+            M = mem[level][:, 0].clone()
+            for t in range(14):
+                kt = dense[:, t]
+                err = v[:, 0, t + 1] - torch.einsum("bn,bnm->bm", kt, M)
+                M = M + beta[:, t, None, None] * (rho * kt)[..., None] * err[:, None, :]
+            assert torch.allclose(new[level][:, 0], M, atol=1e-4)
+        used = (sum(betas) / 2)[..., None] * dense[:, :-1] ** 2
+        assert torch.allclose(new[2], mem[2] + used.sum(1), atol=1e-5)
+
+
+def test_forget_erases_what_was_written():
+    from brain.models import _sparse_read
+    torch.manual_seed(5)
+    b = Brain(BrainConfig(n_layer=1, n_embd=32, n_head=2, mult=8, mem_dim=8, dropout=0.0, key="words",
+                          key_size=4096, key_window=8, key_active=10)).eval()
+    idx = torch.tensor([list(b"Zubak's cat is called Morif.")])
+    with torch.no_grad():
+        b(idx, keep=True)
+        mem = b.write(b.new_memory(1), torch.full((1, idx.size(1)), 3.0))
+        (kidx, kval), _ = b.trace[0]
+        before = _sparse_read(mem[0], kidx, kval)[0, 0, :-1].norm(dim=-1).mean()
+        b(idx, keep=True)
+        after = _sparse_read(b.forget(mem)[0], kidx, kval)[0, 0, :-1].norm(dim=-1).mean()
+    assert after < 0.05 * before
+
+
+def test_novelty_counts_words_and_new_words_count_fully():
+    from brain.models import _word_hash, _words
+    b = Brain(BrainConfig(n_layer=1, n_embd=32, n_head=2, mult=8, mem_dim=8, key="words", key_size=512,
+                          key_window=8, key_active=10, key_novelty=True))
+    b.learn_familiarity(["the cat sat on the mat. the dog ran."] * 50)
+    idx = torch.tensor([list(b"the cat Zubak")])
+    space, n, _, pos = _words(idx)
+    nov = b.novelty(_word_hash(idx, space, n, pos))[0]
+    assert nov[3] == 1.0                                      # Zubak: never seen
+    assert nov[1] < nov[2] < 1.0                              # "the" is more common than "cat"
+    total = float(b.key_count.sum())                          # 11 words and marks per text, a new line between;
+    assert 0.9 * 599 < total <= 599 + 7                       # text past the last full 256-byte row is not read
+
+
+def test_novelty_makes_the_name_count_more():
+    plain, novel = (Brain(BrainConfig(n_layer=1, n_embd=32, n_head=2, mult=8, mem_dim=8, key="words",
+                                      key_size=4096, key_window=8, key_active=20, key_novelty=v))
+                    for v in (False, True))
+    novel.learn_familiarity(["Every day he lives in a town called Home, and she lives in a town called Away."] * 20)
+    a, b = b"Zubak lives in a town called ", b"Kipos lives in a town called "
+    shared = [len(set(m.window_keys(torch.tensor([list(a)]))[0][0, -1].tolist())
+                  & set(m.window_keys(torch.tensor([list(b)]))[0][0, -1].tolist())) for m in (plain, novel)]
+    assert shared[1] < shared[0]
