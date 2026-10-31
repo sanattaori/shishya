@@ -152,3 +152,19 @@ def test_window_keys_depend_only_on_the_recent_bytes():
 def test_v1_checkpoints_still_load_as_v1():
     cfg = {k: v for k, v in BrainConfig().__dict__.items() if not k.startswith("key")}
     assert BrainConfig(**cfg).key == "neurons"
+
+
+def test_window_keys_are_the_fading_sum():
+    """The convolution in window_keys computes Σ_j decay^j · key_byte[byte t-j] ⊙ key_pos[j]."""
+    cfg = BrainConfig(n_layer=1, n_embd=32, n_head=2, mult=8, mem_dim=8, key="window", key_size=512,
+                      key_window=8, key_decay=0.9, key_active=10)
+    brain = Brain(cfg)
+    idx = torch.randint(0, 256, (2, 20))
+    pre = torch.zeros(2, 20, 512)
+    for j in range(8):
+        pre[:, j:] += 0.9 ** j * brain.key_byte[idx[:, : 20 - j]] * brain.key_pos[j]
+    want = pre.topk(10, dim=-1)
+    got_idx, got_val = brain.window_keys(idx)
+    assert torch.equal(got_idx.sort(-1).values, want.indices.sort(-1).values)
+    v = torch.relu(want.values)
+    assert torch.allclose(got_val.sort(-1).values, (v / v.norm(dim=-1, keepdim=True)).sort(-1).values, atol=1e-5)

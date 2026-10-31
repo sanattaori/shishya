@@ -132,10 +132,12 @@ class Brain(nn.Module):
     def window_keys(self, idx: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """v2 keys: (indices [B, T, active], values [B, T, active]), unit length. Fixed, never trained."""
         c = self.cfg
-        B, T = idx.shape
-        pre = torch.zeros(B, T, c.key_size, device=idx.device)
-        for j in range(min(c.key_window, T)):
-            pre[:, j:] += (c.key_decay ** j) * self.key_byte[idx[:, : T - j]] * self.key_pos[j]
+        W = c.key_window
+        # pre[t] = Σ_j decay^j · key_byte[byte t-j] ⊙ key_pos[j], as one causal depthwise convolution over time
+        fade = c.key_decay ** torch.arange(W, device=idx.device, dtype=torch.float32)
+        kernel = (self.key_pos * fade[:, None]).flip(0).T.unsqueeze(1).contiguous()     # units, 1, W
+        x = self.key_byte[idx].transpose(1, 2)                                          # B, units, T
+        pre = F.conv1d(F.pad(x, (W - 1, 0)), kernel, groups=c.key_size).transpose(1, 2)  # B, T, units
         top = pre.topk(c.key_active, dim=-1)
         val = F.relu(top.values)
         return top.indices, val / (val.norm(dim=-1, keepdim=True) + 1e-6)
