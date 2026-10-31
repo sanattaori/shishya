@@ -209,7 +209,7 @@ def resources_check(run_dir: Path, small: bool, smoke: bool, data_dir: str, life
 
 
 def _streams(args):
-    sp = data.splits(args.data_dir, smoke=args.smoke)
+    sp = data.splits(args.data_dir, smoke=args.smoke, need_train=False)
     sizes = data.SMALL_LIFE if args.small else data.FULL_LIFE
     streams = {"dev": data.life_stream(sp.life_dev, sp.names["dev"], SEEDS["dev"], sizes),
                "test": data.life_stream(sp.life_test, sp.names["test"], SEEDS["test"], sizes)}

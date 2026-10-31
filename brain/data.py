@@ -107,9 +107,11 @@ class Splits:
     smoke: bool
 
 
-def splits(data_dir: str | Path, smoke: bool = False, train_bytes: int = 400_000_000) -> Splits:
+def splits(data_dir: str | Path, smoke: bool = False, train_bytes: int = 400_000_000,
+           need_train: bool = True) -> Splits:
     """The validation file gives val / life_dev / life_test (by hash). Train comes from the train file, or in
-    ``smoke`` mode from the rest of the validation file (the CPU check only)."""
+    ``smoke`` mode from the rest of the validation file (the CPU check only). With ``need_train=False`` only the
+    start of the train file is read: enough for the word list that filters names, so the names are the same."""
     valid = load_stories(fetch(data_dir, "valid"))
     val = [s for s in valid if _bucket(s) < 2]
     life_dev = [s for s in valid if _bucket(s) in (2, 3)]
@@ -117,7 +119,9 @@ def splits(data_dir: str | Path, smoke: bool = False, train_bytes: int = 400_000
     if smoke:
         train = [s for s in valid if _bucket(s) >= 6]
     else:
-        train = load_stories(fetch(data_dir, "train", train_bytes), limit_bytes=train_bytes)
+        n = train_bytes if need_train else min(train_bytes, 40_000_000)
+        train = load_stories(fetch(data_dir, "train", train_bytes), limit_bytes=n)
+        assert len(train) >= 20000, "the name filter needs the first 20,000 train stories"
     words = set()
     for s in valid + train[:20000]:
         words.update(re.findall(r"[a-z]+", s.lower()))

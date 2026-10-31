@@ -2,30 +2,50 @@
 # Run the full life test on Kaggle's free GPU with your own account.
 #
 #   export KAGGLE_API_TOKEN=...            # or ~/.kaggle/kaggle.json
-#   brain/kaggle/run.sh YOUR_KAGGLE_USERNAME [branch]
+#   brain/kaggle/run.sh YOUR_KAGGLE_USERNAME
 #
-# The kernel clones the branch from GitHub (push it first), trains GPT, BDH and the Brain on the same 100M bytes,
-# runs the life test, and the results are downloaded to brain/out/kaggle/.
+# 1. uploads brain/ (code only) as a PRIVATE Kaggle dataset <user>/shishya-brain-code
+# 2. pushes a private GPU kernel <user>/shishya-brain-life: GPT, BDH and the Brain on the same 100M bytes,
+#    then the life test
+# 3. waits, and downloads the results to brain/out/kaggle/
 set -euo pipefail
-user=${1:?usage: run.sh KAGGLE_USERNAME [branch]}
-branch=${2:-$(git rev-parse --abbrev-ref HEAD)}
+user=${1:?usage: run.sh KAGGLE_USERNAME}
 here="$(cd "$(dirname "$0")" && pwd)"
+root="$(cd "$here/../.." && pwd)"
 kaggle="${KAGGLE:-kaggle}"
+out="$root/brain/out"
+
+ds="$out/kaggle_code"
+rm -rf "$ds" && mkdir -p "$ds"
+tar -czf "$ds/brain.tar.gz" -C "$root" --exclude=brain/out --exclude=__pycache__ brain
+git -C "$root" rev-parse HEAD > "$ds/commit.txt"
+printf '{"title": "shishya-brain-code", "id": "%s/shishya-brain-code", "licenses": [{"name": "other"}]}\n' "$user" \
+  > "$ds/dataset-metadata.json"
+if "$kaggle" datasets status "$user/shishya-brain-code" >/dev/null 2>&1; then
+  "$kaggle" datasets version -p "$ds" -m "$(cat "$ds/commit.txt")"
+else
+  "$kaggle" datasets create -p "$ds"
+fi
+for _ in $(seq 1 60); do
+  [ "$("$kaggle" datasets status "$user/shishya-brain-code" 2>/dev/null | tail -1)" = "ready" ] && break
+  sleep 10
+done
+
 slug="shishya-brain-life"
-kdir="$here/../out/kernel"
-mkdir -p "$kdir"
-sed "s|BRANCH_NAME|$branch|" "$here/kernel.py" > "$kdir/kernel.py"
-printf '{"id": "%s/%s", "title": "%s", "code_file": "kernel.py", "language": "python", "kernel_type": "script", "is_private": true, "enable_gpu": true, "enable_internet": true, "dataset_sources": [], "competition_sources": [], "kernel_sources": []}\n' \
-  "$user" "$slug" "$slug" > "$kdir/kernel-metadata.json"
+kdir="$out/kernel"
+rm -rf "$kdir" && mkdir -p "$kdir"
+cp "$here/kernel.py" "$kdir/kernel.py"
+printf '{"id": "%s/%s", "title": "%s", "code_file": "kernel.py", "language": "python", "kernel_type": "script", "is_private": true, "enable_gpu": true, "enable_internet": true, "dataset_sources": ["%s/shishya-brain-code"], "competition_sources": [], "kernel_sources": []}\n' \
+  "$user" "$slug" "$slug" "$user" > "$kdir/kernel-metadata.json"
 "$kaggle" kernels push -p "$kdir"
 
 echo "running on Kaggle (a few hours)..."
-for _ in $(seq 1 480); do
+for _ in $(seq 1 600); do
   s=$("$kaggle" kernels status "$user/$slug" 2>&1 | tail -1)
-  case "$s" in *COMPLETE*) break ;; *ERROR*|*CANCEL*) echo "$s" >&2; exit 1 ;; esac
+  echo "$(date -u +%H:%M) $s"
+  case "$s" in *COMPLETE*) break ;; *ERROR*|*CANCEL*) "$kaggle" kernels output "$user/$slug" -p "$out/kaggle" || true; exit 1 ;; esac
   sleep 60
 done
-dest="$here/../out/kaggle"
-mkdir -p "$dest"
-"$kaggle" kernels output "$user/$slug" -p "$dest"
-echo "results: $dest/out/life.json"
+mkdir -p "$out/kaggle"
+"$kaggle" kernels output "$user/$slug" -p "$out/kaggle"
+echo "results: $out/kaggle/out/life.json"
