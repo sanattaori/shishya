@@ -126,6 +126,27 @@ only, never the test stream) showed:
 - Prediction, written now: questions phrased differently (reported, not a rule) will do worse in v2. The address
   is the wording.
 
+## Amendment, 31 Oct 2026, 15:45 UTC (before any verdict result): a notebook baseline, reported only
+
+**Why.** The gradient baselines show whether a local rule beats fine-tuning. They don't show whether it beats the
+simplest memory there is: keep the text, look it up, read it. If the Brain can't beat that, we should know.
+
+**The notebook.**
+- **Reader:** the GPT from the same run, as it left childhood. No fine-tuning. BDH is reported as a second reader.
+- **Store:** every sentence of every past session, in order. Nothing else: no reward, no surprise.
+- **Look-up:** for each question, the 3 stored sentences with the highest BM25 score over lower-case words. Ties go
+  to the newer sentence. Only sentences stored before the question are used.
+- **Reading:** the 3 sentences in stream order (oldest first, so the newest is nearest the question), then the
+  question, cut from the left to fit the reader's 256 bytes. The 5 names are scored as for every other model.
+
+**Rules.**
+- Reported, not a pass rule. L1–L4 don't change, and the notebook isn't part of L3.
+- Reported for v1 and v2, on the same test stream: the same recall rows as the other models, plus the store's size
+  and the time per question.
+- If the notebook matches or beats the Brain, `brain/RESULTS.md` says so plainly.
+- Prediction, written now: the notebook will recall most facts, including questions in other words, because the
+  names are shared. Its weak spot should be changed facts, if it reads both the old and the new name.
+
 ## Sizes and compute
 
 | Preset | Where | Brain | GPT | Childhood |
