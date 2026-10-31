@@ -9,12 +9,17 @@ import subprocess
 import sys
 import tarfile
 
+CANARY = False          # run.sh --canary: 20 steps per model and a short life, to catch GPU-only bugs fast
 W = "/kaggle/working"
 OUT = f"{W}/out"
 CODE = f"{W}/shishya"
 CHILDHOOD = ["--preset", "bee", "--bytes", "1e8", "--batch", "4", "--accum", "4", "--seq", "256", "--segments",
              "4", "--lr", "1e-3", "--warmup", "200", "--log-every", "100", "--eval-every", "500",
              "--val-stories", "200", "--final-val-stories", "2000", "--data-dir", f"{W}/data"]
+
+
+if CANARY:
+    CHILDHOOD[CHILDHOOD.index("--bytes") + 1] = "3.3e5"
 
 
 def sh(cmd, **kw):
@@ -64,7 +69,11 @@ def main():
                 raise SystemExit(f"{kind} failed: " + open(f"{OUT}/{kind}.log").read()[-2000:])
     with open(f"{OUT}/life.log", "w") as log:
         r = subprocess.run([sys.executable, "-m", "brain.lifetest", "--runs", OUT, "--data-dir", f"{W}/data",
-                            "--device", "cuda", "--out", f"{OUT}/life.json"], stdout=log, stderr=subprocess.STDOUT)
+                            "--device", "cuda", "--out", f"{OUT}/life.json"] + (["--small"] if CANARY else []),
+                           stdout=log, stderr=subprocess.STDOUT)
+    if CANARY:
+        for kind in ("gpt", "bdh", "brain"):
+            print(f"== {kind}.log", open(f"{OUT}/{kind}.log").read()[-1500:], sep="\n")
     for kind in ("gpt", "bdh", "brain"):
         print(open(f"{OUT}/{kind}/metrics.json").read()[:400])
     print(open(f"{OUT}/life.log").read()[-4000:])
