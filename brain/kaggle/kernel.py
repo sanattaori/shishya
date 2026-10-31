@@ -35,10 +35,10 @@ def unpack_code():
         if "brain.tar.gz" in files:
             with tarfile.open(os.path.join(root, "brain.tar.gz")) as t:
                 t.extractall(CODE)
+            if "commit.txt" in files:              # only the code dataset's; mounted runs carry their own
+                shutil.copy(os.path.join(root, "commit.txt"), f"{OUT}/commit.txt")
         elif os.path.basename(root) == "brain" and "models.py" in files and not os.path.exists(f"{CODE}/brain"):
             shutil.copytree(root, f"{CODE}/brain")
-        if "commit.txt" in files:
-            shutil.copy(os.path.join(root, "commit.txt"), f"{OUT}/commit.txt")
     assert os.path.exists(f"{CODE}/brain/models.py"), "code not found in /kaggle/input"
 
 

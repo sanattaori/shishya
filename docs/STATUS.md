@@ -1,6 +1,6 @@
 # Where the work is (hand-off for a new session)
 
-*Last updated 31 Oct 2026, 14:20 UTC. Branch `claude/bold-ride-lsozd7`. Read this, then
+*Last updated 31 Oct 2026, 17:15 UTC. Branch `claude/bold-ride-lsozd7`. Read this, then
 [PLAN.md](PLAN.md) (the design and the pass rules), then [brain/RESULTS.md](../brain/RESULTS.md).*
 
 ## How we got here (the owner's decisions, in order)
@@ -21,51 +21,57 @@
 5. **The owner asked for plain English and honest results,** with pass rules fixed before runs. That matches how
    they run their trading bot.
 
-## What is running
+## Where it stands (31 Oct 2026, 17:15 UTC): both verdicts are in, nothing is running
 
-| What | Where | Expected |
+| Run | Kaggle kernel | Verdict |
 |---|---|---|
-| v1 verdict run: **done 15:51 UTC, FAIL** (L1, L2, L4; L3 passes), see brain/RESULTS.md; output downloaded to brain/out/kaggle-shishya-brain-life (not in git) | Kaggle kernel `sanattaori/shishya-brain-life` | done |
-| v2 Brain training: **done 15:59 UTC** (held-out 0.544 bits/byte) | Kaggle kernel `sanattaori/shishya-brain-v2` | done |
-| v2 life test (`run.sh … --life2`, pushed 16:01 UTC) | Kaggle kernel `sanattaori/shishya-brain-life2` | about an hour |
-| tiny v2 Brain: done (memory saves 3.41 bits/byte on names, v1 0.02; see brain/RESULTS.md); its short CPU life test running | this session's CPU (`brain/out/tiny-long/`, not in git) | ~15:00 UTC; only a check |
+| v1: GPT, BDH, Brain v1 (100M bytes each) + life test | `sanattaori/shishya-brain-life` | FAIL (L1, L2, L4); L3 passes |
+| v2 Brain (100M bytes) | `sanattaori/shishya-brain-v2` | childhood 0.544 bits/byte |
+| v2 life test against v1's GPT and BDH | `sanattaori/shishya-brain-life2` | FAIL (L1, L2, L4); **L3 passes by +45 points** |
 
-Kaggle runs on the owner's account (`sanattaori`). The code reaches Kaggle as the private dataset
-`sanattaori/shishya-brain-code`, because the GitHub repo is private. **Credentials:** a session needs
-`KAGGLE_API_TOKEN` from the owner. Never write it into the repo or a log. The owner deletes temporary tokens after use.
+**Headline (brain/RESULTS.md section 3):**
+- v2 learns facts from reading alone: 67% after 3 exposures, 66% after one, with no gradients and no damage to its
+  reading. GPT and BDH fine-tuned on every session get 21–22%.
+- It misses the 80% bar.
+- It keeps only half of the early facts over 636 sessions. The likely cause is interference from writing every step.
+- It takes about 0.5 s per session on a CPU.
 
-## Next steps
+The outputs (models, logs, `life.json`, `diagnose.json`) are in `brain/out/kaggle-*` in the session that ran them
+(not in git). Re-download them with `kaggle kernels output sanattaori/<kernel> -p brain/out/kaggle-<kernel>` and a
+token from the owner. The Kaggle code dataset is `sanattaori/shishya-brain-code` (private). The GitHub repo is
+private, which is why Kaggle gets the code that way.
+
+**Credentials:** a session needs `KAGGLE_API_TOKEN` from the owner. Never write it into the repo or a log. The
+owner deletes temporary tokens after use.
+
+## Next steps (decide with the owner first)
+
+1. **Choose what v3 changes:** see the ideas below, plus "write only surprising steps", a lower write rate, and more
+   units.
+2. **Write v3 into docs/PLAN.md as a dated amendment before any v3 run.**
+   - Same rules unless the owner agrees to change L4's speed target.
+   - Same test stream, so v1, v2 and v3 stay comparable.
+   - Reuse v1's GPT and BDH, so only the Brain is retrained (`run.sh … --brain2` style).
+3. **Check it first on the CPU** (tiny models, dev names only): `brain/diagnose.py`, `brain/probes.py`, the short
+   life test.
+4. **Then the full run.** On free T4s that is about 6 h for the Brain plus 1 h of life test. A rented A100 does it in
+   about 1 h.
+
+Environment for a fresh container:
 
 ```bash
-# 0. a fresh container: environment
 python3 -m venv .venv && .venv/bin/pip install -e ".[dev]" numpy kaggle
 .venv/bin/pip install torch --index-url https://download.pytorch.org/whl/cpu
-export KAGGLE_API_TOKEN=...                       # ask the owner
 export SSL_CERT_FILE=/root/.ccr/ca-bundle.crt     # only in Claude Code cloud containers
-
-# 1. are the runs done?
-.venv/bin/kaggle kernels status sanattaori/shishya-brain-life
-.venv/bin/kaggle kernels status sanattaori/shishya-brain-v2
-
-# 2. when both are COMPLETE: the v2 life test (mounts both outputs; about an hour)
-KAGGLE=.venv/bin/kaggle brain/kaggle/run.sh sanattaori --life2
-
-# 3. download and report
-.venv/bin/kaggle kernels output sanattaori/shishya-brain-life -p brain/out/kaggle-shishya-brain-life
-.venv/bin/python -m brain.report brain/out/kaggle-shishya-brain-life/out      # v1 verdict
-.venv/bin/python -m brain.report brain/out/kaggle-shishya-brain-life2/out     # v2 verdict
-
-# 4. v1's CPU memory, re-measured: its kernel ran before two fixes (chunked scoring; VmHWM instead of ru_maxrss,
-#    which counted the parent's memory). The life rate is life.json["chosen"]["brain"]
-.venv/bin/python -m brain.lifetest --resources --runs brain/out/kaggle-shishya-brain-life/out --life-rate <rate>
 ```
 
-Then:
-- Put the tables and verdicts in `brain/RESULTS.md`. Say plainly which rules failed and why: the diagnostics in
-  `life.json` and `diagnose.json`.
-- Tell the owner in plain words. If a rule failed, decide the next step *with* them; don't tune on the test stream.
+## Ideas for a v3 (with the owner)
 
-## Ideas for a v3 (only after tonight's verdict, and with the owner)
+0. **Write less, so the memory keeps more.**
+   - The fix: write only the most surprising steps (a threshold), or a lower base rate.
+   - The evidence: v2 writes every step of every text, about 160,000 writes over a life. Its dev recall rose as
+     the write rate fell (72% → 80%), and 0.5, the lowest rate tried, was the best.
+   - Directly aimed at L1 and L2.
 
 1. **Less forgetting over long lives.**
    - What: each synapse gets harder to change the more it has stored (metaplasticity). It's a local, diagonal form
