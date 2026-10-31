@@ -27,7 +27,7 @@
 |---|---|---|
 | v1 verdict run: GPT, BDH, Brain v1, then the life test | Kaggle kernel `sanattaori/shishya-brain-life` | ~17:00 UTC 31 Oct |
 | v2 Brain training | Kaggle kernel `sanattaori/shishya-brain-v2` | before or around then |
-| tiny v2 Brain + memory diagnostic | this session's CPU (`brain/out/tiny-long/`) | ~14:20 UTC; lost if the container is recycled. It's only a check. |
+| tiny v2 Brain: done (memory saves 3.41 bits/byte on names, v1 0.02; see brain/RESULTS.md); its short CPU life test running | this session's CPU (`brain/out/tiny-long/`, not in git) | ~15:00 UTC; only a check |
 
 Kaggle runs on the owner's account (`sanattaori`). The code reaches Kaggle as the private dataset
 `sanattaori/shishya-brain-code`, because the GitHub repo is private. **Credentials:** a session needs
