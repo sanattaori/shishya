@@ -257,3 +257,60 @@ The Brain's dev runs (the rule picked the rate with the highest dev recall):
 - **On a CPU:** 529 ms per session (Kaggle's CPU) at a 1.25 GB peak. Memory is within L4, speed is not.
 
 **v1 → v2:** recall after 3 exposures 35% → 67%; after one exposure 24% → 66%; early facts kept 6% → 50%.
+
+## 4. Why v2 forgets: the analysis behind v3 (dev stream only)
+
+*Run on this CPU with the v2 model from Kaggle, 31 Oct 2026, with `python -m brain.study` (one life on the dev
+stream, same seed as the life test's dev runs). The test stream was not looked at again: v3 is chosen on dev only.*
+
+The CPU life gives the same dev recall as Kaggle's (80% at write rate 0.5), so the numbers below describe the run
+that was judged.
+
+**1. v2 learns every fact. Everything it misses, it forgot.**
+
+- All 100 main facts were recalled right after their first reading, and right after each later one.
+- The 50 facts read once: 100% right after reading, 56% at the end.
+- Recall of all facts taught so far fell steadily as the life went on:
+
+| Sessions lived | 106 | 212 | 318 | 424 | 530 | 636 |
+|---|---:|---:|---:|---:|---:|---:|
+| Facts taught so far | 65 | 112 | 161 | 202 | 227 | 260 |
+| Recalled now | 95% | 89% | 79% | 73% | 71% | 67% |
+
+**2. The older the fact, the more it is lost.** Main facts, by sessions since their last reading:
+
+| Sessions since the 3rd reading | 0–100 | 100–200 | 200–400 | 400–700 |
+|---|---:|---:|---:|---:|
+| Recalled right after it | 100% | 100% | 100% | 100% |
+| Recalled at the end | 100% (18) | 79% (33) | 92% (26) | 52% (23) |
+
+**3. The cause: facts of the same kind share most of their address.**
+
+v2's address is the last 32 bytes, each byte counting 0.9× the one after it. In "Pimev lives in a town called",
+the name is 22 bytes back, so it counts about 0.1. The address is mostly the shared wording, and each new fact
+of that kind overwrites part of the older ones. `python -m brain.probes window` (100 dev facts, untrained code):
+
+| Kind of fact | How alike two facts' addresses are | Main facts recalled at the end |
+|---|---:|---:|
+| The secret word of … is | 18% | **96%** (28) |
+| …'s pet is called | 44% | 71% (21) |
+| …'s best friend is | 73% | 83% (12) |
+| … has a toy named | 75% | 84% (19) |
+| … lives in a town called | **86%** | 60% (20) |
+
+The kind whose name sits next to the answer ("The secret word of Burof is") keeps almost everything. The kind
+whose name is furthest from the answer keeps least.
+
+**4. Most of what it writes is not facts.** Over the life, 162,180 steps were read. 66,678 of them were written
+with strength above 0.01 and 24,763 above 0.5. Only 19% of all the writing went to the fact sentences; the rest
+was ordinary story text.
+
+**5. Other dev numbers** (one life at write rate 0.5): corrections (reward 3) 40% at the end, changed facts 63%
+(the new name wins), questions in other words 21% (chance 20%), held-out bits/byte −3.1%, 471 ms per session on
+this 4-core CPU.
+
+**What it can do, shown** ([DEMO.md](DEMO.md), dev names, v2 as trained): after reading "Naros's cat is called
+Fugez." once inside a story and then 30 other stories, asked "Naros's cat is called", v2 *writes* "Fugez." (with
+an empty memory: "Saram."). It takes a correction ("Danat.") and forgets on request (`forget`). After forgetting
+the correction it writes "Sugez.": the first letter is gone, the rest of the old name is still stored under the
+addresses that follow it.

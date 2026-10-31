@@ -62,6 +62,8 @@ def train(args) -> dict:
     sp = data.splits(args.data_dir, smoke=args.smoke, train_bytes=int(args.train_file_bytes))
     names = sp.names["train"]
     model = build(args.model, args.preset).to(dev)
+    if getattr(model.cfg, "key_novelty", False):          # word counts for the v3 address, once, then fixed
+        model.learn_familiarity(sp.train[:20000])
     lasting = getattr(model.cfg, "lasting", False)
     B, T, S = args.batch, args.seq, args.segments
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd, betas=(0.9, 0.95))
@@ -94,8 +96,9 @@ def train(args) -> dict:
                             mem = model.write(mem, model.surprise(logits, ys[:, s], ms[:, s]), 1.0, ms[:, s])
                     loss = nll_sum / n
                     with torch.no_grad():                    # carry the memory on; reset a slot now and then,
-                        keep_slot = (torch.rand(B, device=dev) > 1 / 64).float().view(B, 1, 1, 1)
-                        mems[a] = [m.detach() * keep_slot for m in mem]        # so memories have mixed ages
+                        keep_slot = (torch.rand(B, device=dev) > 1 / 64).float()
+                        mems[a] = [m.detach() * keep_slot.view(B, *[1] * (m.dim() - 1))   # so memories have
+                                   for m in mem]                                          # mixed ages
                     model.trace = None
                 else:
                     logits, _ = model(xs.flatten(0, 1))
@@ -134,7 +137,7 @@ def train(args) -> dict:
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--model", choices=["gpt", "bdh", "brain", "brain2"], required=True)
+    p.add_argument("--model", choices=["gpt", "bdh", "brain", "brain2", "brain3"], required=True)
     p.add_argument("--preset", choices=["tiny", "bee"], default="tiny")
     p.add_argument("--data-dir", default="brain/out/data")
     p.add_argument("--smoke", action="store_true", help="train on part of the validation file (CPU check only)")
