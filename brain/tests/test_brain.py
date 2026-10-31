@@ -1,0 +1,112 @@
+"""Checks of the life-test models. Run with: .venv/bin/python -m pytest brain/tests -q (needs torch)."""
+import importlib.util
+from pathlib import Path
+
+import pytest
+
+torch = pytest.importorskip("torch")
+
+from brain import data  # noqa: E402
+from brain.models import Brain, BrainConfig, build, n_params  # noqa: E402
+
+HERE = Path(__file__).resolve().parent.parent
+
+
+def _pathway_bdh():
+    spec = importlib.util.spec_from_file_location("pathway_bdh", HERE / "third_party" / "bdh.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_plain_bdh_matches_pathway():
+    pw = _pathway_bdh()
+    torch.manual_seed(0)
+    theirs = pw.BDH(pw.BDHConfig(n_layer=3, n_embd=64, n_head=4, dropout=0.0,
+                                 mlp_internal_dim_multiplier=8, vocab_size=256)).eval()
+    ours = Brain(BrainConfig(n_layer=3, n_embd=64, n_head=4, mult=8, dropout=0.0, lasting=False)).eval()
+    with torch.no_grad():
+        ours.decoder.copy_(theirs.decoder)
+        ours.encoder.copy_(theirs.encoder)
+        ours.encoder_v.copy_(theirs.encoder_v)
+        ours.embed.weight.copy_(theirs.embed.weight)
+        ours.lm_head.copy_(theirs.lm_head)
+        idx = torch.randint(0, 256, (2, 40))
+        a, _ = theirs(idx)
+        b, _ = ours(idx)
+    assert torch.allclose(a, b, atol=1e-5)
+
+
+def _sequential_delta(M0, k, v_next, beta):
+    """The delta rule one step at a time: M ← M + β_t k_t (v_{t+1} − Mᵀ k_t)ᵀ."""
+    M = M0.clone()
+    for t in range(k.size(2)):
+        kt = k[:, :, t]                                        # B, nh, N
+        err = v_next[:, :, t] - torch.einsum("bhn,bhnm->bhm", kt, M)
+        M = M + beta[:, None, t, None, None] * kt[..., None] * err[:, :, None, :]
+    return M
+
+
+def test_parallel_write_is_the_sequential_delta_rule():
+    torch.manual_seed(1)
+    cfg = BrainConfig(n_layer=2, n_embd=32, n_head=2, mult=8, mem_dim=8, dropout=0.0)
+    brain = Brain(cfg).eval()
+    idx = torch.randint(0, 256, (3, 17))
+    mem = [torch.randn_like(m) * 0.1 for m in brain.new_memory(3)]
+    with torch.no_grad():
+        brain(idx, memory=mem, keep=True)
+        s = torch.rand(3, 17) * 2
+        new = brain.write(mem, s, reward=1.5)
+        for level, (k, v) in enumerate(brain.trace):
+            rate = torch.sigmoid(brain.mem_rate[level])
+            nxt = torch.ones(3, 17)
+            nxt[:, -1] = 0
+            beta = (rate * s * 1.5 * nxt).clamp(max=cfg.max_beta)
+            want = _sequential_delta(mem[level], k[:, :, :-1], v[:, :, 1:], beta[:, :-1])
+            assert torch.allclose(new[level], want, atol=1e-4)
+
+
+def test_written_text_is_read_back():
+    """After one write, reading the same keys returns (close to) the stored next-step values."""
+    torch.manual_seed(2)
+    cfg = BrainConfig(n_layer=1, n_embd=32, n_head=2, mult=64, mem_dim=8, dropout=0.0, max_beta=1.0)
+    brain = Brain(cfg).eval()
+    with torch.no_grad():
+        brain.mem_rate.fill_(20.0)                             # rate ≈ 1: store fully
+        idx = torch.randint(0, 256, (1, 12))
+        brain(idx, keep=True)
+        mem = brain.write(brain.new_memory(1), torch.ones(1, 12))
+        k, v = brain.trace[0]
+        got = k[:, :, :-1] @ mem[0]                            # what each stored key now reads back
+        # the last key was written last with β = 1, so it reads back its next-step value exactly
+        assert torch.allclose(got[:, :, -1], v[:, :, -1], atol=1e-3)
+
+
+def test_presets_are_about_the_same_size():
+    for preset in ("tiny", "bee"):
+        g, b, p = (n_params(build(k, preset)) for k in ("gpt", "bdh", "brain"))
+        assert abs(g - b) / b < 0.1, (preset, g, b)
+        assert p > b
+
+
+def test_fact_names_are_split_and_never_real_words():
+    split = data.name_split()
+    assert split["train"] and split["dev"] and split["test"]
+    assert not set(split["train"]) & set(split["test"])
+    assert not set(split["dev"]) & set(split["test"])
+
+
+def test_life_stream_is_deterministic_and_complete():
+    stories = [f"Once upon a time there was a cat number {i}. It liked to play. The end." for i in range(400)]
+    a = data.life_stream(stories, data.name_split()["test"], seed=3, sizes=data.SMALL_LIFE)
+    b = data.life_stream(stories, data.name_split()["test"], seed=3, sizes=data.SMALL_LIFE)
+    assert [s.text for s in a.sessions] == [s.text for s in b.sessions]
+    seen = {}
+    for s in a.sessions:
+        for f in s.facts:
+            seen[f] = seen.get(f, 0) + 1
+    for f in a.facts["main"]:
+        assert seen[f.sentence] == 3
+    for f in a.facts["once"] + a.facts["reward"]:
+        assert seen[f.sentence] == 1
+    assert all(len(s.text.encode()) <= data.SESSION_BYTES for s in a.sessions)
