@@ -34,6 +34,8 @@ LR_GRID = [3e-5, 1e-4, 3e-4, 1e-3, 3e-3]
 RATE_GRID = [0.5, 1.0, 2.0, 4.0]
 SEEDS = {"dev": 11, "test": 22}
 T = data.SESSION_BYTES
+# how many sequences are scored at once. Results don't depend on it; memory does (the CPU check uses small ones).
+EVAL_BATCH = {"loglik": 256, "bpb": 32}
 
 
 def load(run_dir: Path, device) -> torch.nn.Module:
@@ -71,8 +73,9 @@ class Learner:
             idx[i, : len(s)] = torch.tensor(list(s))
         idx = idx.to(dev)
         out = []
-        for i in range(0, len(seqs), 256):
-            logits, _ = self.model(idx[i:i + 256], memory=self.memory)
+        n = EVAL_BATCH["loglik"]
+        for i in range(0, len(seqs), n):
+            logits, _ = self.model(idx[i:i + n], memory=self.memory)
             out.append(F.log_softmax(logits.float(), dim=-1))
         lp = torch.cat(out)
         scores = torch.zeros(len(seqs))
@@ -84,9 +87,9 @@ class Learner:
 
     @torch.no_grad()
     def bpb(self, stories: list[str]) -> float:
-        tot, cnt = 0.0, 0
-        for i in range(0, len(stories), 32):
-            x, y, m = _batch(stories[i:i + 32], next(self.model.parameters()).device)
+        tot, cnt, n = 0.0, 0, EVAL_BATCH["bpb"]
+        for i in range(0, len(stories), n):
+            x, y, m = _batch(stories[i:i + n], next(self.model.parameters()).device)
             logits, _ = self.model(x, memory=self.memory)
             nll = F.cross_entropy(logits.float().flatten(0, 1), y.flatten(), reduction="none")
             tot += float((nll * m.flatten()).sum())
@@ -234,6 +237,7 @@ def main(argv=None):
 
     if args.resources:
         torch.set_num_threads(4)
+        EVAL_BATCH.update(loglik=10, bpb=2)
         brain = load(runs / "brain", torch.device("cpu"))
         lr = Hebbian(brain, args.life_rate)
         res = live(lr, streams["test"], val[:50])
