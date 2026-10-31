@@ -13,3 +13,4 @@ bench/out_*.md
 train/news_specialist/out/
 train/*.txt
 train/*.log
+brain/out/

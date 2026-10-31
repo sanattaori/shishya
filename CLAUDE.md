@@ -25,6 +25,13 @@ shishya decide examples/leave_request/schema.json --backend fake \
 `bench/run.py` (rulebench, needs a System One server such as Kev on :8009) and `train/news_specialist/` (Kaggle
 training) are outside the package; `bench/` and `train/` have relaxed ruff rules.
 
+`brain/` is research outside the package (needs torch): Shishya Brain, BDH plus lasting synapses written by a local
+surprise- and reward-weighted delta rule, and the life test against GPT and plain BDH. The plan and its pass rules,
+fixed before any run, are in `docs/PLAN.md`; don't change them after seeing results. `brain/third_party/bdh.py` is
+Pathway's MIT code, vendored unchanged and excluded from ruff; `brain/tests` (run separately:
+`.venv/bin/python -m pytest brain/tests -q`) checks that our BDH matches it exactly. Full runs go to Kaggle
+(`brain/kaggle/run.sh`); `brain/out/` is gitignored. The parked compile-to-program plan is in `docs/parked/`.
+
 ## Architecture
 
 Shishya returns the most likely answer that breaks no rule. `Shishya.decide` in `shishya/engine.py` runs four steps:
