@@ -37,11 +37,11 @@ def unpack_code():
     for root, _dirs, files in os.walk("/kaggle/input"):
         if "shishya-brain-code" not in root:       # mounted runs carry an older copy of the code: never use it
             continue
+        if "commit.txt" in files:                  # only the code dataset's; mounted runs carry their own
+            shutil.copy(os.path.join(root, "commit.txt"), f"{OUT}/commit.txt")
         if "brain.tar.gz" in files:
             with tarfile.open(os.path.join(root, "brain.tar.gz")) as t:
                 t.extractall(CODE)
-            if "commit.txt" in files:              # only the code dataset's; mounted runs carry their own
-                shutil.copy(os.path.join(root, "commit.txt"), f"{OUT}/commit.txt")
         elif os.path.basename(root) == "brain" and "models.py" in files and not os.path.exists(f"{CODE}/brain"):
             shutil.copytree(root, f"{CODE}/brain")
     assert os.path.exists(f"{CODE}/brain/models.py"), "code not found in /kaggle/input"
