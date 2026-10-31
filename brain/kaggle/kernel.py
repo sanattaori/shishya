@@ -1,15 +1,17 @@
-"""Runs on Kaggle (GPU, internet on): clone the branch, train the three `bee` models, run the life test.
+"""Runs on Kaggle (GPU, internet on): train the three `bee` models, then run the life test.
 
-Pushed by brain/kaggle/run.sh, which writes the branch name in below. Everything lands in /kaggle/working/out.
+brain/kaggle/run.sh uploads the code as a private dataset (the GitHub repo is private) and pushes this script.
+Everything lands in /kaggle/working/out.
 """
 import os
+import shutil
 import subprocess
 import sys
+import tarfile
 
-REPO = "https://github.com/sanattaori/shishya"
-BRANCH = "BRANCH_NAME"
 W = "/kaggle/working"
 OUT = f"{W}/out"
+CODE = f"{W}/shishya"
 CHILDHOOD = ["--preset", "bee", "--bytes", "1e8", "--batch", "4", "--accum", "4", "--seq", "256", "--segments",
              "4", "--lr", "1e-3", "--warmup", "200", "--log-every", "100", "--eval-every", "500",
              "--val-stories", "200", "--final-val-stories", "2000", "--data-dir", f"{W}/data"]
@@ -20,6 +22,20 @@ def sh(cmd, **kw):
     return subprocess.run(cmd, check=True, **kw)
 
 
+def unpack_code():
+    """The dataset holds brain.tar.gz (Kaggle may have unpacked it already) and commit.txt."""
+    os.makedirs(CODE, exist_ok=True)
+    for root, _dirs, files in os.walk("/kaggle/input"):
+        if "brain.tar.gz" in files:
+            with tarfile.open(os.path.join(root, "brain.tar.gz")) as t:
+                t.extractall(CODE)
+        elif os.path.basename(root) == "brain" and "models.py" in files and not os.path.exists(f"{CODE}/brain"):
+            shutil.copytree(root, f"{CODE}/brain")
+        if "commit.txt" in files:
+            shutil.copy(os.path.join(root, "commit.txt"), f"{OUT}/commit.txt")
+    assert os.path.exists(f"{CODE}/brain/models.py"), "code not found in /kaggle/input"
+
+
 def train(kind: str, gpu: int):
     env = {**os.environ, "CUDA_VISIBLE_DEVICES": str(gpu)}
     log = open(f"{OUT}/{kind}.log", "w")
@@ -28,31 +44,32 @@ def train(kind: str, gpu: int):
 
 
 def main():
-    sh(["git", "clone", "--depth", "1", "-b", BRANCH, REPO, f"{W}/shishya"])
-    os.chdir(f"{W}/shishya")
     os.makedirs(OUT, exist_ok=True)
-    sh(["git", "rev-parse", "HEAD"], stdout=open(f"{OUT}/commit.txt", "w"))
+    unpack_code()
+    os.chdir(CODE)
     sh([sys.executable, "-c", f"from brain import data; data.splits({W + '/data'!r}, train_bytes=400_000_000)"])
     import torch
     gpus = torch.cuda.device_count()
-    print(f"{gpus} GPU(s)", flush=True)
+    print(f"{gpus} GPU(s): {[torch.cuda.get_device_name(i) for i in range(gpus)]}", flush=True)
     if gpus >= 2:                                   # the Brain on one GPU, GPT then BDH on the other
         brain = train("brain", 1)
         for kind in ("gpt", "bdh"):
             if train(kind, 0).wait():
-                raise SystemExit(f"{kind} failed")
+                raise SystemExit(f"{kind} failed: " + open(f"{OUT}/{kind}.log").read()[-2000:])
         if brain.wait():
-            raise SystemExit("brain failed")
+            raise SystemExit("brain failed: " + open(f"{OUT}/brain.log").read()[-2000:])
     else:
         for kind in ("gpt", "bdh", "brain"):
             if train(kind, 0).wait():
-                raise SystemExit(f"{kind} failed")
+                raise SystemExit(f"{kind} failed: " + open(f"{OUT}/{kind}.log").read()[-2000:])
     with open(f"{OUT}/life.log", "w") as log:
-        sh([sys.executable, "-m", "brain.lifetest", "--runs", OUT, "--data-dir", f"{W}/data", "--device", "cuda",
-            "--out", f"{OUT}/life.json"], stdout=log, stderr=subprocess.STDOUT)
-    for kind in ("gpt", "bdh", "brain"):            # keep the output small: metrics and logs, plus the models
+        r = subprocess.run([sys.executable, "-m", "brain.lifetest", "--runs", OUT, "--data-dir", f"{W}/data",
+                            "--device", "cuda", "--out", f"{OUT}/life.json"], stdout=log, stderr=subprocess.STDOUT)
+    for kind in ("gpt", "bdh", "brain"):
         print(open(f"{OUT}/{kind}/metrics.json").read()[:400])
-    print(open(f"{OUT}/life.log").read()[-3000:])
+    print(open(f"{OUT}/life.log").read()[-4000:])
+    if r.returncode:
+        raise SystemExit("life test failed")
 
 
 if __name__ == "__main__":
