@@ -1,6 +1,6 @@
 # Shishya Brain: results
 
-**Status, 31 Oct 2026, 14:20 UTC: the verdict runs are still on Kaggle. Nothing below is the verdict.** The pass
+**Status, 31 Oct 2026, 14:30 UTC: the verdict runs are still on Kaggle. Nothing below is the verdict.** The pass
 rules are in [docs/PLAN.md](../docs/PLAN.md) and did not change. Sections 1 and 2 are checks of the code and of the
 design, run on this CPU (tiny models, trained on part of the TinyStories *validation* file) and in a 15-minute Kaggle
 canary.
@@ -56,9 +56,22 @@ Settings: 16,384 units, top 40, 100 dev facts.
 - A window too short doesn't reach the name ("…lives in a town called" is 27 bytes). A window too long, without
   fading, is drowned by the story around the fact.
 
-### Tiny v2, 15M bytes
+### Tiny v2, 15M bytes: the memory now works (on short gaps)
 
-**Pending.** Held-out bits/byte at step 800 of 916: 1.004 (v1 at the same step: 1.106).
+Same recipe and bytes as the tiny v1 Brain above.
+
+| Check (dev names only) | v1 | **v2** |
+|---|---:|---:|
+| Held-out bits/byte | 1.102 | **0.997** |
+| A made-up name two texts after it was stated: bits/byte with an empty memory | 3.211 | 3.750 |
+| … with its own memory | 3.190 | **0.341** |
+| **What the memory saves** | 0.02 bits | **3.41 bits** |
+
+For reference, the tiny GPT and BDH (trained on 2.5M bytes only) give 5.33 and 4.46 on the same names.
+
+In plain words: v2 recalls the made-up names almost perfectly two texts later; v1 didn't. This is a short-gap
+drill, like childhood. It is not the life test, where facts must survive about 500 sessions and are asked about in
+a fresh context.
 
 ## 2. Kaggle canary (2× T4, 20 steps per model, full `bee` size)
 
