@@ -36,6 +36,14 @@ python -m brain.lifetest --runs brain/out/tiny --smoke --small --out brain/out/t
 # the real test, on Kaggle (push the branch first)
 brain/kaggle/run.sh YOUR_KAGGLE_USERNAME
 
+# v3: v2's network with v3's memory. Study a dev life, try the demo, then the life test on Kaggle
+python -m brain.study brain/out/runs/brain2 --set key=words key_window=8 key_decay=1.0 key_novelty=true \
+  --out brain/out/study/words-novelty.json
+python -m brain.make_v3 brain/out/runs/brain2 brain/out/runs/brain3
+python -m brain.demo brain/out/runs/brain3 --out brain/DEMO.md
+brain/kaggle/run.sh YOUR_KAGGLE_USERNAME --canary3     # 15 minutes: GPU-only bugs
+brain/kaggle/run.sh YOUR_KAGGLE_USERNAME --v3
+
 # tests
 python -m pytest brain/tests -q
 ```

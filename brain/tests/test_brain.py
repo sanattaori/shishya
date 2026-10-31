@@ -287,3 +287,9 @@ def test_a_correction_reopens_protected_synapses():
         brain(idx, keep=True)
         corrected = brain.write(mem, torch.ones(1, 12), reward=3.0)
     assert plain[0].abs().max() < 0.01 * corrected[0].abs().max()
+
+
+def test_v3_is_v2_with_the_new_address():
+    v2, v3 = build("brain2", "tiny"), build("brain3", "tiny")
+    assert v3.cfg.key == "words" and v3.cfg.key_sentence and v3.cfg.key_novelty
+    assert {k: v.shape for k, v in v2.named_parameters()} == {k: v.shape for k, v in v3.named_parameters()}

@@ -521,7 +521,7 @@ class GPT(nn.Module):
 
 
 # v3 (docs/PLAN.md, amendment of 31 Oct 2026): v2 with these settings, chosen on the dev stream
-V3 = {"key": "words", "key_window": 8, "key_decay": 1.0}
+V3 = {"key": "words", "key_window": 8, "key_decay": 1.0, "key_sentence": True, "key_novelty": True}
 
 
 def build(kind: str, preset: str) -> nn.Module:
