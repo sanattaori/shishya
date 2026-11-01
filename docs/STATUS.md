@@ -81,7 +81,7 @@ owner deletes temporary tokens after use.
    reconsolidation. Choose by a rule written before the last result, as for v3.
 4. [x] A retrieval baseline in the life test, plus an exact-lookup one (dev: 26% and 100%): GPT reads the best-matching stored sentence before each
    question. Reported, not a rule: it shows where Shishya stands against "keep every text and look it up".
-5. [~] The v4 amendment in docs/PLAN.md (written 1 Nov, L5 ≥ 50%); canary4 and v4 on Kaggle next: the same L1–L3, a new L5 for questions in other words (held-out
+5. [~] The v4 amendment in docs/PLAN.md (written 1 Nov, L5 ≥ 50%); canary4 clean; v4 running on Kaggle (`sanattaori/shishya-brain-v4`, pushed 1 Nov ~10:00 UTC; collect it with `run.sh`'s download line and `python -m brain.report`): the same L1–L3, a new L5 for questions in other words (held-out
    wordings), L4 reported only. Then `brain/kaggle/run.sh … --canary4`, then `--v4`, then RESULTS.md.
 6. Then v5 (the Guru school), as in ROADMAP.md.
 
