@@ -533,3 +533,18 @@ reconsolidation wins those back.
 
 **So v4 is v3 + the meaning part (weight 4) + metaplasticity + reconsolidation** (`models.V4`). The amendment is
 in docs/PLAN.md.
+
+### What the v4 demo showed (dev names, v2's network with v4's memory)
+
+- Reading and correcting work as in v3. One answer had a wrong letter ("Zigig." for Zifig), though the 1-in-5
+  choice was still 100% right.
+- **`forget`:** the correction is erased (1% left on "Danat"). But v4 then writes "Sugez.": a new first letter,
+  then the rest of the *old* name.
+  - The cause is the word code. The start of a word is the *sum* of its letters' codes (each bound to its
+    place), so "Su…" and "Fu…" share half their address, and the old "…ugez" still answers.
+  - The fix is for v5: code a word's letters in order (each bound to the code so far), not as a sum.
+  - Also fixed on the way: `forget` now reopens protected synapses as a correction does (it didn't, with
+    metaplasticity).
+- **A question in other words** ("The town where Pimev lives is called") still failed in the demo ("Movis.";
+  24% on Zifig). That fits the dev lives: v4 answers questions in other words about half the time (47%), not
+  always.
