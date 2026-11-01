@@ -75,11 +75,11 @@ owner deletes temporary tokens after use.
 **v4, in order (tick as done):**
 1. [x] Held-out wordings (`data.HELDOUT_PARAPHRASE`, committed before step 2): a second way to ask each kind of question, used only on the test stream, so v4's
    "questions in other words" can't be fitted to the wordings seen on dev.
-2. [ ] The meaning part of the address: the sentence's words without their order, each counting by how new it is,
+2. [x] The meaning part of the address (`key_bag`; probes in brain/RESULTS.md section 7): the sentence's words without their order, each counting by how new it is,
    bound to the word being read. Probe it on dev facts (`python -m brain.probes`).
 3. [ ] Dev lives (`python -m brain.study`): v3 + meaning part, with and without metaplasticity +
    reconsolidation. Choose by a rule written before the last result, as for v3.
-4. [ ] A retrieval baseline in the life test: GPT reads the best-matching stored sentence before each
+4. [x] A retrieval baseline in the life test, plus an exact-lookup one (dev: 26% and 100%): GPT reads the best-matching stored sentence before each
    question. Reported, not a rule: it shows where Shishya stands against "keep every text and look it up".
 5. [ ] The v4 amendment in docs/PLAN.md: the same L1–L3, a new L5 for questions in other words (held-out
    wordings), L4 reported only. Then `brain/kaggle/run.sh … --canary4`, then `--v4`, then RESULTS.md.
