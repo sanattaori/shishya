@@ -120,6 +120,43 @@ set before the next run. **Proposal:** ≤ 1 s per 256-byte session on a 4-core 
    - Note: v3's memory address doesn't depend on BDH's neurons. The same memory can sit on any network,
      including a faster one. BDH costs about 7× GPT's compute per byte (v1 canary). The owner chooses.
 
+## How sleep works (in the brain, and planned for Shishya)
+
+**In the brain.**
+- *By day,* the hippocampus stores each experience quickly, in one go. It is a small, fast memory, like
+  Shishya's lasting memory.
+- *At night,* in deep sleep, the hippocampus replays the day's experiences, many times and fast. The cortex
+  listens and slowly adjusts its own, much larger, connections, until it holds the knowledge itself.
+- *Then* the hippocampus can let the details go. It has room again the next day.
+- What survives is mostly the gist ("Zubak has a cat called Fugez"), not every word of the story.
+- This is why people remember better after sleep, and why the hippocampus can stay small for a whole life.
+
+**For Shishya.**
+
+| | Brain | Shishya |
+|---|---|---|
+| Fast memory, written by day | hippocampus | the lasting memory (16,384 units, 25 MB) |
+| Slow knowledge | cortex | the network's own weights from childhood (12.8M) |
+| Replay | the hippocampus re-fires stored patterns | the Brain is cued and **writes back what its memory holds** ("Zubak's cat is called" → "Fugez.") |
+| Consolidation | the cortex adjusts slowly | the weights learn the replayed text, a little each night |
+| Making room | traces fade once the cortex has them | memory traces the weights now know are weakened, so their units are free |
+
+**The two kinds of night, for later (v7).**
+- **(a) Local rules only.** The weights change by a Hebbian rule from the replayed activity. This is the most
+  brain-like, and it's new: there's no known recipe that works well. It's a research question in itself.
+- **(b) Gradient replay.** The replayed text trains the weights by ordinary backprop, offline, gently, mixed
+  with some old text so English isn't damaged. It works today ("Language Models Need Sleep", 2026). But it
+  means gradients at night.
+
+**What sleep would give.**
+- A life of any length: the fast memory never fills up.
+- Facts become part of the model's knowledge. For example, it could then use "Fugez is a cat" in a story without
+  being asked.
+- Less forgetting than v3's 5%.
+
+**The risk.** Training the weights at night can damage what childhood taught (the classic forgetting of
+gradient learning). Every night is checked: held-out bits per byte must not rise.
+
 ## The steps (each one pre-registered)
 
 | Step | What it adds | Test | Rough cost |
