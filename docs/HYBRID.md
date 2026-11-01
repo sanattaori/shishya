@@ -85,3 +85,51 @@ stored text, ms per session on this CPU.
   any stage 2.
 - **H5** decides whether v4's meaning address is the way forward or whether the address needs the LLM's own
   hidden states (stage 2).
+
+## Results (1 Nov 2026, this CPU; `brain/out/hybrid/`, not in git)
+
+**Verdict: FAIL on H4 and H5.** H1, H2 and H3 pass.
+
+### Dev (the choice)
+
+The rule chose `key_bag` 0, `rate` 0.25, `gain` 8: dev recall 99%, in other words 17%, bits per byte +4.4%. The
+best setting with the meaning part (`key_bag` 4, rate 0.25, gain 8) had recall 88% and other words 44%, but bits per
+byte +5.1%, just over the limit, so it was out. Gain 2 was too weak to beat the LLM's own guesses (recall 41–48%).
+Gain 8 starts to push stored words into ordinary text (bits per byte +4–17%). Fine-tuning: 3e-5 chosen (dev recall
+25%).
+
+### Test (run once)
+
+| Learner (SmolLM2-135M, frozen) | Recall, 3 readings | 1 reading | Correction | Changed fact | Other words (dev wording) | Other words (held-out) | Early facts kept | Bits/byte | Memory |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **Hybrid** | 96% | 76% | 88% | 97% | 30% | 27% | 0.95 | +2.5% | 38 MB (fixed) |
+| RAG | 100% | 100% | 100% | 100% | 100% | 100% | 1.00 | 0 | 160 KB of text |
+| Lookup (a database) | 100% | 100% | 100% | 100% | 100% | 100% | 1.00 | | 160 KB |
+| Fine-tuning (3e-5) | 36% | 6% | 34% | 20% | 29% | 27% | 0.71 | −25.8% | |
+| No learning | 23% | 16% | 10% | 13% | 24% | 19% | | 0 | |
+
+| Rule | Result |
+|---|---|
+| H1 learns (≥ 80%) | pass (96%) |
+| H2 no forgetting | pass (0.95 kept; +2.5%) |
+| H3 beats fine-tuning | pass (lower bound +50 points) |
+| H4 matches RAG (lower bound > −5 points) | **fail** (−8 points; 96% against 100%) |
+| H5 other words (≥ 60%) | **fail** (27%; chance 20%) |
+
+Hybrid: 348 ms per session on this CPU (the LLM's forward pass is most of it).
+
+### Against the predictions
+
+- H1, H2, H3 passed, as predicted. H5 failed, as predicted (27%, inside the 20–50% guess).
+- **H4 was predicted to pass and failed.** RAG got every fact; the hybrid missed 4 of 100.
+- **The memory-size argument doesn't hold at this scale.** The hybrid's fixed memory is 38 MB. RAG kept 160 KB of
+  text, 236× less. A fixed size only pays off after hundreds of MB of text read.
+
+### What it means, in plain words
+
+- **v3's memory carries over to a real LLM without any training:** 96% of facts after 3 readings, 97% of changed
+  facts, its early facts kept, and the LLM's reading barely touched. That is 2.7× fine-tuning (36%).
+- **On this test, RAG on the same LLM is better at everything:** facts, other wordings, memory size and speed.
+  Stage 1 has no advantage over RAG.
+- The rule above sent stage 2 on only if H1–H4 passed. H4 failed, so stage 2 does not start by this plan. The
+  plan didn't say what to do when only H4 fails; that is the owner's decision.
