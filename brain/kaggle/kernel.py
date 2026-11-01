@@ -11,6 +11,7 @@ is private), writes MODE below, and pushes this script. Everything lands in /kag
 - v4, canary4: the same for the v4 Brain
 - v5, canary5: v5 at scale (docs/V5.md): SmolLM2-1.7B frozen, three childhoods (layers 3, 6, 13), the dev school,
           the layer chosen by the rule, a dev life, then the test school and test life for v5, RAG and no learning
+- v5brain, canary5brain: the same with no LLM: the v2 BDH Brain (from the life2 run) is the reader, layers 2, 4, 6
 """
 import os
 import shutil
@@ -97,6 +98,10 @@ def main():
     if MODE in ("v5", "canary5"):
         v5(MODE == "canary5")
         return
+    if MODE in ("v5brain", "canary5brain"):
+        mount_runs(["brain2"])
+        v5(MODE == "canary5brain", llm=f"brain:{OUT}/brain2", layers=[2, 4, 6], d=f"{OUT}/v5brain")
+        return
     if MODE == "brain2":
         wait(train("brain2", 0), "brain2")
         print(open(f"{OUT}/brain2.log").read()[-2000:])
@@ -127,15 +132,15 @@ def main():
 
 
 V5_LLM = "HuggingFaceTB/SmolLM2-1.7B"
-V5_LAYERS = [3, 6, 13]
 
 
-def v5(canary: bool):
-    """docs/V5.md, v5 at scale. Two childhoods at once (one per GPU), then the rest on GPU 0."""
+def v5(canary: bool, llm: str = V5_LLM, layers=None, d: str | None = None):
+    """docs/V5.md, v5 at scale. Two childhoods at once (one per GPU), then the rest two at a time."""
     import json
-    d = f"{OUT}/v5"
+    V5_LAYERS = layers or [3, 6, 13]
+    d = d or f"{OUT}/v5"
     os.makedirs(d, exist_ok=True)
-    common = ["--llm", V5_LLM, "--data-dir", f"{W}/data", "--device", "cuda"]
+    common = ["--llm", llm, "--data-dir", f"{W}/data", "--device", "cuda"]
     steps = ["--steps", "20", "--check", "10"] if canary else ["--steps", "600", "--check", "50"]
 
     def run(args, gpu=0, log=None):

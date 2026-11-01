@@ -12,11 +12,12 @@
 # --canary3  the same with a short life: GPU-only bugs in minutes                      kernel shishya-brain-canary3
 # --v4, --canary4  the same for the v4 Brain                                          kernel shishya-brain-v4 / -canary4
 # --v5, --canary5  v5 at scale: SmolLM2-1.7B + v5's memory (docs/V5.md)              kernel shishya-brain-v5 / -canary5
+# --v5brain, --canary5brain  v5 with no LLM: the v2 BDH Brain + v5's memory          kernel shishya-brain-v5brain
 #
 # Uploads brain/ (code only) as a PRIVATE dataset <user>/shishya-brain-code, pushes a private GPU kernel, waits,
 # and downloads its output to brain/out/kaggle-<kernel>/.
 set -euo pipefail
-user=${1:?usage: run.sh KAGGLE_USERNAME [--canary | --brain2 | --life2 | --v3 | --canary3 | --v4 | --canary4 | --v5 | --canary5]}
+user=${1:?usage: run.sh KAGGLE_USERNAME [--canary | --brain2 | --life2 | --v3 | --canary3 | --v4 | --canary4 | --v5 | --canary5 | --v5brain | --canary5brain]}
 flag=${2:-}
 here="$(cd "$(dirname "$0")" && pwd)"
 root="$(cd "$here/../.." && pwd)"
@@ -34,6 +35,8 @@ case "$flag" in
   --canary4) mode=canary4; slug=shishya-brain-canary4; sources="\"$user/shishya-brain-life2\"" ;;
   --v5) mode=v5; slug=shishya-brain-v5 ;;
   --canary5) mode=canary5; slug=shishya-brain-canary5 ;;
+  --v5brain) mode=v5brain; slug=shishya-brain-v5brain; sources="\"$user/shishya-brain-life2\"" ;;
+  --canary5brain) mode=canary5brain; slug=shishya-brain-canary5brain; sources="\"$user/shishya-brain-life2\"" ;;
   *) echo "unknown flag $flag" >&2; exit 2 ;;
 esac
 
