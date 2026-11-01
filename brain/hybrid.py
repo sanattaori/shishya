@@ -51,6 +51,16 @@ def load_llm(name: str = LLM):
     return tok, model
 
 
+def run_llm(model, ids, mask=None, layer: int | None = None):
+    """The LLM's logits (float, on the CPU) and, with ``layer``, that layer's hidden states (float, on the CPU).
+    The inputs go to the model's device, so the same code runs with the LLM on a GPU."""
+    dev = next(model.parameters()).device
+    out = model(input_ids=ids.to(dev), attention_mask=None if mask is None else mask.to(dev),
+                output_hidden_states=layer is not None)
+    lg = out.logits.float().cpu()
+    return (lg, out.hidden_states[layer].float().cpu()) if layer is not None else lg
+
+
 def make_address(key_bag: float, familiar: list[str]) -> Brain:
     """Only the Brain's fixed address code (``Brain.window_keys``), with v3's settings and v4's meaning part.
     The word counts come from the first 20,000 childhood stories, as for v3. The tiny network around it is unused."""
@@ -92,7 +102,7 @@ class LLMLearner(Learner):
         return None
 
     def logits(self, tk: Tokens, rows: slice) -> torch.Tensor:
-        out = self.model(input_ids=tk.ids[rows], attention_mask=tk.mask[rows]).logits.float()
+        out = run_llm(self.model, tk.ids[rows], tk.mask[rows])
         b = self.bias(tk, rows)
         return out if b is None else out + b
 
@@ -215,7 +225,7 @@ def loss_ref(model, tok, stories: list[str]) -> float:
     tk = Tokens(tok, [data._fit(s, data.SESSION_BYTES) for s in stories])
     tot, cnt = 0.0, 0
     for i in range(0, len(stories), CHUNK):
-        lg = model(input_ids=tk.ids[i:i + CHUNK], attention_mask=tk.mask[i:i + CHUNK]).logits.float()
+        lg = run_llm(model, tk.ids[i:i + CHUNK], tk.mask[i:i + CHUNK])
         y, m = tk.ids[i:i + CHUNK, 1:], tk.mask[i:i + CHUNK, 1:]
         nll = F.cross_entropy(lg[:, :-1].flatten(0, 1), y.flatten(), reduction="none").view_as(y)
         tot, cnt = tot + float((nll * m).sum()), cnt + int(m.sum())

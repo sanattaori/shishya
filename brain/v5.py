@@ -42,7 +42,7 @@ import torch
 import torch.nn.functional as F
 
 from . import data
-from .hybrid import BOS, CAP, RAG, LLMLearner, Tokens, load_llm, loss_ref, make_address
+from .hybrid import BOS, CAP, RAG, LLMLearner, Tokens, load_llm, loss_ref, make_address, run_llm
 from .lifetest import Lookup, live
 from .models import MAX_WORD, NOVELTY_BUCKETS, Brain
 
@@ -120,6 +120,14 @@ RELATIONS = {
 }
 DEV_RELATIONS = ["spell", "planet", "dance", "club", "uncle", "river"]       # held out of childhood: for its checks
 TRAIN_RELATIONS = [r for r in RELATIONS if r not in DEV_RELATIONS]
+
+
+def llm_on(name: str, device: str = "cpu"):
+    """The frozen LLM: float32 on the CPU, float16 on a GPU."""
+    tok, llm = load_llm(name)
+    if device != "cpu":
+        llm = llm.half().to(device)
+    return tok, llm
 
 
 def _is_letter(b: int) -> bool:
@@ -273,7 +281,7 @@ class Student(LLMLearner):
     def __init__(self, model, tok, who: Who, reader: Reader):
         super().__init__(model, tok)
         self.who, self.reader = who, reader
-        E = model.get_output_embeddings().weight.detach().float()
+        E = model.get_output_embeddings().weight.detach().float().cpu()   # the memory lives on the CPU
         self.E = E / E.norm(dim=-1, keepdim=True)
         with torch.no_grad():
             self.Z = reader.Z(self.E)                                       # V, m
@@ -296,12 +304,12 @@ class Student(LLMLearner):
             for c, (i, pos) in enumerate(chunk):
                 ids[c, 1:len(pos) + 1] = ps.tk.ids[i, pos]
                 mask[c, :len(pos) + 1] = 1
-            out = self.model(input_ids=ids, attention_mask=mask, output_hidden_states=True)
-            w = self.reader.what(out.hidden_states[self.reader.layer].float())
+            logits, hid = run_llm(self.model, ids, mask, self.reader.layer)
+            w = self.reader.what(hid)
             for c, (i, pos) in enumerate(chunk):
                 ps.what[i, pos] = w[c, 1:len(pos) + 1]
                 if want_logits:
-                    ps.iso_logits[(i, pos[0])] = out.logits[c, 1:len(pos) + 1].float()
+                    ps.iso_logits[(i, pos[0])] = logits[c, 1:len(pos) + 1]
 
     def read(self, kidx, kval, what, M=None) -> torch.Tensor:
         """[N, active], [N, active], [N, r] → [N, m]."""
@@ -331,7 +339,7 @@ class Student(LLMLearner):
         scores = torch.zeros(len(texts))
         for i in range(0, len(texts), 32):
             sl = slice(i, i + 32)
-            lg = self.model(input_ids=tk.ids[sl], attention_mask=tk.mask[sl]).logits.float() + self.bias_full(ps, sl)
+            lg = run_llm(self.model, tk.ids[sl], tk.mask[sl]) + self.bias_full(ps, sl)
             lp = F.log_softmax(lg, dim=-1)
             for j in range(lp.size(0)):
                 n, start = i + j, len(prompts[i + j])
@@ -349,7 +357,7 @@ class Student(LLMLearner):
         tot = 0.0
         for i in range(0, len(texts), 32):
             sl = slice(i, i + 32)
-            lg = self.model(input_ids=tk.ids[sl], attention_mask=tk.mask[sl]).logits.float() + self.bias_full(ps, sl)
+            lg = run_llm(self.model, tk.ids[sl], tk.mask[sl]) + self.bias_full(ps, sl)
             y, m = tk.ids[sl, 1:], tk.mask[sl, 1:]
             nll = F.cross_entropy(lg[:, :-1].flatten(0, 1), y.flatten(), reduction="none").view_as(y)
             tot += float((nll * m).sum())
@@ -436,7 +444,7 @@ def childhood(args) -> None:
     torch.manual_seed(0)
     torch.set_num_threads(4)
     sp = data.splits(args.data_dir, need_train=False)
-    tok, llm = load_llm(args.llm)
+    tok, llm = llm_on(args.llm, args.device)
     who = Who(make_address(0.0, sp.train[:20000]), power=args.power)
     reader = Reader(llm.config.hidden_size, r=args.r, layer=args.layer)
     st = Student(llm, tok, who, reader)
@@ -446,10 +454,10 @@ def childhood(args) -> None:
     hs, n = torch.zeros(llm.config.hidden_size), 0
     with torch.no_grad():
         for i in range(0, len(sents), 32):
-            out = llm(input_ids=tk.ids[i:i + 32], attention_mask=tk.mask[i:i + 32], output_hidden_states=True)
+            _, hid = run_llm(llm, tk.ids[i:i + 32], tk.mask[i:i + 32], args.layer)
             m = tk.mask[i:i + 32].clone()
             m[:, 0] = 0
-            hs += (out.hidden_states[args.layer].float() * m[..., None]).sum((0, 1))
+            hs += (hid * m[..., None]).sum((0, 1))
             n += int(m.sum())
     reader.mu.copy_(hs / n)
     st.loss_ref = loss_ref(llm, tok, sp.val[:100])
@@ -477,7 +485,7 @@ def childhood(args) -> None:
                 for c, (i, pos) in enumerate(chunk):
                     ids[c, 1:len(pos) + 1] = ps.tk.ids[i, pos]
                     mask[c, :len(pos) + 1] = 1
-                hid = llm(input_ids=ids, attention_mask=mask, output_hidden_states=True).hidden_states[args.layer]
+                _, hid = run_llm(llm, ids, mask, args.layer)
                 for c, (i, pos) in enumerate(chunk):
                     H[(i, pos[0])] = hid[c, 1:len(pos) + 1].float()
         K_i, K_v, Wh, V, NLL = [], [], [], [], []
@@ -505,9 +513,7 @@ def childhood(args) -> None:
         qs = Parsed(tok, who, texts)
         Hq = {}
         with torch.no_grad():
-            outq = llm(input_ids=qs.tk.ids, attention_mask=qs.tk.mask, output_hidden_states=True)
-            Hq = outq.hidden_states[args.layer].float()
-            base = outq.logits.float()
+            base, Hq = run_llm(llm, qs.tk.ids, qs.tk.mask, args.layer)
         loss, hits = 0.0, []
         for n, (q, _) in enumerate(questions):
             first = next(k for k, c in enumerate(qs.tk.char_starts[n]) if k > 0 and c >= len(q))
@@ -562,11 +568,11 @@ def childhood(args) -> None:
         opt.step()
 
 
-def load_student(run: str, llm_name: str = LLM, data_dir: str = "brain/out/data"):
+def load_student(run: str, llm_name: str = LLM, data_dir: str = "brain/out/data", device: str = "cpu"):
     ck = torch.load(Path(run) / "reader.pt", weights_only=False)
     a = ck["args"]
     sp = data.splits(data_dir, need_train=False)
-    tok, llm = load_llm(llm_name)
+    tok, llm = llm_on(llm_name, device)
     who = Who(make_address(0.0, sp.train[:20000]), power=a["power"])
     reader = Reader(llm.config.hidden_size, r=a["r"], layer=a["layer"])
     reader.load_state_dict(ck["reader"])
@@ -576,6 +582,14 @@ def load_student(run: str, llm_name: str = LLM, data_dir: str = "brain/out/data"
 
 
 # -- the school exam, for any learner --------------------------------------------------------------------------------
+GURU_QUESTIONS = Path(__file__).with_name("guru_questions.json")
+
+
+def guru_wordings() -> dict[str, list[str]] | None:
+    """Question wordings written by an outside LLM (brain/notes/guru_questions.py), for evaluation only."""
+    return json.loads(GURU_QUESTIONS.read_text())["wordings"] if GURU_QUESTIONS.exists() else None
+
+
 def school_exam(learner, world, two_step_think: bool = True) -> dict:
     """plain, other words (the school's exam wordings, never in a lesson or in childhood), two-step asked directly,
     and two-step thinking out loud: first "{s}'s best friend is" (1 of 5), then the chosen friend's fact (1 of 5)."""
@@ -594,6 +608,11 @@ def school_exam(learner, world, two_step_think: bool = True) -> dict:
     res = {"plain": float(np.mean(known(learner, world, plain))),
            "other_words": float(np.mean(known(learner, world, other))),
            "two_step_direct": float(np.mean(known(learner, world, two)))}
+    gw = guru_wordings()
+    if gw:                                                  # reported only: one outside wording per fact
+        guru = [(gw[f.relation][i % len(gw[f.relation])].format(s=f.subject, p=f.pet), f.obj)
+                for i, f in enumerate(facts)]
+        res["other_words_guru"] = float(np.mean(known(learner, world, guru)))
     if two_step_think:
         # step 1: which of 5 is the friend?
         prompts, conts, rows = [], [], []
@@ -663,6 +682,8 @@ def main(argv=None):
     li.add_argument("--llm", default=LLM)
     li.add_argument("--data-dir", default="brain/out/data")
     li.add_argument("--out")
+    for sub_ in (c, s, li):
+        sub_.add_argument("--device", default="cpu")
     args = p.parse_args(argv)
     torch.set_num_threads(4)
     if args.cmd == "childhood":
@@ -671,11 +692,11 @@ def main(argv=None):
     from .school import TemplateGuru, make_world
     if args.run in ("rag", "lookup", "none"):
         sp = data.splits(args.data_dir, need_train=False)
-        tok, llm = load_llm(args.llm)
+        tok, llm = llm_on(args.llm, args.device)
         learner = {"rag": lambda: RAG(llm, tok), "lookup": lambda: Lookup(llm),
                    "none": lambda: LLMLearner(llm, tok)}[args.run]()
     else:
-        learner, sp, tok, llm = load_student(args.run, args.llm, args.data_dir)
+        learner, sp, tok, llm = load_student(args.run, args.llm, args.data_dir, args.device)
     if args.cmd == "school":
         world = make_world(sp.names[args.names], args.people, seed=0 if args.names == "dev" else 1)
         stories = sp.life_dev if args.names == "dev" else sp.life_test
@@ -689,6 +710,20 @@ def main(argv=None):
         stream = data.life_stream(stories, names, SEEDS[args.stream], sizes)
         stream.heldout = args.stream == "test"
         res = live(learner, stream, sp.val[: args.val_stories])
+        gw = guru_wordings()
+        if gw:                                              # reported only: one outside wording per main fact
+            from .lifetest import recall
+            from .school import WORDINGS
+            rels = list(WORDINGS)                           # the same order as data.RELATIONS
+            for i, f in enumerate(stream.facts["main"]):
+                ws = gw[rels[f.relation]]
+                object.__setattr__(f, "_guru", ws[i % len(ws)].format(s=f.subject, p=f.pet))
+            orig = data.Fact.heldout
+            try:
+                data.Fact.heldout = property(lambda self: self._guru)
+                res["recall_guru"] = float(np.mean(recall(learner, stream, stream.facts["main"], "heldout")))
+            finally:
+                data.Fact.heldout = orig
         res["main_correct"] = [bool(x) for x in res["main_correct"]]
         if hasattr(learner, "ms"):
             res["ms_per_session_median"] = float(np.median(learner.ms))
