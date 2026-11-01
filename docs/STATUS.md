@@ -118,6 +118,8 @@ mkdir -p brain/out/data && mv brain/out/kaggle-shishya-brain-life2/data/* brain/
   (`setsid nohup … &`), then poll.
 - **`pgrep -f` / `pkill -f` match the shell running them** when the pattern is in its own command line. A
   `pkill -f name` once killed its own command. Use the PID from `ps`.
+- **Scoring 256 questions at once takes about 8 GB on a CPU** (the BDH activations). Two such runs at once on
+  this 15 GB machine get killed for memory. `study.py` and `school.py` score 64 at a time.
 - **Several study lives at once share 4 cores.** Their "ms per session" are then 2–3× too high. Only a run
   alone (or Kaggle's CPU check) measures speed.
 - **Kaggle shows no logs while a kernel runs.** Use `run.sh … --canary3` first for GPU-only bugs.
