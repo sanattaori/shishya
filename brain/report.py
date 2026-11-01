@@ -8,7 +8,8 @@ import json
 import sys
 from pathlib import Path
 
-NAMES = {"gpt": "GPT + fine-tuning", "bdh": "BDH + fine-tuning", "brain": "**Shishya Brain** (local rule only)"}
+NAMES = {"gpt": "GPT + fine-tuning", "bdh": "BDH + fine-tuning", "brain": "**Shishya Brain** (local rule only)",
+         "retrieval": "GPT + retrieval (reported, not a rule)"}
 
 
 def pct(x: float) -> str:
@@ -30,14 +31,15 @@ def report(run: Path) -> str:
             f"Brain {met['brain']['val_bpb'] / g - 1:+.1%}.", "",
             "### Life (test stream, fresh-context questions, chance = 20%)", "",
             "| Learner | Setting (dev) | Recall, 3 exposures | 1 exposure | 1 correction (reward 3) "
-            "| Changed fact: new wins | Paraphrased | Early facts kept | Bits/byte change |",
-            "|---|---|---:|---:|---:|---:|---:|---:|---:|"]
+            "| Changed fact: new wins | Paraphrased | Held-out wording | Early facts kept | Bits/byte change |",
+            "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for k, t in life["test"].items():
-        out.append(f"| {NAMES[k]} | {life['chosen'][k]} | {pct(t['recall_main'])} | {pct(t['recall_once'])} | "
-                   f"{pct(t['recall_reward'])} | {pct(t['change_new_wins'])} | {pct(t['recall_paraphrase'])} | "
-                   f"{t['early_end']:.2f} of {t['early_mid']:.2f} | {t['bpb_rise']:+.1%} |")
+        held = pct(t["recall_heldout"]) if "recall_heldout" in t else ""
+        out.append(f"| {NAMES[k]} | {life['chosen'].get(k, '')} | {pct(t['recall_main'])} | {pct(t['recall_once'])} "
+                   f"| {pct(t['recall_reward'])} | {pct(t['change_new_wins'])} | {pct(t['recall_paraphrase'])} "
+                   f"| {held} | {t['early_end']:.2f} of {t['early_mid']:.2f} | {t['bpb_rise']:+.1%} |")
     out.append("| No learning (as after childhood) | | " + " / ".join(
-        f"{k} {pct(v)}" for k, v in life["no_learning"].items()) + " | | | | | | |")
+        f"{k} {pct(v)}" for k, v in life["no_learning"].items()) + " | | | | | | | |")
     v, r = life["verdict"], life["resources"]
     out += ["", "### Verdict (rules fixed in docs/PLAN.md before the run)", "", "| Rule | Result |", "|---|---|"]
     for name, ok in v["rules"].items():
