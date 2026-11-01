@@ -622,3 +622,27 @@ L4 measured: 677 ms per 256-byte write, peak 1253 MB.
 | In other words (held-out wordings, L5 ≥ 50%) | not measured | 35% |
 | Early facts kept | 0.95 | 0.95 |
 | Verdict | FAIL (L4 only) | **FAIL (L5 only)** |
+
+## 9. The school, first runs (v5 groundwork; dev names only; not a verdict)
+
+`python -m brain.school brain/out/runs/brain4 --people 40`: a made-up world of 40 people, each with a pet, a
+town, a toy, a secret word and a best friend (200 facts). Each fact is taught **once**, inside a story, with an
+ordinary story after each lesson. Then one quiz per fact; a wrong answer gets a correction (reward 3). Then a
+closed-book exam (1 of 5 names, chance 20%). The teacher is the template Guru; no LLM yet.
+
+| Closed-book exam (after the quiz) | v3 | v4 |
+|---|---:|---:|
+| Asked the plain way | 99.5% (4 corrected) | **100%** (none needed) |
+| Asked in wordings never used in a lesson | 22% | 22% |
+| Two-step ("The best friend of Zubak lives in a town called") | 20% | 24% |
+
+- **Learning from one lesson is close to perfect:** 200 facts, each read once.
+- **Questions in other words are at chance here,** although v4 got 48% in the life test. The difference: here
+  every person has 5 facts. v4's meaning part is led by the name (the newest word), so a reworded question about
+  Zubak's town finds all five of Zubak's facts about equally. In the life test each person had one fact.
+- **Two-step questions are at chance,** as expected: nothing in the Brain chains one recalled fact into the next
+  question yet.
+- **For v5:** the meaning part must carry *what is asked* (town, pet, toy), not only *about whom*. Ideas:
+  - weigh the relation's words more
+  - lessons in many wordings, so more ways of asking are stored
+  - word codes that drift toward words used in the same places (a local rule)
