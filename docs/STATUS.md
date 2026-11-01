@@ -1,6 +1,6 @@
 # Where the work is (hand-off for a new session)
 
-*Last updated 1 Nov 2026. Branch `ccr-ebda0c39-9rnnt2`. Read this, then [PLAN.md](PLAN.md) (the design, the pass
+*Last updated 1 Nov 2026, 10:45 UTC. Branch `ccr-ebda0c39-9rnnt2`. Read this, then [PLAN.md](PLAN.md) (the design, the pass
 rules and the dated amendments), then [brain/RESULTS.md](../brain/RESULTS.md). How v3 works: [brain/ARCHITECTURE.md](../brain/ARCHITECTURE.md).*
 
 ## How we got here (the owner's decisions, in order)
@@ -37,6 +37,7 @@ rules and the dated amendments), then [brain/RESULTS.md](../brain/RESULTS.md). H
 | v2 Brain (100M bytes) | `sanattaori/shishya-brain-v2` | childhood 0.544 bits/byte |
 | v2 life test against v1's GPT and BDH | `sanattaori/shishya-brain-life2` | FAIL (L1, L2, L4); L3 passes by +45 points |
 | v3 life test (v2's network, v3's memory) | `sanattaori/shishya-brain-v3` | **L1, L2, L3 pass**; FAIL on L4 (CPU speed) only |
+| v4 life test (v2's network, v4's memory) | `sanattaori/shishya-brain-v4` | L1, L2, L3 pass; **FAIL on L5** (held-out wordings 35% < 50%); L4 reported only |
 
 **What v3 is** ([PLAN.md](PLAN.md), amendment of 31 Oct): v2's trained network, unchanged, with a new way to address
 and write its lasting memory. The settings are in `brain/models.py` (`V3`); `brain/make_v3.py` builds it from the
@@ -81,9 +82,18 @@ owner deletes temporary tokens after use.
    reconsolidation. Choose by a rule written before the last result, as for v3.
 4. [x] A retrieval baseline in the life test, plus an exact-lookup one (dev: 26% and 100%): GPT reads the best-matching stored sentence before each
    question. Reported, not a rule: it shows where Shishya stands against "keep every text and look it up".
-5. [~] The v4 amendment in docs/PLAN.md (written 1 Nov, L5 ≥ 50%); canary4 clean; v4 running on Kaggle (`sanattaori/shishya-brain-v4`, pushed 1 Nov ~10:00 UTC; collect it with `run.sh`'s download line and `python -m brain.report`): the same L1–L3, a new L5 for questions in other words (held-out
-   wordings), L4 reported only. Then `brain/kaggle/run.sh … --canary4`, then `--v4`, then RESULTS.md.
-6. Then v5 (the Guru school), as in ROADMAP.md.
+5. [x] The v4 amendment (docs/PLAN.md, 1 Nov), canary4, and the v4 verdict (brain/RESULTS.md section 8):
+   L1–L3 pass; L5 fails (35% in held-out wordings, as predicted); changed facts 90%; one reading 76%.
+6. **v5, next.** The school is started: `brain/school.py` (a made-up world, a template Guru, quizzes with
+   corrections, a closed-book exam with plain, reworded and two-step questions; dev names only). First runs:
+   `brain/out/school/v3.json`, `v4.json` (see brain/RESULTS.md section 9 when written). To do, in order:
+   - A word code that keeps letter order (ROADMAP.md "Learned on the way"): fewer traces after `forget`, less
+     overlap.
+   - A dev rule that also looks at one-reading recall (v4's rule picked rate 4.0, and one reading fell to 76%).
+   - Questions in other words, the main gap (35% held-out). Ideas: word codes that drift toward words seen in the
+     same places (random indexing, a local rule); lessons from the Guru in many wordings.
+   - Two-step questions need "thinking out loud" and a new childhood (a rented GPU).
+   - An LLM Guru needs an API key from the owner (OpenRouter or Anthropic).
 
 Environment for a fresh container:
 
