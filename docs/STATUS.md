@@ -1,6 +1,6 @@
 # Where the work is (hand-off for a new session)
 
-*Last updated 1 Nov 2026, 10:45 UTC. Branch `ccr-ebda0c39-9rnnt2`. Read this, then [PLAN.md](PLAN.md) (the design, the pass
+*Last updated 1 Nov 2026, 12:10 UTC. Branch `ccr-ebda0c39-9rnnt2`. Read this, then [PLAN.md](PLAN.md) (the design, the pass
 rules and the dated amendments), then [brain/RESULTS.md](../brain/RESULTS.md). How v3 works: [brain/ARCHITECTURE.md](../brain/ARCHITECTURE.md).*
 
 ## How we got here (the owner's decisions, in order)
@@ -88,8 +88,22 @@ owner deletes temporary tokens after use.
    corrections, a closed-book exam with plain, reworded and two-step questions; dev names only). First runs:
    `brain/out/school/v3.json`, `v4.json` (brain/RESULTS.md section 9): after one lesson per fact, plain questions
    100%, but unseen wordings and two-step questions at chance (each person has 5 facts, and the name-led meaning
-   part can't tell which one is asked). Running: the same with 3 lessons per fact (`*-3lessons.json`). To do,
-   in order:
+   part can't tell which one is asked). With 3 lessons per fact in 3 wordings: still at chance (24%), but v4's
+   protection keeps plain recall at 100% where v3 falls to 80%. An address probe shows v4 *finds* the right fact
+   for 76% of unseen wordings but shares only ~30% of its address, so the read is too faint (RESULTS.md section 9).
+   "Who × what" and a linear fingerprint read-back did not help.
+
+   **The plan for v5 (my recommendation, 1 Nov):** a new childhood. In childhood the read path only ever saw a
+   fact asked again in the same words, so it never learned to use a partial match. v5's childhood drills restate
+   facts **in other words** (and, for two steps, chain two facts: "Zubak's friend is Kipos. Kipos lives in …").
+   - The rephrasings come from the Guru. An open LLM (Qwen) can run on Kaggle's GPU, so no API key is needed;
+     templates work as a start.
+   - The memory is v4's. Childhood is about 6–7 h on Kaggle's free T4 (as v2's was), or about 1 h on a rented A100.
+   - The test is the school's exam plus the life test, with rules fixed first.
+
+   To do, in order:
+   - **v5's childhood drills:** a pool of rephrasings per relation, split train / dev / test like the names, so
+     the test wordings are never seen in childhood.
    - **The meaning part must carry what is asked, not only about whom** (the school's main finding).
    - A word code that keeps letter order (ROADMAP.md "Learned on the way"): fewer traces after `forget`, less
      overlap.
