@@ -677,3 +677,21 @@ person's 5).
   the time.
 - A single linear read-back is a blur of many memories. The brain's CA3 completes cues with recurrent attractor
   dynamics, which needs a real design (v5).
+
+### Three lessons per fact, in three wordings
+
+The same school, with each fact taught three times, once in each lesson wording (1,200 sessions).
+
+| Closed-book exam | v3, 1 lesson | v3, 3 lessons | v4, 1 lesson | v4, 3 lessons |
+|---|---:|---:|---:|---:|
+| Plain, before the quiz | 98% | **80%** | 100% | 98.5% |
+| Plain, after the quiz | 99.5% | 93% (41 corrected) | 100% | 100% (3 corrected) |
+| Unseen wordings | 22% | 22% | 22% | 24% |
+| Two-step | 20% | 19% | 24% | 25% |
+
+- **More wordings in the lessons don't help with an unseen one.** All four lives are at chance (20%).
+- **v4's protection earns its place.** With three times as many writes, v3's plain recall fell to 80% before the
+  quiz. v4 kept 98.5%, and needed only 3 corrections.
+- **The likely reason for the unseen wordings:** in childhood, the Brain's read path only ever saw a fact asked
+  again in exactly the same words. It never learned to use a partial match. That points to a new childhood with
+  rephrased drills (v5 plan in docs/STATUS.md).
