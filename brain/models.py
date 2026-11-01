@@ -52,6 +52,10 @@ class BrainConfig:
     # v4 ("words" only): weight of the address's meaning part, the sentence's earlier words without their order,
     # bound to the word being read. 0 leaves it out (v3).
     key_bag: float = 0.0
+    # studied for v5: bind the meaning part as "who ⊙ what": the new words (never seen in childhood, such as made-up
+    # names) and the familiar words are summed apart and bound together, so a question finds the fact about this
+    # person *and* this topic, not every fact about the person
+    key_bag_bind: bool = False
     # write gate (studied for v3): a step is written only if its surprise is at least this. 0 writes every step.
     write_min_surprise: float = 0.0
     # metaplasticity (studied for v3, window and words keys only): a unit's plasticity falls as 1 / (1 + use/tau).
@@ -212,7 +216,9 @@ class Brain(nn.Module):
         length = torch.zeros(B * (T + 1), device=idx.device).index_add_(0, rows, (~space).float().flatten())
         scale = length.clamp_min(1).rsqrt()
         if c.key_novelty:
-            scale = scale * self.novelty(_word_hash(idx, space, n, pos)).flatten()
+            nov = self.novelty(_word_hash(idx, space, n, pos)).flatten()
+            scale = scale * nov
+            is_new = (nov > 0.999).float().view(B, T + 1, 1)                          # never seen in childhood
         C = (C * scale[:, None]).view(B, T + 1, U)
         # the word being read, so far
         cs = F.pad(e.cumsum(1), (0, 0, 1, 0))                                           # B, T+1, U
@@ -221,6 +227,9 @@ class Brain(nn.Module):
         cur = torch.where(space[..., None], self.key_space.expand(B, T, U), so_far)
         pre = cur * self.key_pos[0]
         bag = torch.zeros_like(pre) if c.key_bag else None
+        if c.key_bag and c.key_bag_bind:
+            assert c.key_novelty, "who ⊙ what needs key_novelty"
+            who = torch.zeros_like(pre)
         sp = space.long()
         if c.key_sentence:                  # words before the last . ! ? or new line are not part of the address
             stop = (idx == 46) | (idx == 33) | (idx == 63) | (idx == 10)
@@ -230,9 +239,16 @@ class Brain(nn.Module):
             j = torch.where(j > last_stop, j, torch.zeros_like(j)) if c.key_sentence else j.clamp_min(0)  # 0: none
             word = C.view(B * (T + 1), U)[(j + (T + 1) * torch.arange(B, device=idx.device)[:, None]).flatten()]
             pre = pre + c.key_decay ** d * word.view(B, T, U) * self.key_pos[d]
-            if bag is not None:
+            if bag is not None and c.key_bag_bind:
+                new_word = is_new.view(B * (T + 1), 1)[(j + (T + 1) * torch.arange(B, device=idx.device)[:, None]
+                                                        ).flatten()].view(B, T, 1)
+                who = who + new_word * word.view(B, T, U)
+                bag = bag + (1 - new_word) * word.view(B, T, U)
+            elif bag is not None:
                 bag = bag + word.view(B, T, U)
-        if bag is not None:                 # the meaning part: which words, not where, bound to the word being read
+        if bag is not None and c.key_bag_bind:  # who ⊙ what, bound to the word being read
+            pre = pre + c.key_bag * who * bag * cur * (2.0 ** 0.5)
+        elif bag is not None:               # the meaning part: which words, not where, bound to the word being read
             pre = pre + c.key_bag * bag * cur
         return pre
 

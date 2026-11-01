@@ -646,3 +646,25 @@ closed-book exam (1 of 5 names, chance 20%). The teacher is the template Guru; n
   - weigh the relation's words more
   - lessons in many wordings, so more ways of asking are stored
   - word codes that drift toward words used in the same places (a local rule)
+
+### Where the school's reworded questions fail: finding vs reading (address probe, dev names)
+
+Each school fact is stored at the address of its lesson sentence. The probe asks whether the exam's question,
+in a wording never used in a lesson, has an address closest to its own fact's (among all 200, and among the
+person's 5).
+
+| Address | Plain question finds its fact | Unseen wording finds its fact | … among the person's 5 | Share of the address |
+|---|---:|---:|---:|---:|
+| v4 (meaning part: sum, weight 4) | 100% | 76% | 80% | 0.29 |
+| "Who × what" (new words bound to familiar words), weight 1 | 100% | 69% | 72% | 0.22 |
+| … weight 4 | 100% | 76% | 76% | 0.31 |
+| … weight 16 | 100% | 79% | 78% | 0.32 |
+
+- **Finding is mostly not the problem.** v4's address is closest to the right fact for 3 of 4 unseen questions,
+  yet the exam recall is at chance (22%).
+- **Reading is.** The question shares only about 30% of the fact's address. Its other 70% reads other facts'
+  values, so the answer comes back faint and noisy.
+- **"Who × what"** (`key_bag_bind`, kept for the record) doesn't help: the name was not what confused it.
+- **For v5, the target is completing a partial cue** (as the brain's CA3 does): a question that finds 30% of an
+  address should read the whole memory, not 30% of it. A second route is more stored wordings per fact (lessons
+  in several wordings, being tested now).
