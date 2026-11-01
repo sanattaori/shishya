@@ -369,14 +369,14 @@ class Brain(nn.Module):
         k0 = trace[0][0]
         B, T = (k0[0] if isinstance(k0, tuple) else k0[:, 0, :, 0]).shape[:2]
         full = torch.full((B, T), 1e6, device=self.lm_head.device)           # β = rate · 1e6, capped at max_beta
-        gate, life = self.cfg.write_min_surprise, self.life_rate
-        self.cfg.write_min_surprise, self.life_rate = 0.0, 1.0
+        gate, life, reopen = self.cfg.write_min_surprise, self.life_rate, self.cfg.meta_reopen
+        self.cfg.write_min_surprise, self.life_rate, self.cfg.meta_reopen = 0.0, 1.0, True
         try:
             for _ in range(passes):
                 self.trace = trace
-                memory = self.write(memory, full, 1.0, mask)
+                memory = self.write(memory, full, 2.0, mask)    # as a correction: protected synapses reopen
         finally:
-            self.cfg.write_min_surprise, self.life_rate = gate, life
+            self.cfg.write_min_surprise, self.life_rate, self.cfg.meta_reopen = gate, life, reopen
             self.trace = None
         return memory
 
