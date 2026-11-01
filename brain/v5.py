@@ -123,11 +123,80 @@ TRAIN_RELATIONS = [r for r in RELATIONS if r not in DEV_RELATIONS]
 
 
 def llm_on(name: str, device: str = "cpu"):
-    """The frozen LLM: float32 on the CPU, float16 on a GPU."""
+    """The frozen reader: an LLM (float32 on the CPU, float16 on a GPU), or with ``brain:<run folder>`` Shishya's
+    own BDH Brain (no LLM at all)."""
+    if name.startswith("brain:"):
+        from .lifetest import load
+        return ByteTok(), BrainLM(load(Path(name[6:]), torch.device(device)))
     tok, llm = load_llm(name)
     if device != "cpu":
         llm = llm.half().to(device)
     return tok, llm
+
+
+class ByteTok:
+    """Bytes as tokens, for the Brain (it reads bytes). Offsets are in characters, as a Hugging Face tokenizer's."""
+
+    def __call__(self, text: str, add_special_tokens: bool = False, return_offsets_mapping: bool = False):
+        ids, offs = [], []
+        for i, ch in enumerate(text):
+            for b in ch.encode():
+                ids.append(b)
+                offs.append((i, i + 1))
+        return {"input_ids": ids, "offset_mapping": offs}
+
+
+class BrainLM(torch.nn.Module):
+    """Shishya's BDH Brain, frozen and without its own lasting memory, with the interface v5 uses: logits and the
+    hidden state after each layer. The Brain reads text from its first byte, so the BOS put first is dropped and
+    position 0 gets uniform logits and a zero state."""
+
+    def __init__(self, brain: Brain):
+        super().__init__()
+        from types import SimpleNamespace
+        self.brain = brain.eval()
+        self.config = SimpleNamespace(hidden_size=brain.cfg.n_embd, num_hidden_layers=brain.cfg.n_layer)
+
+    def get_output_embeddings(self):
+        from types import SimpleNamespace
+        return SimpleNamespace(weight=self.brain.lm_head.T)
+
+    @torch.no_grad()
+    def _run(self, idx: torch.Tensor):
+        from .models import _ln, _rope
+        b, c = self.brain, self.brain.cfg
+        B, T = idx.shape
+        D, nh, N = c.n_embd, c.n_head, c.neurons
+        x = _ln(b.embed(idx).unsqueeze(1))
+        phases = torch.arange(T, device=idx.device, dtype=torch.float32).view(1, 1, -1, 1) * b.freqs
+        hs = [x.view(B, T, D)]
+        for _ in range(c.n_layer):                          # Brain.forward with no lasting memory, in eval mode
+            x_sparse = F.relu(x @ b.encoder)
+            qr = _rope(phases, x_sparse)
+            yKV = ((qr @ qr.mT) * (1.0 / N)).tril(diagonal=-1) @ x
+            yKV = _ln(yKV, eps=1e-5 / N**2)
+            y_sparse = F.relu(yKV @ b.encoder_v)
+            yMLP = (x_sparse * y_sparse).transpose(1, 2).reshape(B, 1, T, N * nh) @ b.decoder
+            x = _ln(x + _ln(yMLP))
+            hs.append(x.view(B, T, D))
+        return x.view(B, T, D) @ b.lm_head, hs
+
+    def forward(self, input_ids, attention_mask=None, output_hidden_states: bool = False):
+        from types import SimpleNamespace
+        idx = input_ids[:, 1:]
+        lgs, hss = [], []
+        for i in range(0, idx.size(0), 8):                  # BDH's attention is large: 8 texts at a time
+            lg, hs = self._run(idx[i:i + 8])
+            lgs.append(lg)
+            hss.append(hs)
+        lg = torch.cat(lgs)
+        B, _, V = lg.shape
+        z = lg.new_zeros(B, 1, V)
+        out = SimpleNamespace(logits=torch.cat([z, lg], 1))
+        if output_hidden_states:
+            layers = [torch.cat([hs[k] for hs in hss]) for k in range(len(hss[0]))]
+            out.hidden_states = tuple(torch.cat([h.new_zeros(B, 1, h.size(-1)), h], 1) for h in layers)
+        return out
 
 
 def _is_letter(b: int) -> bool:

@@ -1,0 +1,78 @@
+{
+ "models": [
+  "google/gemma-4-31b-it:free",
+  "nvidia/nemotron-3-ultra-550b-a55b:free"
+ ],
+ "wordings": {
+  "pet": [
+   "Meet {s}'s {p} named",
+   "Say hello to {s}'s {p} called",
+   "Here is {s}'s {p} known as",
+   "Look at {s}'s {p} that answers to",
+   "This is {s}'s {p} going by the name",
+   "Find {s}'s {p} who goes by",
+   "Introducing {s}'s {p} named",
+   "Watch {s}'s {p} called",
+   "Observe {s}'s {p} that is named",
+   "Notice {s}'s {p} bearing the name",
+   "Discover {s}'s {p} known by the name",
+   "Spot {s}'s {p} who is called"
+  ],
+  "town": [
+   "In {s}'s town the name is",
+   "The town that {s} sleeps in goes by the name",
+   "The town that {s} plays in is called",
+   "The town that {s} dreams of is named",
+   "A town that {s} reads in is known as",
+   "The name of {s}'s town is",
+   "The town of {s} is known as",
+   "There is a town that {s} stays in called",
+   "The little town that {s} rests in goes by the name",
+   "The town that holds {s} is named",
+   "For {s} the town is called",
+   "To {s} the town is named"
+  ],
+  "friend": [
+   "The dear friend of {s} is named",
+   "The close friend of {s} goes by",
+   "A true friend of {s} answers to",
+   "The trusted friend {s} knows is called",
+   "{s} calls their dear friend",
+   "The loyal friend {s} loves is known as",
+   "{s} introduces their special friend as",
+   "A kind friend of {s} bears the name",
+   "The faithful friend {s} has is named",
+   "{s} refers to their good friend as",
+   "The sweet friend {s} plays with is called",
+   "{s} names their cherished friend"
+  ],
+  "toy": [
+   "In {s}'s room the toy is called",
+   "The toy belonging to {s} is called",
+   "A soft toy owned by {s} goes by the name",
+   "The cuddly toy of {s} answers to",
+   "Meet {s}'s toy its name is",
+   "Here is {s}'s toy known as",
+   "The toy {s} loves is called",
+   "One toy {s} treasures is named",
+   "The little toy {s} hugs is called",
+   "A bright toy for {s} is named",
+   "The favorite toy of {s} goes by",
+   "The toy {s} carries everywhere is called"
+  ],
+  "secret": [
+   "A secret name that {s} loves is",
+   "The secret code {s} guards is",
+   "What {s} calls a secret phrase is",
+   "The secret nickname {s} prefers is",
+   "A secret term {s} cherishes is",
+   "The secret title {s} uses is",
+   "The secret label {s} chooses is",
+   "A secret expression {s} favors is",
+   "The secret identifier {s} adopts is",
+   "A secret moniker {s} selects is",
+   "The secret handle {s} employs is",
+   "A secret tag {s} assigns is"
+  ]
+ }
+}
