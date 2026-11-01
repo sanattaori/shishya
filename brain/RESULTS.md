@@ -480,3 +480,24 @@ address in v3, and 14–20% with the meaning part.
    If neither does, v4 has no meaning part.
 2. Then metaplasticity + reconsolidation (τ = 1) is added if, with the chosen weight, it raises dev changed facts
    by at least 5 points, keeps recall in other words within 2 points, and L1 and L2 still pass on dev.
+
+### Two new baselines (dev stream, reported, not rules)
+
+"Keep every text and look it up" is what people use today, so v4's life test reports it, in two forms. Both store
+every sentence read (160 KB over the dev life). Before a question, they find the stored sentence whose words
+match it best, with rare words counting most.
+
+| Dev life | Recall, 3 readings | 1 reading | Correction | Changed fact | In other words |
+|---|---:|---:|---:|---:|---:|
+| GPT + retrieval (the sentence is put in front of the question) | 26% | 26% | 38% | 30% | 31% |
+| A database: exact lookup, no neural reader | **100%** | **100%** | **100%** | **100%** | **100%** |
+
+- **The lookup finds the right sentence every time** (20 of 20 checked by hand).
+- **Our small GPT doesn't use it.** It (and BDH) doesn't copy a made-up name it has seen only once, even in the
+  same text. After "Birab lives in a town called Vunev." it still pays 1.6–2.6 bits per letter for "Vunev" the
+  second time. Copying common names ("Lily") works. Learning in context is weak at this size.
+- **A plain database solves this test completely.** Shishya Brain shouldn't be sold as a better database.
+  - Its claim is a *neural network* that learns from what it reads, after training, without gradients, with a
+    memory of fixed size, and that keeps reading well.
+  - Tests that a lookup can't pass on its own (two-step questions, using a fact in its own writing) are for
+    later versions (docs/ROADMAP.md).
