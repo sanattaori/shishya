@@ -318,3 +318,10 @@ def test_verdict_from_v4_counts_l5_and_reports_l4():
     assert v4["pass"] and v4["rules"]["L5_other_words"] and not v4["rules"]["L4_small_machine"]
     test["brain"] = {**good, "recall_heldout": 0.3}
     assert not verdict(test, slow, "brain4")["pass"]
+
+
+def test_v4_is_v3_with_meaning_and_protection():
+    v3, v4 = build("brain3", "tiny"), build("brain4", "tiny")
+    assert v4.cfg.key_bag > 0 and v4.cfg.meta_tau > 0 and v4.cfg.meta_reopen
+    assert {k: v.shape for k, v in v3.named_parameters()} == {k: v.shape for k, v in v4.named_parameters()}
+    assert len(v4.new_memory(1)) == v4.cfg.n_layer + 1                  # the use of each unit, for metaplasticity

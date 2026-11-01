@@ -186,6 +186,67 @@ committed before its result (1cf73cf).
 - If v3 passes L1 and L2, the next steps are a meaning-based address for questions in other words, and sleep.
 - If it doesn't, v1–v3 are written up as a finished study.
 
+## Amendment, 1 Nov 2026 (after v3's verdict, before any v4 run): v4 adds a meaning part to the address, and rule L5
+
+**The owner's decisions (1 Nov):**
+- Add intelligence and test it.
+- Set speed aside for now: **L4 is reported, not a pass rule, from v4 on.** v1–v3's verdicts stand as they were.
+
+**Why.** v3 passed L1–L3. Its weak spot is questions in other words: 34% on the test, chance 20%. Its address is
+the words in their order, so "The town where Pimev lives is called" doesn't find "Pimev lives in a town called".
+
+**The change, v4 (`--model brain4`, settings in `models.V4`).**
+1. **v3's address, plus a meaning part.**
+   - The meaning part is the sentence's earlier words without their order, each counting by how new it is,
+     bound to the word being read.
+   - Its weight is 4 against the ordered part's 1.
+   - The same words in another order give the same meaning part. So a question in other words shares about 37%
+     of its fact's address instead of 10%, and finds its own fact among 100 dev facts 99% of the time instead
+     of 41%.
+2. **Metaplasticity with reconsolidation.**
+   - A unit that has stored a lot changes less: plasticity 1 / (1 + use/τ), τ = 1. This is the local form of
+     Larimar's least-squares write.
+   - A correction (reward > 1) writes at full plasticity again, as a recalled memory becomes changeable in the
+     brain.
+   - Added by step 2 of the rule written before the v4 dev lives (brain/RESULTS.md section 7). With the meaning
+     part, it raised changed facts from 60% to 83% and kept questions in other words within 2 points.
+3. **Everything else is v3's.** v2's network (no new childhood), the delta rule, the life stream, the dev choice
+   of the write-rate multiplier, and the GPT and BDH runs.
+
+**Evidence (dev stream only, v2's network, one life each; brain/RESULTS.md section 7).**
+
+| Dev life, v2's network | Recall, 3 readings | 1 reading | Correction | Changed fact | In other words (dev wordings) | Early facts kept | Bits/byte |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| v3's memory | 99% | 98% | 100% | 83% | 28% | 0.95 of 1.00 | -2.8% |
+| + meaning part (weight 4) | 98% | 90% | 84% | 60% | 49% | 0.95 of 1.00 | -2.9% |
+| **+ metaplasticity + reconsolidation (v4)** | 100% | 94% | 98% | 83% | 47% | 1.00 of 1.00 | -2.9% |
+
+**A new test: held-out wordings.**
+- A second way to ask each kind of question (`data.HELDOUT_PARAPHRASE`, for example "The word that Zubak keeps
+  secret is").
+- They were committed (2d8d9d7) before v4's address was designed, and are used only on the test stream. So v4
+  can't have been fitted to them.
+
+**Rules.** L1, L2 and L3 as before. L4 is reported only. And a new one:
+
+| | Rule |
+|---|---|
+| L5 | **Understands questions in other words:** at least 50% of the main facts recalled when asked in the held-out wordings (chance 20%) |
+
+The verdict passes if L1, L2, L3 and L5 all hold.
+
+**Reported, not rules:**
+- Two baselines: GPT + retrieval, and an exact database lookup (dev: 26% and 100%).
+- The dev wordings, and everything reported before.
+
+**Predictions, written now:**
+- L1, L2 and L3 pass.
+- L5 is uncertain, more likely to fail than pass. The dev wordings give 47%, and the held-out wordings change
+  more words ("whose name is", "likes best", "keeps secret"). I expect 35–50%.
+- The database lookup scores close to 100% on the test too. Shishya doesn't beat a database at storing facts;
+  that's not its claim.
+- L4 (reported): about 0.7 s per session on Kaggle's CPU.
+
 ## Sizes and compute
 
 | Preset | Where | Brain | GPT | Childhood |

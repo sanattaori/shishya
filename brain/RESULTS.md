@@ -518,3 +518,18 @@ weight 4.**
 (other facts share 6% of an address instead of 3%), and some updating ability is lost: one reading 98% → 90%,
 corrections 100% → 84%, changed facts 83% → 60%. Step 2 of the rule tests whether metaplasticity +
 reconsolidation wins those back.
+
+**Step 2 of the rule** (metaplasticity + reconsolidation, τ = 1, with weight 4):
+
+| Dev life, v2's network | Recall, 3 readings | 1 reading | Correction | Changed fact | In other words (dev wordings) | Early facts kept | Bits/byte |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| v3's memory | 99% | 98% | 100% | 83% | 28% | 0.95 of 1.00 | -2.8% |
+| + meaning part (weight 4) | 98% | 90% | 84% | 60% | 49% | 0.95 of 1.00 | -2.9% |
+| **+ metaplasticity + reconsolidation (v4)** | 100% | 94% | 98% | 83% | 47% | 1.00 of 1.00 | -2.9% |
+
+- Changed facts rose by 23 points (the rule needs 5).
+- Questions in other words stayed within 2 points (49% → 47%).
+- L1 and L2 pass on dev (100%, early facts 1.00).
+
+**So v4 is v3 + the meaning part (weight 4) + metaplasticity + reconsolidation** (`models.V4`). The amendment is
+in docs/PLAN.md.
