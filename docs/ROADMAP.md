@@ -145,8 +145,8 @@ set before the next run. **Proposal:** ≤ 1 s per 256-byte session on a 4-core 
 - **(a) Local rules only.** The weights change by a Hebbian rule from the replayed activity. This is the most
   brain-like, and it's new: there's no known recipe that works well. It's a research question in itself.
 - **(b) Gradient replay.** The replayed text trains the weights by ordinary backprop, offline, gently, mixed
-  with some old text so English isn't damaged. It works today ("Language Models Need Sleep", 2026). But it
-  means gradients at night.
+  with some old text so English isn't damaged. This is the approach of "Language Models Need Sleep" (2026). It
+  is known to work, but it means gradients at night.
 
 **What sleep would give.**
 - A life of any length: the fast memory never fills up.

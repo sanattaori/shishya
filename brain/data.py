@@ -35,6 +35,15 @@ RELATIONS = [
     ("The secret word of {s} is {o}.", "The secret word of {s} is", "{s}'s secret word is"),
 ]
 PETS = ["cat", "dog", "bird", "fish", "frog", "duck", "bunny"]
+# v4: a second way to ask each kind of question (same order as RELATIONS), written before v4's address was designed
+# and used only on the test stream, so "questions in other words" can't be fitted to wordings seen on dev.
+HELDOUT_PARAPHRASE = [
+    "{s} has a {pet} whose name is",
+    "The name of the town where {s} lives is",
+    "The friend {s} likes best is",
+    "The name of the toy that {s} has is",
+    "The word that {s} keeps secret is",
+]
 
 FULL_LIFE = {"main": 100, "early": 20, "once": 50, "reward": 50, "change": 30, "per_session": 2}
 SMALL_LIFE = {"main": 12, "early": 4, "once": 6, "reward": 6, "change": 4, "per_session": 2}
@@ -180,6 +189,11 @@ class Fact:
     @property
     def paraphrase(self) -> str:
         return self._fill(RELATIONS[self.relation][2])
+
+    @property
+    def heldout(self) -> str:
+        """The held-out wording (test stream only)."""
+        return self._fill(HELDOUT_PARAPHRASE[self.relation])
 
 
 def make_fact(rng: random.Random, subject: str, obj: str) -> Fact:

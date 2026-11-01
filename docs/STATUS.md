@@ -73,7 +73,7 @@ owner deletes temporary tokens after use.
   in the cloud container, so the Guru (v5) needs a key from the owner.
 
 **v4, in order (tick as done):**
-1. [ ] Held-out wordings: a second way to ask each kind of question, used only on the test stream, so v4's
+1. [x] Held-out wordings (`data.HELDOUT_PARAPHRASE`, committed before step 2): a second way to ask each kind of question, used only on the test stream, so v4's
    "questions in other words" can't be fitted to the wordings seen on dev.
 2. [ ] The meaning part of the address: the sentence's words without their order, each counting by how new it is,
    bound to the word being read. Probe it on dev facts (`python -m brain.probes`).
