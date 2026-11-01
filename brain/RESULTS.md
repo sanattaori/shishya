@@ -1,7 +1,7 @@
 # Shishya Brain: results
 
-**Status, 31 Oct 2026, 23:30 UTC: three verdicts are in. v1 FAIL; v2 FAIL on L1, L2 and L4 (section 3). v3 passes L1, L2 and L3 and fails only L4, on CPU speed (section 6).** Sections 4–5 are the analysis behind v3 (dev stream only). Sections 1–2 are checks, not verdicts. The pass
-rules are in [docs/PLAN.md](../docs/PLAN.md) and did not change. Sections 1 and 2 are checks of the code and of the
+**Status, 1 Nov 2026, 10:40 UTC: four verdicts are in.** v1 and v2 FAIL on L1, L2, L4 (section 3). v3 passes L1–L3 and fails only L4, on CPU speed (section 6). v4 passes L1–L3 and fails the new rule L5, questions in held-out wordings: 35% against 50% (section 8; L4 is reported only from v4 on). Sections 4, 5 and 7 are the analysis behind v3 and v4 (dev stream only). Sections 1–2 are checks, not verdicts. The pass
+rules are in [docs/PLAN.md](../docs/PLAN.md); each change was a dated amendment written before the run it applies to. Sections 1 and 2 are checks of the code and of the
 design, run on this CPU (tiny models, trained on part of the TinyStories *validation* file) and in a 15-minute Kaggle
 canary.
 
@@ -548,3 +548,77 @@ in docs/PLAN.md.
 - **A question in other words** ("The town where Pimev lives is called") still failed in the demo ("Movis.";
   24% on Zifig). That fits the dev lives: v4 answers questions in other words about half the time (47%), not
   always.
+
+## 8. The v4 verdict (Kaggle `sanattaori/shishya-brain-v4`, code 318800a, the amendment's own commit)
+
+v4 is v2's network with v4's memory (docs/PLAN.md, amendment of 1 Nov). Same test stream, same GPT and BDH (their
+numbers are again exactly those of the earlier runs), the rules as amended: L5 is new, L4 is reported only.
+
+#### Childhood (same bytes for every model)
+
+| Model | Parameters | Bytes | Held-out bits/byte | Hours | Bytes/s |
+|---|---:|---:|---:|---:|---:|
+| gpt | 12,706,304 | 100,007,936 | 0.588 | 0.4 | 62,058 |
+| bdh | 12,713,984 | 100,007,936 | 0.532 | 3.4 | 8,240 |
+| brain | 12,795,916 | 100,007,936 | 0.544 | 6.2 | 4,511 |
+
+Stage 1 (within 5% of GPT): BDH -9.5%, Brain -7.4%.
+
+#### Life (test stream, fresh-context questions, chance = 20%)
+
+| Learner | Setting (dev) | Recall, 3 exposures | 1 exposure | 1 correction (reward 3) | Changed fact: new wins | Paraphrased | Held-out wording | Early facts kept | Bits/byte change |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| **Shishya Brain** (local rule only) | 4.0 | 98% | 76% | 94% | 90% | 48% | 35% | 0.95 of 1.00 | -2.7% |
+| GPT + fine-tuning | 3e-05 | 21% | 14% | 20% | 30% | 22% | 21% | 0.15 of 0.45 | +1.9% |
+| BDH + fine-tuning | 3e-05 | 22% | 16% | 18% | 30% | 20% | 21% | 0.15 of 0.35 | +1.8% |
+| GPT + retrieval (reported, not a rule) |  | 27% | 28% | 26% | 27% | 23% | 25% | 0.20 of 0.20 | +0.0% |
+| A database: exact lookup, no reader (reported, not a rule) |  | 100% | 100% | 100% | 100% | 100% | 100% | 1.00 of 1.00 | +nan% |
+| No learning (as after childhood) | | brain 18% / gpt 17% / bdh 25% | | | | | | | |
+
+#### Verdict (rules fixed in docs/PLAN.md before the run)
+
+| Rule | Result |
+|---|---|
+| L1_learns | pass |
+| L2_no_forgetting | pass |
+| L4_small_machine | **fail** (reported, not a pass rule) |
+| L3_beats_gradient | pass |
+| L5_other_words | **fail** |
+
+L3 detail: vs gpt: recall difference lower 95% bound +0.69, vs bdh: recall difference lower 95% bound +0.68
+L4 measured: 677 ms per 256-byte write, peak 1253 MB.
+
+**Overall: FAIL**
+
+**What happened, in plain words**
+
+- **L5 fails, as predicted.**
+  - Questions in the held-out wordings (never used on dev, written before v4 was designed) get **35%**. The bar
+    was 50%, chance is 20%. The prediction written before the run was 35–50%, "more likely to fail".
+  - Asked in the dev wordings, v4 gets **48%** on the test stream (v3 34%, v2 28%).
+  - The meaning part helps, but it doesn't reach "understands questions in other words".
+- **L1–L3 pass again.** 98% after 3 readings. Early facts kept 0.95. Reading −2.7%. About 4.5× the fine-tuned
+  GPT and BDH (lower bounds +0.68 to +0.69).
+- **Updating got better than v3.** Corrections 94% (v3 90%). Changed facts: the new name wins 90% (v3 77%).
+  Metaplasticity with reconsolidation does what it was meant to.
+- **After one reading: 76%,** below v3's 96%.
+  - The dev choice of write rate picked 4.0: every rate gave 100% on dev, and 4.0 had the smallest bits-per-byte
+    change by a hair.
+  - On dev, rate 0.5 gave 94% after one reading. The higher rate likely costs the facts read once.
+  - The dev rule doesn't look at one-reading recall; that is a weakness of the rule, to fix in v5's.
+- **The two baselines.**
+  - GPT + retrieval: 27%. Our small GPT doesn't copy a made-up name seen once.
+  - The exact database lookup: 100% on everything, held-out wordings included, as predicted. Shishya is not a
+    better database. Its claim is a neural network that learns after training, without gradients, at fixed size.
+- **L4 (reported only):** 677 ms per session on Kaggle's CPU, 1.25 GB.
+
+| | v3 | **v4** |
+|---|---:|---:|
+| Recall after 3 readings | 99% | 98% |
+| After 1 reading | 96% | 76% |
+| Correction | 90% | 94% |
+| Changed fact: new wins | 77% | **90%** |
+| In other words (the dev wordings) | 34% | **48%** |
+| In other words (held-out wordings, L5 ≥ 50%) | not measured | 35% |
+| Early facts kept | 0.95 | 0.95 |
+| Verdict | FAIL (L4 only) | **FAIL (L5 only)** |
