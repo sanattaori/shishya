@@ -64,7 +64,7 @@ owner deletes temporary tokens after use.
 - Fails only L4: 665 ms per session on Kaggle's CPU against 50 ms (1.2 GB memory: OK).
 - By the decision point agreed with the owner (pass L1 and L2), the work goes on to v4.
 
-1. **Choose v4 with the owner,** in their direction (better learning than an LLM, no LLM inside):
+1. **Read [ROADMAP.md](ROADMAP.md) (1 Nov): "Shishya goes to school".** It is the proposed path from v4 to a flagship test, with the owner's five open decisions at the end. Choose v4 with the owner, in their direction (better learning than an LLM, no LLM inside; a teacher LLM outside is fine):
    - **Questions in other words** (v3: 34% on test, chance 20%). A meaning-based address without BERT: words
      that occur in the same places get similar codes, learned slowly in life. This is v3's main weak spot.
    - **Changed facts** (v3: 77%). Metaplasticity + reconsolidation got 93% on dev, against v3's 83%
