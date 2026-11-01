@@ -26,7 +26,7 @@ import numpy as np
 import torch
 
 from . import data
-from .lifetest import Hebbian, load
+from .lifetest import EVAL_BATCH, Hebbian, load
 
 # relation -> (lesson wordings, exam wordings never used in lessons). {s}: subject, {o}: object, {p}: pet kind
 WORDINGS = {
@@ -165,8 +165,10 @@ def main(argv=None):
     p.add_argument("--lessons", type=int, default=1)
     p.add_argument("--data-dir", default="brain/out/data")
     p.add_argument("--out")
+    p.add_argument("--threads", type=int, default=4)
     args = p.parse_args(argv)
-    torch.set_num_threads(4)
+    torch.set_num_threads(args.threads)
+    EVAL_BATCH.update(loglik=64, bpb=16)              # about 2 GB instead of 8 on a CPU; results don't depend on it
     sp = data.splits(args.data_dir, need_train=False)
     world = make_world(sp.names["dev"], args.people)
     brain = load(Path(args.run), torch.device("cpu"))
