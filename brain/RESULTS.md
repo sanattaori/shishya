@@ -501,3 +501,20 @@ match it best, with rare words counting most.
     memory of fixed size, and that keeps reading well.
   - Tests that a lookup can't pass on its own (two-step questions, using a fact in its own writing) are for
     later versions (docs/ROADMAP.md).
+
+### The dev lives (v2's network)
+
+| Dev life | Recall, 3 readings | 1 reading | Correction | Changed fact | In other words (dev wordings) | Early facts kept | Bits/byte |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| v3 (no meaning part) | 99% | 98% | 100% | 83% | **28%** | 0.95 of 1.00 | -2.8% |
+| Meaning part, weight 4 | 98% | 90% | 84% | 60% | **49%** | 0.95 of 1.00 | -2.9% |
+| Meaning part, weight 8 | 98% | 94% | 86% | 70% | **53%** | 0.90 of 1.00 | -2.8% |
+
+**Step 1 of the rule:** weight 8 is higher in other words (53% against 49%), but its early facts kept (0.90)
+are more than 2 points below v3's 0.95. Weight 4 meets both conditions (98%, 0.95). **v4's meaning part has
+weight 4.**
+
+**What the meaning part costs.** Reworded questions go from 28% to 49%. But the memory holds more overlap now
+(other facts share 6% of an address instead of 3%), and some updating ability is lost: one reading 98% → 90%,
+corrections 100% → 84%, changed facts 83% → 60%. Step 2 of the rule tests whether metaplasticity +
+reconsolidation wins those back.
