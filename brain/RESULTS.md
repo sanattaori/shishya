@@ -668,3 +668,12 @@ person's 5).
 - **For v5, the target is completing a partial cue** (as the brain's CA3 does): a question that finds 30% of an
   address should read the whole memory, not 30% of it. A second route is more stored wordings per fact (lessons
   in several wordings, being tested now).
+
+**A first try at completing a partial cue: no.**
+- The memory also stored a fingerprint of each address (a fixed random projection to 512 numbers), written
+  with the same delta rule. A question read its fingerprint back, rebuilt an address from it, and read again.
+- Over a school life (76,800 written steps, `brain/notes/probe_complete.py`), the rebuilt address matched its
+  own fact *less* than the question did: 22% against 29% of the address; it found its fact 63% against 76% of
+  the time.
+- A single linear read-back is a blur of many memories. The brain's CA3 completes cues with recurrent attractor
+  dynamics, which needs a real design (v5).
