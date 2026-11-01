@@ -9,7 +9,8 @@ import sys
 from pathlib import Path
 
 NAMES = {"gpt": "GPT + fine-tuning", "bdh": "BDH + fine-tuning", "brain": "**Shishya Brain** (local rule only)",
-         "retrieval": "GPT + retrieval (reported, not a rule)"}
+         "retrieval": "GPT + retrieval (reported, not a rule)",
+         "lookup": "A database: exact lookup, no reader (reported, not a rule)"}
 
 
 def pct(x: float) -> str:
