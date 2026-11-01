@@ -450,3 +450,33 @@ not harder than dev, against the prediction that it might be.
 | Held-out bits/byte change (L2: ≤ +5%) | −5.5% | −2.7% | −2.7% |
 | CPU ms per session (L4: ≤ 50) | 562 | 529 | 665 |
 | Verdict | FAIL (L1, L2, L4) | FAIL (L1, L2, L4) | **FAIL (L4 only)** |
+
+## 7. Choosing v4 (dev stream only, v2's network)
+
+v4 aims at questions in other words. The test stream gets wordings that were never used on dev
+(`data.HELDOUT_PARAPHRASE`, committed in 2d8d9d7, before v4's address was designed).
+
+### The meaning part of the address (`python -m brain.probes`, 100 dev facts, untrained codes)
+
+v3's address plus a second part: the sentence's earlier words without their order, each counting by how new it
+is, bound to the word being read (`key_bag` is its weight).
+
+| Meaning part (key_bag) | Question finds its own fact | Same kind alike | In other words: finds its fact | In other words: share of the address |
+|---:|---:|---:|---:|---:|
+| 0 (v3) | 100% | 13% | 41% | 10% |
+| 0.5 | 100% | 15% | 85% | 23% |
+| 1 | 100% | 16% | 90% | 28% |
+| 2 | 100% | 16% | 94% | 33% |
+| 4 | 100% | 16% | 99% | 37% |
+| 8 | 100% | 16% | 100% | 44% |
+| 16 | 100% | 16% | 100% | 46% |
+
+Two facts about the same person ("Zubak's cat is called", "Zubak lives in a town called") share 6% of their
+address in v3, and 14–20% with the meaning part.
+
+**The rule for choosing v4, written before any v4 dev life (1 Nov).**
+1. The meaning part's weight is 4 or 8: whichever gives the higher dev recall in other words (a tie goes to 4).
+   It must keep recall after 3 readings and the early facts kept within 2 points of v3's dev life (99%, 0.95).
+   If neither does, v4 has no meaning part.
+2. Then metaplasticity + reconsolidation (τ = 1) is added if, with the chosen weight, it raises dev changed facts
+   by at least 5 points, keeps recall in other words within 2 points, and L1 and L2 still pass on dev.

@@ -82,11 +82,14 @@ def probe_model(run: Path, sp: data.Splits) -> list[dict]:
 
 
 def probe_window(sp: data.Splits, window: int, decay: float, units: int = 16384, active: int = 40,
-                 key: str = "window") -> dict:
-    """An untrained code: finds its own fact, how alike same-kind facts are, and the same with paraphrases."""
+                 key: str = "window", **extra) -> dict:
+    """An untrained code: finds its own fact, how alike same-kind facts are, and the same with paraphrases.
+    ``extra``: more config settings (key_novelty, key_bag, …)."""
     cfg = BrainConfig(n_layer=1, n_embd=32, n_head=2, mult=8, mem_dim=8, key=key, key_size=units,
-                      key_window=window, key_decay=decay, key_active=active)
+                      key_window=window, key_decay=decay, key_active=active, **extra)
     brain = Brain(cfg)
+    if cfg.key_novelty:
+        brain.learn_familiarity(sp.train[:20000])
     store, query, para, rel = [], [], [], []
     for f, text, pos in fact_texts(sp):
         rel.append(f.relation)

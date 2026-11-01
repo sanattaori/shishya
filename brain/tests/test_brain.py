@@ -293,3 +293,14 @@ def test_v3_is_v2_with_the_new_address():
     v2, v3 = build("brain2", "tiny"), build("brain3", "tiny")
     assert v3.cfg.key == "words" and v3.cfg.key_sentence and v3.cfg.key_novelty
     assert {k: v.shape for k, v in v2.named_parameters()} == {k: v.shape for k, v in v3.named_parameters()}
+
+
+def test_meaning_part_makes_word_order_matter_less():
+    """With key_bag, the same words in another order share more of the address."""
+    def shared(bag):
+        b = Brain(BrainConfig(n_layer=1, n_embd=32, n_head=2, mult=8, mem_dim=8, key="words", key_size=4096,
+                              key_window=8, key_active=40, key_bag=bag))
+        a, q = (set(b.window_keys(torch.tensor([list(t)]))[0][0, -1].tolist())
+                for t in (b"Zubak's cat is called ", b"The cat of Zubak is called "))
+        return len(a & q)
+    assert shared(4.0) > shared(0.0) + 5
