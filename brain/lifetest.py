@@ -250,7 +250,12 @@ def bootstrap_lower(a: list[bool], b: list[bool], n: int = 2000, seed: int = 0) 
     return float(np.quantile(a[idx].mean(1) - b[idx].mean(1), 0.025))
 
 
-def verdict(test: dict, resources: dict) -> dict:
+# v4 on (docs/PLAN.md, amendment of 1 Nov 2026): L5, questions asked in held-out wordings, and L4 reported only
+L5_MIN = 0.60
+L4_COUNTS = {"brain", "brain2", "brain3"}        # the Brains judged with L4 as a pass rule
+
+
+def verdict(test: dict, resources: dict, brain: str = "brain") -> dict:
     br = test["brain"]
     rules = {
         "L1_learns": br["recall_main"] >= 0.80,
@@ -265,7 +270,11 @@ def verdict(test: dict, resources: dict) -> dict:
         less_forgetting = b["bpb_rise"] - br["bpb_rise"] >= 0.02 and br["recall_main"] - b["recall_main"] >= -0.05
         l3[k] = {"recall_diff_lower95": lb, "pass": bool(better_recall or less_forgetting)}
     rules["L3_beats_gradient"] = all(v["pass"] for v in l3.values())
-    return {"rules": rules, "L3_detail": l3, "pass": all(rules.values())}
+    if "recall_heldout" in br:
+        rules["L5_other_words"] = br["recall_heldout"] >= L5_MIN
+    l4 = brain in L4_COUNTS
+    counted = [k for k in rules if l4 or k != "L4_small_machine"]
+    return {"rules": rules, "L3_detail": l3, "L4_counts": l4, "pass": all(rules[k] for k in counted)}
 
 
 def resources_check(run_dir: Path, small: bool, smoke: bool, data_dir: str, life_rate: float,
@@ -341,7 +350,7 @@ def main(argv=None):
           f"change {t['change_new_wins']:.2f} paraphrase {t['recall_paraphrase']:.2f}", flush=True)
     resources = resources_check(runs, args.small, args.smoke, args.data_dir, report["chosen"]["brain"], args.brain)
     report["resources"] = resources
-    report["verdict"] = verdict(report["test"], resources)
+    report["verdict"] = verdict(report["test"], resources, args.brain)
     report["setup"] = {"small": args.small, "smoke": args.smoke, "brain": args.brain,
                        "sessions": len(streams["test"].sessions),
                        "facts_main": len(streams["test"].facts["main"]), "device": str(dev)}

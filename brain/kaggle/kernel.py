@@ -8,6 +8,7 @@ is private), writes MODE below, and pushes this script. Everything lands in /kag
 - v3:     make the v3 Brain from v2's (brain/make_v3.py), then its life test against the same GPT and BDH
           (the `life2` run's output is mounted: it holds GPT, BDH and the v2 Brain)
 - canary3: the same with a short life, to catch GPU-only bugs in minutes
+- v4, canary4: the same for the v4 Brain
 """
 import os
 import shutil
@@ -99,10 +100,12 @@ def main():
         mount_runs(["gpt", "bdh", "brain2"])
         life("brain2")
         return
-    if MODE in ("v3", "canary3"):
+    if MODE in ("v3", "canary3", "v4", "canary4"):
+        kind = "brain" + MODE[-1]
         mount_runs(["gpt", "bdh", "brain2"])
-        sh([sys.executable, "-m", "brain.make_v3", f"{OUT}/brain2", f"{OUT}/brain3", "--data-dir", f"{W}/data"])
-        life("brain3", small=MODE == "canary3")
+        sh([sys.executable, "-m", "brain.make_v3", f"{OUT}/brain2", f"{OUT}/{kind}", "--data-dir", f"{W}/data",
+            "--kind", kind])
+        life(kind, small=MODE.startswith("canary"))
         return
     if gpus >= 2:                                   # the Brain on one GPU, GPT then BDH on the other
         brain = train("brain", 1)
