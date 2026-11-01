@@ -325,3 +325,19 @@ def test_v4_is_v3_with_meaning_and_protection():
     assert v4.cfg.key_bag > 0 and v4.cfg.meta_tau > 0 and v4.cfg.meta_reopen
     assert {k: v.shape for k, v in v3.named_parameters()} == {k: v.shape for k, v in v4.named_parameters()}
     assert len(v4.new_memory(1)) == v4.cfg.n_layer + 1                  # the use of each unit, for metaplasticity
+
+
+def test_forget_works_through_metaplasticity():
+    from brain.models import _sparse_read
+    torch.manual_seed(7)
+    b = Brain(BrainConfig(n_layer=1, n_embd=32, n_head=2, mult=8, mem_dim=8, dropout=0.0, key="words",
+                          key_size=4096, key_window=8, key_active=10, meta_tau=0.01)).eval()
+    idx = torch.tensor([list(b"Zubak's cat is called Morif.")])
+    with torch.no_grad():
+        b(idx, keep=True)
+        mem = b.write(b.new_memory(1), torch.full((1, idx.size(1)), 3.0))
+        (kidx, kval), _ = b.trace[0]
+        before = _sparse_read(mem[0], kidx, kval)[0, 0, :-1].norm(dim=-1).mean()
+        b(idx, keep=True)
+        after = _sparse_read(b.forget(mem)[0], kidx, kval)[0, 0, :-1].norm(dim=-1).mean()
+    assert after < 0.05 * before
