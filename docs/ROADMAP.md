@@ -157,6 +157,17 @@ set before the next run. **Proposal:** ≤ 1 s per 256-byte session on a 4-core 
 **The risk.** Training the weights at night can damage what childhood taught (the classic forgetting of
 gradient learning). Every night is checked: held-out bits per byte must not rise.
 
+## Learned on the way (v4, 1 Nov)
+
+- **A plain database solves the current life test** (100% on everything on dev). Later tests must ask for what
+  a lookup can't do on its own: two-step questions, and using a fact in its own writing.
+- **Our small GPT and BDH don't copy a made-up name seen once in the same text.** So "GPT + retrieval" scores only
+  26% on dev. Learning in context is weak at this size; Shishya's lasting memory does what the context can't.
+- **Word code fix for v5:** code a word's letters in order (each bound to the code so far), not as a sum. Today
+  "Su…" and "Fu…" share half their address, which leaves traces after `forget` and adds overlap.
+- **The meaning part trades updating for understanding.** Metaplasticity + reconsolidation won the updating back
+  on dev.
+
 ## The steps (each one pre-registered)
 
 | Step | What it adds | Test | Rough cost |
