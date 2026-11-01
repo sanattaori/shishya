@@ -16,6 +16,8 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import math
+import re
 import resource
 import subprocess
 import sys
@@ -142,6 +144,50 @@ class Gradient(Learner):
             self.opt.step()
 
 
+class Retrieval(Learner):
+    """The baseline people use today: keep every sentence read, and before a question put the best-matching one in
+    front of it. The model itself never changes. Matching: the question's words weighted by how rare they are among
+    the stored sentences (log((N+1)/(df+1))); on a tie, the most recent sentence wins."""
+
+    def __init__(self, model):
+        super().__init__(model)
+        self.sents: list[str] = []
+        self.words: list[set[str]] = []
+        self.df: dict[str, int] = {}
+
+    @staticmethod
+    def _words(text: str) -> set[str]:
+        return set(re.findall(r"[a-z]+", text.lower()))
+
+    def learn(self, s: data.Session):
+        for sent in data._sentences(s.text):
+            w = self._words(sent)
+            self.sents.append(sent)
+            self.words.append(w)
+            for x in w:
+                self.df[x] = self.df.get(x, 0) + 1
+
+    def best(self, question: str) -> str:
+        q, n = self._words(question), len(self.sents)
+        idf = {w: math.log((n + 1) / (self.df.get(w, 0) + 1)) for w in q}
+        top, best = 0.0, ""
+        for sent, w in zip(self.sents, self.words):
+            score = sum(idf[x] for x in q & w)
+            if score >= top and score > 0:
+                top, best = score, sent
+        return best
+
+    def memory_bytes(self) -> int:
+        return sum(len(x.encode()) for x in self.sents)
+
+    @torch.no_grad()
+    def loglik(self, prompts: list[str], conts: list[str]) -> torch.Tensor:
+        found = {p: data._fit(self.best(p), 150) for p in set(prompts)}     # GPT reads at most 256 bytes
+        ctx = [(found[p] + " " if found[p] else "") for p in prompts]
+        full = super().loglik([c + p for c, p in zip(ctx, prompts)], conts)
+        return full
+
+
 def recall(learner: Learner, stream: data.LifeStream, facts: list[data.Fact], paraphrase: bool | str = False
            ) -> list[bool]:
     """paraphrase: False (the question as in childhood), True (in other words), "heldout" (test stream only)."""
@@ -183,6 +229,8 @@ def live(learner: Learner, stream: data.LifeStream, val: list[str]) -> dict:
         out["recall_heldout"] = float(np.mean(recall(learner, stream, f["main"], paraphrase="heldout")))
     if isinstance(learner, Hebbian):
         out["ms_per_write_median"] = float(np.median(learner.ms))
+    if isinstance(learner, Retrieval):
+        out["memory_bytes"] = learner.memory_bytes()
     return out
 
 
@@ -286,6 +334,11 @@ def main(argv=None):
         print(f"TEST {kind} ({best}): recall3 {t['recall_main']:.2f} recall1 {t['recall_once']:.2f} "
               f"reward {t['recall_reward']:.2f} change {t['change_new_wins']:.2f} "
               f"retention {t['retention']:.2f} rise {t['bpb_rise']:+.3f}", flush=True)
+    # reported, not a rule: GPT with "keep every sentence and look it up" (v4 on)
+    report["test"]["retrieval"] = live(Retrieval(models["gpt"]), streams["test"], val)
+    t = report["test"]["retrieval"]
+    print(f"TEST retrieval (gpt): recall3 {t['recall_main']:.2f} recall1 {t['recall_once']:.2f} "
+          f"change {t['change_new_wins']:.2f} paraphrase {t['recall_paraphrase']:.2f}", flush=True)
     resources = resources_check(runs, args.small, args.smoke, args.data_dir, report["chosen"]["brain"], args.brain)
     report["resources"] = resources
     report["verdict"] = verdict(report["test"], resources)
