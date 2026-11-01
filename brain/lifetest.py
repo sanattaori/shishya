@@ -142,10 +142,12 @@ class Gradient(Learner):
             self.opt.step()
 
 
-def recall(learner: Learner, stream: data.LifeStream, facts: list[data.Fact], paraphrase: bool = False) -> list[bool]:
+def recall(learner: Learner, stream: data.LifeStream, facts: list[data.Fact], paraphrase: bool | str = False
+           ) -> list[bool]:
+    """paraphrase: False (the question as in childhood), True (in other words), "heldout" (test stream only)."""
     prompts, conts = [], []
     for f in facts:
-        p = f.paraphrase if paraphrase else f.prompt
+        p = f.heldout if paraphrase == "heldout" else f.paraphrase if paraphrase else f.prompt
         for o in stream.candidates[f.sentence]:
             prompts.append(p)
             conts.append(f" {o}.")
@@ -177,6 +179,8 @@ def live(learner: Learner, stream: data.LifeStream, val: list[str]) -> dict:
         "bpb_before": before, "bpb_after": after, "bpb_rise": after / before - 1,
         "main_correct": r["main"], "seconds": round(time.time() - t0, 1),
     }
+    if getattr(stream, "heldout", False):                    # v4: wordings never used on dev (test stream only)
+        out["recall_heldout"] = float(np.mean(recall(learner, stream, f["main"], paraphrase="heldout")))
     if isinstance(learner, Hebbian):
         out["ms_per_write_median"] = float(np.median(learner.ms))
     return out
@@ -232,6 +236,7 @@ def _streams(args):
     sizes = data.SMALL_LIFE if args.small else data.FULL_LIFE
     streams = {"dev": data.life_stream(sp.life_dev, sp.names["dev"], SEEDS["dev"], sizes),
                "test": data.life_stream(sp.life_test, sp.names["test"], SEEDS["test"], sizes)}
+    streams["test"].heldout = True
     return sp, streams
 
 
