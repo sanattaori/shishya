@@ -49,6 +49,9 @@ class BrainConfig:
     key_active: int = 40
     key_sentence: bool = True      # "words" only: the address starts at the sentence, like a question would
     key_novelty: bool = False      # "words" only: earlier words count by how new they are (see Brain.novelty)
+    # v4 ("words" only): weight of the address's meaning part, the sentence's earlier words without their order,
+    # bound to the word being read. 0 leaves it out (v3).
+    key_bag: float = 0.0
     # write gate (studied for v3): a step is written only if its surprise is at least this. 0 writes every step.
     write_min_surprise: float = 0.0
     # metaplasticity (studied for v3, window and words keys only): a unit's plasticity falls as 1 / (1 + use/tau).
@@ -193,6 +196,10 @@ class Brain(nn.Module):
         new it is (see ``learn_familiarity``): "is" and "called" count little, a name never seen counts fully.
 
             pre[t] = cur(t) ⊙ slot[0] + Σ_d decay^d · novelty(word) · word(t, d) ⊙ slot[d]
+                     + key_bag · (Σ_d novelty(word) · word(t, d)) ⊙ cur(t)
+
+        The last term (v4) is the meaning part: the same words in another order ("the cat of Zubak is called",
+        "Zubak's cat is called") give the same sum, so a question in other words shares part of the address.
         """
         c = self.cfg
         B, T = idx.shape
@@ -213,6 +220,7 @@ class Brain(nn.Module):
         so_far = so_far / (pos + 1).float().sqrt()[..., None]
         cur = torch.where(space[..., None], self.key_space.expand(B, T, U), so_far)
         pre = cur * self.key_pos[0]
+        bag = torch.zeros_like(pre) if c.key_bag else None
         sp = space.long()
         if c.key_sentence:                  # words before the last . ! ? or new line are not part of the address
             stop = (idx == 46) | (idx == 33) | (idx == 63) | (idx == 10)
@@ -222,6 +230,10 @@ class Brain(nn.Module):
             j = torch.where(j > last_stop, j, torch.zeros_like(j)) if c.key_sentence else j.clamp_min(0)  # 0: none
             word = C.view(B * (T + 1), U)[(j + (T + 1) * torch.arange(B, device=idx.device)[:, None]).flatten()]
             pre = pre + c.key_decay ** d * word.view(B, T, U) * self.key_pos[d]
+            if bag is not None:
+                bag = bag + word.view(B, T, U)
+        if bag is not None:                 # the meaning part: which words, not where, bound to the word being read
+            pre = pre + c.key_bag * bag * cur
         return pre
 
     def novelty(self, h: torch.Tensor) -> torch.Tensor:
