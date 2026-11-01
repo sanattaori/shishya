@@ -1,6 +1,7 @@
 # Where the work is (hand-off for a new session)
 
-*Last updated 1 Nov 2026, 12:10 UTC. Branch `ccr-ebda0c39-9rnnt2`. Read this, then [PLAN.md](PLAN.md) (the design, the pass
+*Last updated 2 Nov 2026, 04:00 IST. Branch `brain-v5` (the `ccr-ebda0c39-9rnnt2` work + `brain-hybrid` + v5). For v5
+read [V5.md](V5.md) first. Before v5: read this, then [PLAN.md](PLAN.md) (the design, the pass
 rules and the dated amendments), then [brain/RESULTS.md](../brain/RESULTS.md). How v3 works: [brain/ARCHITECTURE.md](../brain/ARCHITECTURE.md).*
 
 ## How we got here (the owner's decisions, in order)
@@ -38,6 +39,10 @@ rules and the dated amendments), then [brain/RESULTS.md](../brain/RESULTS.md). H
 | v2 life test against v1's GPT and BDH | `sanattaori/shishya-brain-life2` | FAIL (L1, L2, L4); L3 passes by +45 points |
 | v3 life test (v2's network, v3's memory) | `sanattaori/shishya-brain-v3` | **L1, L2, L3 pass**; FAIL on L4 (CPU speed) only |
 | v4 life test (v2's network, v4's memory) | `sanattaori/shishya-brain-v4` | L1, L2, L3 pass; **FAIL on L5** (held-out wordings 35% < 50%); L4 reported only |
+| Hybrid stage 1 (SmolLM2-135M + v3's memory; [HYBRID.md](HYBRID.md)) | CPU | H1–H3 pass; FAIL on H4 (vs RAG) and H5 (held-out wordings 27%) |
+| **v5, 135M (main; [V5.md](V5.md))** | CPU, `brain/out/v5/` | **all five pass**: other words 89.5%, held-out wordings 93%; RAG ties or wins most rows |
+| v5, SmolLM2-1.7B (scale) | `sanattaori/shishya-brain-v5` | all five pass: other words 93%, held-out wordings 98% |
+| v5 with no LLM (the BDH Brain as reader) | `sanattaori/shishya-brain-v5brain` | running (2 Nov, 04:00 IST) |
 
 **What v3 is** ([PLAN.md](PLAN.md), amendment of 31 Oct): v2's trained network, unchanged, with a new way to address
 and write its lasting memory. The settings are in `brain/models.py` (`V3`); `brain/make_v3.py` builds it from the
@@ -84,7 +89,14 @@ owner deletes temporary tokens after use.
    question. Reported, not a rule: it shows where Shishya stands against "keep every text and look it up".
 5. [x] The v4 amendment (docs/PLAN.md, 1 Nov), canary4, and the v4 verdict (brain/RESULTS.md section 8):
    L1–L3 pass; L5 fails (35% in held-out wordings, as predicted); changed facts 90%; one reading 76%.
-6. **v5, next.** The school is started: `brain/school.py` (a made-up world, a template Guru, quizzes with
+6. [x] **v5 (2 Nov): done, see [V5.md](V5.md).** A frozen LLM plus a who ⊗ what memory, written by the
+   delta rule with no gradients. Passes all five rules at 135M and 1.7B. Credentials are in the repo's gitignored
+   `.env` (`KAGGLE_API_TOKEN`, `OPENROUTER_API_KEY`); load with `set -a; . ./.env; set +a`. Free OpenRouter
+   models (`:free`) only. **Next (V5.md's rule, all pass):** tests where keeping text and looking it up
+   struggles (many facts in one sentence, facts that change many times, combining facts without a plan), then
+   sleep. The history below is kept for reference.
+
+   *(Before v5, 1 Nov:)* The school is started: `brain/school.py` (a made-up world, a template Guru, quizzes with
    corrections, a closed-book exam with plain, reworded and two-step questions; dev names only). First runs:
    `brain/out/school/v3.json`, `v4.json` (brain/RESULTS.md section 9): after one lesson per fact, plain questions
    100%, but unseen wordings and two-step questions at chance (each person has 5 facts, and the name-led meaning
