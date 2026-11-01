@@ -43,7 +43,8 @@ def report(run: Path) -> str:
     v, r = life["verdict"], life["resources"]
     out += ["", "### Verdict (rules fixed in docs/PLAN.md before the run)", "", "| Rule | Result |", "|---|---|"]
     for name, ok in v["rules"].items():
-        out.append(f"| {name} | {'pass' if ok else '**fail**'} |")
+        note = " (reported, not a pass rule)" if name.startswith("L4") and not v.get("L4_counts", True) else ""
+        out.append(f"| {name} | {'pass' if ok else '**fail**'}{note} |")
     l3 = ", ".join(f"vs {k}: recall difference lower 95% bound {d['recall_diff_lower95']:+.2f}"
                    for k, d in v["L3_detail"].items())
     out += ["", "L3 detail: " + l3,

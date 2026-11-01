@@ -534,10 +534,13 @@ class GPT(nn.Module):
 
 # v3 (docs/PLAN.md, amendment of 31 Oct 2026): v2 with these settings, chosen on the dev stream
 V3 = {"key": "words", "key_window": 8, "key_decay": 1.0, "key_sentence": True, "key_novelty": True}
+# v4 (docs/PLAN.md, amendment of 1 Nov 2026): v3 plus the meaning part of the address, chosen on the dev stream
+V4 = {**V3, "key_bag": 4.0}
+VERSIONS = {"brain3": V3, "brain4": V4}
 
 
 def build(kind: str, preset: str) -> nn.Module:
-    """kind: gpt | bdh | brain (v1) | brain2 (v2: window keys) | brain3 (v3: see V3)."""
+    """kind: gpt | bdh | brain (v1) | brain2 (v2: window keys) | brain3, brain4 (v3, v4: see VERSIONS)."""
     bcfg, gcfg = PRESETS[preset]
     if kind == "gpt":
         return GPT(gcfg)
@@ -547,8 +550,8 @@ def build(kind: str, preset: str) -> nn.Module:
         return Brain(bcfg)
     if kind == "brain2":
         return Brain(BrainConfig(**{**asdict(bcfg), "key": "window"}))
-    if kind == "brain3":
-        return Brain(BrainConfig(**{**asdict(bcfg), **V3}))
+    if kind in VERSIONS:
+        return Brain(BrainConfig(**{**asdict(bcfg), **VERSIONS[kind]}))
     raise ValueError(f"unknown model {kind!r}")
 
 

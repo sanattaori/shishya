@@ -304,3 +304,17 @@ def test_meaning_part_makes_word_order_matter_less():
                 for t in (b"Zubak's cat is called ", b"The cat of Zubak is called "))
         return len(a & q)
     assert shared(4.0) > shared(0.0) + 5
+
+
+def test_verdict_from_v4_counts_l5_and_reports_l4():
+    from brain.lifetest import verdict
+    good = {"recall_main": 0.9, "bpb_rise": -0.02, "retention": 0.9, "main_correct": [True] * 9 + [False],
+            "recall_heldout": 0.7}
+    base = {"recall_main": 0.2, "bpb_rise": 0.02, "main_correct": [False] * 8 + [True] * 2}
+    test = {"brain": good, "gpt": base, "bdh": base}
+    slow = {"peak_rss_mb": 1000, "ms_per_write": 600}
+    assert not verdict(test, slow, "brain3")["pass"]            # v3: L4 counted
+    v4 = verdict(test, slow, "brain4")
+    assert v4["pass"] and v4["rules"]["L5_other_words"] and not v4["rules"]["L4_small_machine"]
+    test["brain"] = {**good, "recall_heldout": 0.3}
+    assert not verdict(test, slow, "brain4")["pass"]
