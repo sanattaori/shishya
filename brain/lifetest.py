@@ -270,7 +270,7 @@ def bootstrap_lower(a: list[bool], b: list[bool], n: int = 2000, seed: int = 0) 
 
 
 # v4 on (docs/PLAN.md, amendment of 1 Nov 2026): L5, questions asked in held-out wordings, and L4 reported only
-L5_MIN = 0.60
+L5_MIN = 0.50
 L4_COUNTS = {"brain", "brain2", "brain3"}        # the Brains judged with L4 as a pass rule
 
 

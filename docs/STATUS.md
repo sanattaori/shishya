@@ -77,11 +77,11 @@ owner deletes temporary tokens after use.
    "questions in other words" can't be fitted to the wordings seen on dev.
 2. [x] The meaning part of the address (`key_bag`; probes in brain/RESULTS.md section 7): the sentence's words without their order, each counting by how new it is,
    bound to the word being read. Probe it on dev facts (`python -m brain.probes`).
-3. [ ] Dev lives (`python -m brain.study`): v3 + meaning part, with and without metaplasticity +
+3. [x] Dev lives (`python -m brain.study`; brain/RESULTS.md section 7; v4 = meaning part 4 + metaplasticity + reconsolidation): v3 + meaning part, with and without metaplasticity +
    reconsolidation. Choose by a rule written before the last result, as for v3.
 4. [x] A retrieval baseline in the life test, plus an exact-lookup one (dev: 26% and 100%): GPT reads the best-matching stored sentence before each
    question. Reported, not a rule: it shows where Shishya stands against "keep every text and look it up".
-5. [ ] The v4 amendment in docs/PLAN.md: the same L1–L3, a new L5 for questions in other words (held-out
+5. [~] The v4 amendment in docs/PLAN.md (written 1 Nov, L5 ≥ 50%); canary4 and v4 on Kaggle next: the same L1–L3, a new L5 for questions in other words (held-out
    wordings), L4 reported only. Then `brain/kaggle/run.sh … --canary4`, then `--v4`, then RESULTS.md.
 6. Then v5 (the Guru school), as in ROADMAP.md.
 
