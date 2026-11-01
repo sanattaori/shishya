@@ -20,7 +20,7 @@ a local Hebbian rule. The plan, and the pass rules fixed before any run, are in 
 - `report.py`: the tables for `RESULTS.md`.
 - `kaggle/`: the full run on Kaggle's free GPU (`--canary` first: a 15-minute GPU check).
 
-Results so far: [RESULTS.md](RESULTS.md). Where the work is and how to resume: [docs/STATUS.md](../docs/STATUS.md).
+How it works, part by part: [ARCHITECTURE.md](ARCHITECTURE.md). Results so far: [RESULTS.md](RESULTS.md). Where the work is and how to resume: [docs/STATUS.md](../docs/STATUS.md).
 
 This is research code outside the `shishya` package. It needs PyTorch: `pip install torch numpy`.
 

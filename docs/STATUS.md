@@ -1,7 +1,7 @@
 # Where the work is (hand-off for a new session)
 
 *Last updated 31 Oct 2026, 23:35 UTC. Branch `ccr-ebda0c39-9rnnt2`. Read this, then [PLAN.md](PLAN.md) (the design, the pass
-rules and the dated amendments), then [brain/RESULTS.md](../brain/RESULTS.md).*
+rules and the dated amendments), then [brain/RESULTS.md](../brain/RESULTS.md). How v3 works: [brain/ARCHITECTURE.md](../brain/ARCHITECTURE.md).*
 
 ## How we got here (the owner's decisions, in order)
 
