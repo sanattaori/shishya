@@ -9,6 +9,8 @@ is private), writes MODE below, and pushes this script. Everything lands in /kag
           (the `life2` run's output is mounted: it holds GPT, BDH and the v2 Brain)
 - canary3: the same with a short life, to catch GPU-only bugs in minutes
 - v4, canary4: the same for the v4 Brain
+- v5, canary5: v5 at scale (docs/V5.md): SmolLM2-1.7B frozen, three childhoods (layers 3, 6, 13), the dev school,
+          the layer chosen by the rule, a dev life, then the test school and test life for v5, RAG and no learning
 """
 import os
 import shutil
@@ -92,6 +94,9 @@ def main():
     import torch
     gpus = torch.cuda.device_count()
     print(f"mode {MODE}, {gpus} GPU(s): {[torch.cuda.get_device_name(i) for i in range(gpus)]}", flush=True)
+    if MODE in ("v5", "canary5"):
+        v5(MODE == "canary5")
+        return
     if MODE == "brain2":
         wait(train("brain2", 0), "brain2")
         print(open(f"{OUT}/brain2.log").read()[-2000:])
@@ -119,6 +124,71 @@ def main():
         for kind in ("gpt", "bdh", "brain"):
             print(f"== {kind}.log", open(f"{OUT}/{kind}.log").read()[-1500:], sep="\n")
     life("brain", small=MODE == "canary")
+
+
+V5_LLM = "HuggingFaceTB/SmolLM2-1.7B"
+V5_LAYERS = [3, 6, 13]
+
+
+def v5(canary: bool):
+    """docs/V5.md, v5 at scale. Two childhoods at once (one per GPU), then the rest on GPU 0."""
+    import json
+    d = f"{OUT}/v5"
+    os.makedirs(d, exist_ok=True)
+    common = ["--llm", V5_LLM, "--data-dir", f"{W}/data", "--device", "cuda"]
+    steps = ["--steps", "20", "--check", "10"] if canary else ["--steps", "600", "--check", "50"]
+
+    def run(args, gpu=0, log=None):
+        env = {**os.environ, "CUDA_VISIBLE_DEVICES": str(gpu)}
+        f = open(log or f"{d}/{args[0]}.log", "a")
+        return subprocess.Popen([sys.executable, "-m", "brain.v5", *args, *common], env=env, stdout=f,
+                                stderr=subprocess.STDOUT)
+
+    def done(p, what):
+        if p.wait():
+            raise SystemExit(f"{what} failed")
+
+    import torch
+    gpus = max(1, torch.cuda.device_count())
+    pending = list(V5_LAYERS)
+    while pending:
+        batch = [pending.pop(0) for _ in range(min(gpus, len(pending)))]
+        procs = [(L, run(["childhood", "--layer", str(L), *steps, "--out", f"{d}/l{L}"], gpu=i,
+                         log=f"{d}/childhood_l{L}.log")) for i, L in enumerate(batch)]
+        for L, p in procs:
+            done(p, f"childhood l{L}")
+    people = ["--people", "10"] if canary else []
+    jobs = [(["school", "--run", f"{d}/l{L}", "--names", "dev", *people, "--out", f"{d}/school_dev_l{L}.json"],
+             f"school dev l{L}") for L in V5_LAYERS]
+    jobs += [(["school", "--run", b, "--names", "dev", *people, "--out", f"{d}/school_dev_{b}.json"],
+              f"school dev {b}") for b in ("rag", "none")]
+    for i in range(0, len(jobs), gpus):
+        procs = [(w, run(a, gpu=g, log=f"{d}/dev.log")) for g, (a, w) in enumerate(jobs[i:i + gpus])]
+        for w, p in procs:
+            done(p, w)
+    best = None
+    for L in sorted(V5_LAYERS):                          # a tie goes to the lower layer
+        r = json.load(open(f"{d}/school_dev_l{L}.json"))["after_quiz"]
+        if best is None or r["plain"] + r["other_words"] > best[0]:
+            best = (r["plain"] + r["other_words"], L)
+    L = best[1]
+    open(f"{d}/chosen_layer", "w").write(str(L))
+    print("chosen layer", L, flush=True)
+    life_small = ["--val-stories", "40"] if canary else []
+    jobs = [(["life", "--run", f"{d}/l{L}", "--stream", "dev", *life_small, "--out", f"{d}/life_dev.json"],
+             "life dev")]
+    if not canary:
+        jobs += [(["school", "--run", r, "--names", "test", "--out", f"{d}/school_test_{n}.json"], f"school test {n}")
+                 for r, n in ((f"{d}/l{L}", "v5"), ("rag", "rag"), ("none", "none"))]
+        jobs += [(["life", "--run", r, "--stream", "test", "--out", f"{d}/life_test_{n}.json"], f"life test {n}")
+                 for r, n in ((f"{d}/l{L}", "v5"), ("rag", "rag"), ("none", "none"))]
+    for i in range(0, len(jobs), gpus):
+        procs = [(w, run(a, gpu=g, log=f"{d}/test.log")) for g, (a, w) in enumerate(jobs[i:i + gpus])]
+        for w, p in procs:
+            done(p, w)
+    for f in sorted(os.listdir(d)):
+        if f.endswith(".json"):
+            print("==", f, open(f"{d}/{f}").read()[:1500])
 
 
 if __name__ == "__main__":
