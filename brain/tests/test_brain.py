@@ -341,3 +341,17 @@ def test_forget_works_through_metaplasticity():
         b(idx, keep=True)
         after = _sparse_read(b.forget(mem)[0], kidx, kval)[0, 0, :-1].norm(dim=-1).mean()
     assert after < 0.05 * before
+
+
+def test_school_world_has_answers_for_every_question():
+    from brain import school
+    names = data.name_split()["dev"]
+    w = school.make_world(names, people=10, seed=1)
+    assert len(w.facts) == 50
+    for s in w.people:
+        friend = w.of(s, "friend").obj
+        assert friend in w.people and friend != s                  # two-step questions always have an answer
+    objs = {f.obj for f in w.facts.values() if f.relation != "friend"}
+    assert not objs & set(w.people) and not objs & set(w.others)    # answers never collide with other names
+    f = w.of(w.people[0], "pet")
+    assert all(f.obj in f.fill(t) for t in school.WORDINGS["pet"][0])
