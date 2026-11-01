@@ -22,6 +22,7 @@ import resource
 import subprocess
 import sys
 import time
+import zlib
 from pathlib import Path
 
 import numpy as np
@@ -188,6 +189,24 @@ class Retrieval(Learner):
         return full
 
 
+class Lookup(Retrieval):
+    """A database, no neural reader: the same matching sentence as ``Retrieval``; a candidate name scores 1 if it is
+    in that sentence, else 0 (ties broken at random, the same way every run). The honest ceiling for this test."""
+
+    @torch.no_grad()
+    def loglik(self, prompts: list[str], conts: list[str]) -> torch.Tensor:
+        found = {p: self.best(p) for p in set(prompts)}
+        out = []
+        for p, c in zip(prompts, conts):
+            name = c.strip(" .")
+            tie = zlib.crc32(f"{p}|{c}".encode()) / 2**32 * 1e-3
+            out.append(float(re.search(rf"\b{re.escape(name)}\b", found[p]) is not None) + tie)
+        return torch.tensor(out)
+
+    def bpb(self, stories: list[str]) -> float:
+        return float("nan")                                   # a database doesn't read
+
+
 def recall(learner: Learner, stream: data.LifeStream, facts: list[data.Fact], paraphrase: bool | str = False
            ) -> list[bool]:
     """paraphrase: False (the question as in childhood), True (in other words), "heldout" (test stream only)."""
@@ -344,10 +363,10 @@ def main(argv=None):
               f"reward {t['recall_reward']:.2f} change {t['change_new_wins']:.2f} "
               f"retention {t['retention']:.2f} rise {t['bpb_rise']:+.3f}", flush=True)
     # reported, not a rule: GPT with "keep every sentence and look it up" (v4 on)
-    report["test"]["retrieval"] = live(Retrieval(models["gpt"]), streams["test"], val)
-    t = report["test"]["retrieval"]
-    print(f"TEST retrieval (gpt): recall3 {t['recall_main']:.2f} recall1 {t['recall_once']:.2f} "
-          f"change {t['change_new_wins']:.2f} paraphrase {t['recall_paraphrase']:.2f}", flush=True)
+    for name, learner in (("retrieval", Retrieval(models["gpt"])), ("lookup", Lookup(models["gpt"]))):
+        report["test"][name] = t = live(learner, streams["test"], val)
+        print(f"TEST {name}: recall3 {t['recall_main']:.2f} recall1 {t['recall_once']:.2f} "
+              f"change {t['change_new_wins']:.2f} paraphrase {t['recall_paraphrase']:.2f}", flush=True)
     resources = resources_check(runs, args.small, args.smoke, args.data_dir, report["chosen"]["brain"], args.brain)
     report["resources"] = resources
     report["verdict"] = verdict(report["test"], resources, args.brain)
