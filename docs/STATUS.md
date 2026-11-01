@@ -86,7 +86,11 @@ owner deletes temporary tokens after use.
    L1–L3 pass; L5 fails (35% in held-out wordings, as predicted); changed facts 90%; one reading 76%.
 6. **v5, next.** The school is started: `brain/school.py` (a made-up world, a template Guru, quizzes with
    corrections, a closed-book exam with plain, reworded and two-step questions; dev names only). First runs:
-   `brain/out/school/v3.json`, `v4.json` (see brain/RESULTS.md section 9 when written). To do, in order:
+   `brain/out/school/v3.json`, `v4.json` (brain/RESULTS.md section 9): after one lesson per fact, plain questions
+   100%, but unseen wordings and two-step questions at chance (each person has 5 facts, and the name-led meaning
+   part can't tell which one is asked). Running: the same with 3 lessons per fact (`*-3lessons.json`). To do,
+   in order:
+   - **The meaning part must carry what is asked, not only about whom** (the school's main finding).
    - A word code that keeps letter order (ROADMAP.md "Learned on the way"): fewer traces after `forget`, less
      overlap.
    - A dev rule that also looks at one-reading recall (v4's rule picked rate 4.0, and one reading fell to 76%).
