@@ -1,6 +1,6 @@
 # Where the work is (hand-off for a new session)
 
-*Last updated 31 Oct 2026, 23:35 UTC. Branch `ccr-ebda0c39-9rnnt2`. Read this, then [PLAN.md](PLAN.md) (the design, the pass
+*Last updated 1 Nov 2026. Branch `ccr-ebda0c39-9rnnt2`. Read this, then [PLAN.md](PLAN.md) (the design, the pass
 rules and the dated amendments), then [brain/RESULTS.md](../brain/RESULTS.md). How v3 works: [brain/ARCHITECTURE.md](../brain/ARCHITECTURE.md).*
 
 ## How we got here (the owner's decisions, in order)
@@ -64,19 +64,26 @@ owner deletes temporary tokens after use.
 - Fails only L4: 665 ms per session on Kaggle's CPU against 50 ms (1.2 GB memory: OK).
 - By the decision point agreed with the owner (pass L1 and L2), the work goes on to v4.
 
-1. **Read [ROADMAP.md](ROADMAP.md) (1 Nov): "Shishya goes to school".** It is the proposed path from v4 to a flagship test, with the owner's five open decisions at the end. Choose v4 with the owner, in their direction (better learning than an LLM, no LLM inside; a teacher LLM outside is fine):
-   - **Questions in other words** (v3: 34% on test, chance 20%). A meaning-based address without BERT: words
-     that occur in the same places get similar codes, learned slowly in life. This is v3's main weak spot.
-   - **Changed facts** (v3: 77%). Metaplasticity + reconsolidation got 93% on dev, against v3's 83%
-     (brain/RESULTS.md section 5).
-   - **Sleep:** move the lasting memory into the slow weights, so the memory can be emptied and the model keeps
-     what it learned.
-   - **Speed for L4:** the forward pass is about 50 billion operations per session, estimated. BDH's ReLU
-     neurons are mostly zero, and sparse kernels could skip them. Or a smaller core under the same memory.
-   - **Harder tests:** longer lives, many more facts, facts that must be combined, a bigger model against a GPT
-     of the same size. Also a retrieval baseline ("keep every text and look it up"), so the comparison is honest.
-2. **Write v4 into docs/PLAN.md as a dated amendment before any v4 run,** with the same discipline: dev stream
-   only, rules and predictions fixed first.
+**The owner's decisions, 1 Nov 2026** (on ROADMAP.md's open questions):
+- "Plan and start." Do what is right; commit often (a new session continues from [RESUME.md](RESUME.md)).
+- **Speed is set aside for now.** L4 is reported, not a pass rule, from v4 on.
+- **Add intelligence and test it.**
+- The owner wants to understand sleep; it is explained in ROADMAP.md ("How sleep works").
+- The Guru's model and budget, the core network, and a rented GPU are left to the work. There is no LLM API key
+  in the cloud container, so the Guru (v5) needs a key from the owner.
+
+**v4, in order (tick as done):**
+1. [ ] Held-out wordings: a second way to ask each kind of question, used only on the test stream, so v4's
+   "questions in other words" can't be fitted to the wordings seen on dev.
+2. [ ] The meaning part of the address: the sentence's words without their order, each counting by how new it is,
+   bound to the word being read. Probe it on dev facts (`python -m brain.probes`).
+3. [ ] Dev lives (`python -m brain.study`): v3 + meaning part, with and without metaplasticity +
+   reconsolidation. Choose by a rule written before the last result, as for v3.
+4. [ ] A retrieval baseline in the life test: GPT reads the best-matching stored sentence before each
+   question. Reported, not a rule: it shows where Shishya stands against "keep every text and look it up".
+5. [ ] The v4 amendment in docs/PLAN.md: the same L1–L3, a new L5 for questions in other words (held-out
+   wordings), L4 reported only. Then `brain/kaggle/run.sh … --canary4`, then `--v4`, then RESULTS.md.
+6. Then v5 (the Guru school), as in ROADMAP.md.
 
 Environment for a fresh container:
 
