@@ -44,7 +44,7 @@ _CLAUSE = re.compile(r"(?:, (?:and |but )?| and | but )(?=[a-z])")
 
 
 def clause_starts(text: str) -> list[int]:
-    """Character offsets where a new clause starts (inside a sentence)."""
+    """Character offsets where a new clause starts (inside a sentence; v5.clause_starts also cuts at . ! ?)."""
     return [m.end() for m in _CLAUSE.finditer(text)]
 
 
@@ -343,3 +343,20 @@ def main(argv=None):
 if __name__ == "__main__":
     main()
 
+
+
+SLEEP_SETTINGS = {                                   # v7's dev choice (docs/V7.md); the first wins a tie
+    "none": ["--mode", "none"],
+    "sleep": ["--mode", "sleep"],
+    "sleep_r0.8": ["--mode", "sleep", "--resolve", "0.8"],
+    "sleep_r0.9": ["--mode", "sleep", "--resolve", "0.9"],
+}
+
+
+def choose_sleep(rows: dict[str, dict]) -> str:
+    """The setting with the best mean of current value (plain + other words) and never-changed facts on hard school
+    A with dev names; a tie goes to the earlier one in SLEEP_SETTINGS."""
+    def score(k):
+        return (rows[k]["current_both"] + rows[k]["kept_plain"]) / 2
+    order = list(SLEEP_SETTINGS)
+    return max([k for k in order if k in rows], key=lambda k: (round(score(k), 6), -order.index(k)))

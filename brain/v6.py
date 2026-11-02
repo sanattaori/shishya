@@ -116,6 +116,7 @@ def main(argv=None):
     c = sub.add_parser("childhood")
     c.add_argument("--who", choices=["all", "first"], default="all")
     c.add_argument("--init", help="start from this childhood's reader (a v5 run folder)")
+    c.add_argument("--pool", action="store_true", help="v7: the reader also reads the clause's mean state")
     c.add_argument("--layer", type=int, default=2)
     c.add_argument("--r", type=int, default=32)
     c.add_argument("--power", type=float, default=16.0)

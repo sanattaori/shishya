@@ -88,3 +88,11 @@ def test_later_wins_at_sleep_only_for_close_addresses():
     s.sleep()
     assert torch.allclose(_read(s, 2), s.Z[5], atol=1e-2)
     assert torch.allclose(_read(s, 1), s.Z[6], atol=1e-2)
+
+
+def test_choose_sleep_prefers_the_best_mean_and_the_earlier_on_a_tie():
+    rows = {"none": {"current_both": 0.4, "kept_plain": 0.8}, "sleep": {"current_both": 0.5, "kept_plain": 0.7},
+            "sleep_r0.8": {"current_both": 0.7, "kept_plain": 0.7}}
+    assert v7.choose_sleep(rows) == "sleep_r0.8"
+    rows["sleep_r0.8"]["current_both"] = 0.4
+    assert v7.choose_sleep(rows) == "none"
