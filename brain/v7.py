@@ -16,12 +16,20 @@ passes of the same delta rule (interleaved replay). Dead facts are gone for good
 orders disturb each other less.
 
 Modes: ``wake`` (reconsolidation only), ``sleep`` (sleep only), ``both``, ``none`` (v5/v6 as is).
+
+**Clause meaning** (``clause`` > 0, any mode). A sentence that says several things ("Zubak lives in Kelm, has a dog
+called Rex and likes Kipos best of all") blurs each part's meaning with the others. With ``clause``, each clause is
+also read alone (after the sentence's first word, its subject), and a step's "what" is ``clause`` × the clause's
+meaning + (1 − ``clause``) × the sentence's. A new clause starts after ", " or " and " when the next word starts with
+a small letter (", Kipos." stays one clause).
 """
 from __future__ import annotations
 
 import argparse
+import bisect
 import json
 import random
+import re
 import time
 from pathlib import Path
 
@@ -29,19 +37,66 @@ import torch
 import torch.nn.functional as F
 
 from . import data, v5
+from .hybrid import BOS, run_llm
+
+_CLAUSE = re.compile(r"(?:, (?:and |but )?| and | but )(?=[a-z])")
+
+
+def clause_starts(text: str) -> list[int]:
+    """Character offsets where a new clause starts (inside a sentence)."""
+    return [m.end() for m in _CLAUSE.finditer(text)]
 
 
 class Sleeper(v5.Student):
     def __init__(self, base: v5.Student, mode: str = "both", day: int = 100, passes: int = 3, match: float = 0.3,
-                 recall_min: float = 0.3, seed: int = 0):
+                 recall_min: float = 0.3, seed: int = 0, clause: float = 0.0):
         super().__init__(base.model, base.tok, base.who, base.reader)
         self.loss_ref = base.loss_ref
         self.mode, self.day, self.passes, self.match, self.recall_min = mode, day, passes, match, recall_min
+        self.clause = clause
         self.rng = random.Random(seed)
         self.K_i, self.K_v, self.Wh, self.tokens, self.beta, self.fact = [], [], [], [], [], []
         self.alive: dict[int, bool] = {}
         self.first: dict[int, int] = {}                 # fact -> index of its first trace
         self.sessions = self.replaced = self.sleeps = 0
+
+    @torch.no_grad()
+    def meaning(self, ps: v5.Parsed, want_logits: bool = False) -> None:
+        super().meaning(ps, want_logits)
+        if self.clause <= 0:
+            return
+        parts = []                                        # (row, positions) of each clause of a gated sentence
+        for i, pos in ps.groups:
+            cs = clause_starts(ps.tk.texts[i])
+            if not cs:
+                continue
+            cut: dict[int, list[int]] = {}
+            for k in pos:
+                cut.setdefault(bisect.bisect_right(cs, ps.tk.char_starts[i][k]), []).append(k)
+            if len(cut) <= 1:
+                continue
+            text, st = ps.tk.texts[i], ps.tk.char_starts[i]
+            c0 = st[pos[0]]
+            while c0 < len(text) and text[c0] == " ":
+                c0 += 1
+            sp = text.find(" ", c0)
+            subj = [k for k in pos if st[k] < (len(text) if sp < 0 else sp)]
+            for n, ks in enumerate(cut.values()):          # later clauses are read after the sentence's first word
+                parts.append((i, ks, subj if n > 0 else []))
+        for j in range(0, len(parts), 32):
+            chunk = parts[j:j + 32]
+            L = max(len(p) + len(sj) for _, p, sj in chunk) + 1
+            ids = torch.full((len(chunk), L), BOS)
+            mask = torch.zeros(len(chunk), L, dtype=torch.long)
+            for c, (i, pos, sj) in enumerate(chunk):
+                ids[c, 1:len(sj) + len(pos) + 1] = ps.tk.ids[i, sj + pos]
+                mask[c, :len(sj) + len(pos) + 1] = 1
+            _, hid = run_llm(self.model, ids, mask, self.reader.layer)
+            w = self.reader.what(hid)
+            for c, (i, pos, sj) in enumerate(chunk):
+                a = 1 + len(sj)
+                mix = self.clause * w[c, a:a + len(pos)] + (1 - self.clause) * ps.what[i, pos]
+                ps.what[i, pos] = mix / (mix.norm(dim=-1, keepdim=True) + 1e-6)
 
     # -- which written tokens start or continue a new name ----------------------------------------------------------
     def _name_steps(self, text: str, ps: v5.Parsed, pos: list[int]) -> list[tuple[bool, bool]]:
@@ -215,13 +270,14 @@ def main(argv=None):
     p.add_argument("--passes", type=int, default=3)
     p.add_argument("--match", type=float, default=0.3)
     p.add_argument("--recall-min", type=float, default=0.3)
+    p.add_argument("--clause", type=float, default=0.0)
     p.add_argument("--llm", default=v5.LLM)
     p.add_argument("--data-dir", default="brain/out/data")
     p.add_argument("--device", default="cpu")
     p.add_argument("--out")
     args = p.parse_args(argv)
     torch.set_num_threads(4)
-    kw = dict(day=args.day, passes=args.passes, match=args.match, recall_min=args.recall_min)
+    kw = dict(day=args.day, passes=args.passes, match=args.match, recall_min=args.recall_min, clause=args.clause)
     st, sp = make(args.run, args.llm, args.data_dir, args.device, args.mode, **kw)
     seed = 0 if args.names == "dev" else 1
     stories = sp.life_dev if args.names == "dev" else sp.life_test

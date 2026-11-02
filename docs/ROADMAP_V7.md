@@ -108,6 +108,40 @@ friend is Kipos."), read that step back through the memory, and then answer.
   - a personal memory that learns from a conversation once and stays up to date;
   - a small on-device model that learns without retraining.
 
+### v9's main test: the student beats its teacher, in one area (added 2 Nov 2026, 21:00 IST, the owner's request)
+
+The owner asked whether Shishya can take an LLM's knowledge quickly and then do better than that LLM. The honest
+answer, which this test checks: not at everything (a 100M student can't hold what a billions-parameter teacher
+holds), but in one area, after time has passed, yes, because Shishya keeps learning and the LLM is frozen.
+
+**How the knowledge moves (fastest first).**
+1. **Facts, through the memory:** the teacher LLM writes lessons; Shishya reads each once. No gradients; seconds.
+2. **Skills, through the weights:** the teacher writes teaching text for the area; the 100M Brain gets a short
+   training on it (distillation, as in TinyStories and Phi). Done once, on the free Kaggle GPU.
+
+**The test (rules and numbers are fixed in V9.md before any run).**
+- **The area:** real facts that changed after the teacher's training date, from public data (for example
+  Wikidata: who leads a country, a company or a team; records; capitals and offices). Facts that didn't change are
+  in it too.
+- **Time 0:** the teacher (a free model) teaches Shishya the area as the teacher knows it.
+- **Then life:** Shishya reads short news-style texts about the changes, once each, over many days. Corrections
+  come from a quiz, as in the long life.
+- **The exam (multiple choice, scored the same for all):**
+  - the current value of facts that changed;
+  - facts that never changed;
+  - all of it in other wordings (an outside examiner).
+- **Who takes it:**
+  - the teacher as is (frozen);
+  - the teacher with RAG over the same news;
+  - a small LLM fine-tuned on the same news;
+  - Shishya.
+  Each also reports its efficiency: parameters, memory, ms per question, GPU or not.
+- **"Beats its teacher" means** that Shishya is ahead of the frozen teacher on the full exam, by a 95% bootstrap
+  lower bound above 0. It must also keep the teacher's knowledge: on never-changed facts it needs at least 90% of
+  the teacher's score. RAG is reported next to it, as everywhere.
+- **What it would show:** a small model on a CPU, taught once by a big LLM, then better than that LLM on what
+  matters to its user, without retraining. It would not show that Shishya is a better chatbot.
+
 ## Risks I see now
 
 - v6 may show the meaning part of the address can't be trained to put "moved to" where "lives in" is asked. v7's
@@ -115,5 +149,7 @@ friend is Kipos."), read that step back through the memory, and then answer.
   matched.
 - The 100M BDH may not load cleanly, or may read worse than its card says. Then v9 trains a smaller general
   Brain (about 25M, FineWeb-Edu) over several free Kaggle sessions.
+- Real names and news text are much harder than children's stories; the memory's address (built for short
+  made-up names) may need work on them before v9's test is fair.
 - A 100M Brain is still far from a useful assistant. The honest claim for v9 is a better *learning* architecture
   at small scale, not a better chatbot.
