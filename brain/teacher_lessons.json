@@ -1,0 +1,1012 @@
+{
+ "models": [
+  "dots-studio/dots-3-note-preview:free",
+  "xingchen-agi/xing4.0-29b-a4b:free"
+ ],
+ "model_per_relation": {
+  "teacher": "dots-studio/dots-3-note-preview:free",
+  "sister": "dots-studio/dots-3-note-preview:free",
+  "brother": "dots-studio/dots-3-note-preview:free",
+  "cousin": "dots-studio/dots-3-note-preview:free",
+  "uncle": "dots-studio/dots-3-note-preview:free",
+  "aunt": "dots-studio/dots-3-note-preview:free",
+  "grandma": "dots-studio/dots-3-note-preview:free",
+  "doctor": "dots-studio/dots-3-note-preview:free",
+  "coach": "dots-studio/dots-3-note-preview:free",
+  "neighbour": "dots-studio/dots-3-note-preview:free",
+  "baby": "dots-studio/dots-3-note-preview:free",
+  "boss": "dots-studio/dots-3-note-preview:free",
+  "boat": "dots-studio/dots-3-note-preview:free",
+  "ship": "dots-studio/dots-3-note-preview:free",
+  "car": "dots-studio/dots-3-note-preview:free",
+  "song": "dots-studio/dots-3-note-preview:free",
+  "book": "dots-studio/dots-3-note-preview:free",
+  "poem": "dots-studio/dots-3-note-preview:free",
+  "school": "dots-studio/dots-3-note-preview:free",
+  "shop": "dots-studio/dots-3-note-preview:free",
+  "island": "dots-studio/dots-3-note-preview:free",
+  "river": "dots-studio/dots-3-note-preview:free",
+  "mountain": "dots-studio/dots-3-note-preview:free",
+  "star": "dots-studio/dots-3-note-preview:free",
+  "castle": "dots-studio/dots-3-note-preview:free",
+  "team": "dots-studio/dots-3-note-preview:free",
+  "club": "dots-studio/dots-3-note-preview:free",
+  "garden": "dots-studio/dots-3-note-preview:free",
+  "hat": "dots-studio/dots-3-note-preview:free",
+  "spell": "dots-studio/dots-3-note-preview:free",
+  "planet": "dots-studio/dots-3-note-preview:free",
+  "dance": "dots-studio/dots-3-note-preview:free",
+  "pet": "dots-studio/dots-3-note-preview:free",
+  "town": "dots-studio/dots-3-note-preview:free",
+  "friend": "dots-studio/dots-3-note-preview:free",
+  "toy": "dots-studio/dots-3-note-preview:free",
+  "secret": "dots-studio/dots-3-note-preview:free"
+ },
+ "relations": {
+  "teacher": {
+   "lesson": [
+    "{s} has a teacher named {o}.",
+    "{s}'s teacher is {o}.",
+    "The teacher of {s} is {o}.",
+    "{s} is taught by teacher {o}.",
+    "In class, {s} listens to teacher {o}.",
+    "{s} respects teacher {o}.",
+    "The teacher that {s} admires is {o}.",
+    "{s} follows teacher {o}."
+   ],
+   "change": [
+    "{s} now has a different teacher, {o}.",
+    "{s} changed teacher to {o}.",
+    "{s} got a new teacher named {o}.",
+    "The teacher for {s} is now {o}.",
+    "{s} has a new teacher, {o}.",
+    "{s} switched to teacher {o}."
+   ],
+   "clause": [
+    "has a teacher named {o}",
+    "is taught by {o}",
+    "is learning from {o}",
+    "is guided by {o}"
+   ]
+  },
+  "sister": {
+   "lesson": [
+    "{s} has a sister named {o}.",
+    "{s} has a sister called {o}.",
+    "{s} is the sister of {o}.",
+    "{s} is a sister to {o}.",
+    "{s} has a little sister named {o}.",
+    "{s} has an older sister called {o}.",
+    "{s} has a sister, and her name is {o}.",
+    "{s} has a sister whose name is {o}."
+   ],
+   "change": [
+    "{s} now has a sister named {o}.",
+    "{s} got a new sister called {o}.",
+    "{s} has a different sister named {o}.",
+    "{s} changed her sister to {o}.",
+    "{s} now has a sister called {o}.",
+    "{s} has another sister named {o}."
+   ],
+   "clause": [
+    "has a sister named {o}",
+    "is the sister of {o}",
+    "is called {o}",
+    "is related to {o}"
+   ]
+  },
+  "brother": {
+   "lesson": [
+    "{s} has a brother named {o}.",
+    "{s} is the brother of {o}.",
+    "The brother of {s} is {o}.",
+    "{s} has a brother called {o}.",
+    "The brother that {s} has is {o}.",
+    "{s} is the brother known as {o}.",
+    "The brother of {s} goes by the name {o}.",
+    "{s} has a brother who is {o}."
+   ],
+   "change": [
+    "{s} now has a new brother called {o}.",
+    "{s} got a different brother named {o}.",
+    "{s} moved and now has another brother {o}.",
+    "{s} changed and now the brother is {o}.",
+    "{s} has a new brother named {o}.",
+    "{s} now the brother is {o}."
+   ],
+   "clause": [
+    "has a brother named {o}",
+    "is the brother of {o}",
+    "is the sibling of {o}",
+    "is called {o}"
+   ]
+  },
+  "cousin": {
+   "lesson": [
+    "{s} has a cousin named {o}.",
+    "The cousin of {s} is {o}.",
+    "{s}'s cousin is called {o}.",
+    "In {s}'s family there is a cousin named {o}.",
+    "A cousin of {s} is known as {o}.",
+    "{s} is related to a cousin named {o}.",
+    "The cousin that {s} has is {o}.",
+    "Among {s}'s relatives is a cousin named {o}."
+   ],
+   "change": [
+    "Now {s} has a new cousin named {o}.",
+    "After the change, {s} has a different cousin called {o}.",
+    "The updated fact is that {s} has a cousin named {o}.",
+    "In the new version, {s} has a cousin named {o}.",
+    "It has changed and now {s} has a cousin named {o}.",
+    "The situation changed so {s} now has a cousin named {o}."
+   ],
+   "clause": [
+    "has a cousin named {o}",
+    "is the cousin of {o}",
+    "has a cousin called {o}",
+    "is related to a cousin named {o}"
+   ]
+  },
+  "uncle": {
+   "lesson": [
+    "The uncle of {s} is {o}.",
+    "{s} has an uncle named {o}.",
+    "{s}'s uncle is {o}.",
+    "In the story, {s} has an uncle called {o}.",
+    "The relative who is {s}'s uncle is {o}.",
+    "Among the family, {s} has an uncle {o}.",
+    "The uncle belonging to {s} is {o}.",
+    "The man that is the uncle of {s} is {o}."
+   ],
+   "change": [
+    "Now {s} has a different uncle, {o}.",
+    "The uncle of {s} changed to {o}.",
+    "{s} got a new uncle named {o}.",
+    "After the move, {s} has another uncle, {o}.",
+    "The fact has changed: {s} now has an uncle called {o}.",
+    "Instead of the previous one, {s} now has an uncle named {o}."
+   ],
+   "clause": [
+    "has an uncle named {o}",
+    "is the nephew of {o}",
+    "calls {o}",
+    "is the child of {o}"
+   ]
+  },
+  "aunt": {
+   "lesson": [
+    "{s} has an aunt named {o}.",
+    "{s}'s aunt is {o}.",
+    "The aunt of {s} is {o}.",
+    "{s} is the child of an aunt called {o}.",
+    "In {s}'s family, the aunt is {o}.",
+    "{s} has a relative who is an aunt named {o}.",
+    "The woman who is {s}'s aunt is {o}.",
+    "{s} knows her aunt as {o}."
+   ],
+   "change": [
+    "{s} now has a different aunt named {o}.",
+    "{s} changed her aunt to {o}.",
+    "The aunt of {s} has been replaced by {o}.",
+    "{s} got a new aunt called {o}.",
+    "After the change, {s}'s aunt is {o}.",
+    "{s} has another aunt named {o}."
+   ],
+   "clause": [
+    "has an aunt named {o}",
+    "is the niece of {o}",
+    "is the sister of {o}",
+    "has a relative called {o}"
+   ]
+  },
+  "grandma": {
+   "lesson": [
+    "{s} has a grandma named {o}.",
+    "{s} calls her grandma {o}.",
+    "The grandma of {s} is {o}.",
+    "{s} thinks her grandma is {o}.",
+    "{s} says her grandma is {o}.",
+    "{s} remembers her grandma as {o}.",
+    "{s} describes her grandma as {o}.",
+    "{s} loves her grandma {o}."
+   ],
+   "change": [
+    "{s} now has a different grandma named {o}.",
+    "{s} changed her grandma to {o}.",
+    "{s} got a new grandma called {o}.",
+    "{s} replaced her grandma with {o}.",
+    "{s} now calls her grandma {o}.",
+    "{s} has a new grandma named {o}."
+   ],
+   "clause": [
+    "is named {o}",
+    "is called {o}",
+    "has the name {o}",
+    "is known as {o}"
+   ]
+  },
+  "doctor": {
+   "lesson": [
+    "The doctor of {s} is {o}.",
+    "{s} has a doctor named {o}.",
+    "In the story, {s} sees the doctor {o}.",
+    "When {s} needs help, the doctor is {o}.",
+    "The doctor that {s} visits is {o}.",
+    "For {s}, the doctor is {o}.",
+    "{s} meets the doctor {o}.",
+    "The doctor of {s} is called {o}."
+   ],
+   "change": [
+    "{s} got a new doctor {o}.",
+    "{s} changed doctors to {o}.",
+    "After the move, {s} has a different doctor {o}.",
+    "{s} now sees a new doctor {o}.",
+    "The doctor for {s} is now {o}.",
+    "{s} switched to a new doctor {o}."
+   ],
+   "clause": [
+    "has a doctor named {o}",
+    "sees the doctor {o}",
+    "visits the doctor {o}",
+    "is treated by the doctor {o}"
+   ]
+  },
+  "coach": {
+   "lesson": [
+    "{s} has a coach named {o}.",
+    "{s}'s coach is {o}.",
+    "The coach of {s} is {o}.",
+    "{s} works with coach {o}.",
+    "{s} is trained by coach {o}.",
+    "{s} follows coach {o}.",
+    "{s} listens to coach {o}.",
+    "{s} meets coach {o}."
+   ],
+   "change": [
+    "{s} now has a new coach {o}.",
+    "{s} changed coach to {o}.",
+    "{s} got a different coach {o}.",
+    "{s} replaced coach with {o}.",
+    "{s} now works with coach {o}.",
+    "{s} has a different coach named {o}."
+   ],
+   "clause": [
+    "has a coach named {o}",
+    "is trained by {o}",
+    "works with {o}",
+    "learns from {o}"
+   ]
+  },
+  "neighbour": {
+   "lesson": [
+    "The neighbour of {s} is {o}.",
+    "{s} has a neighbour named {o}.",
+    "In the village, {s} lives beside neighbour {o}.",
+    "The house next to {s} belongs to neighbour {o}.",
+    "{s} shares a garden with neighbour {o}.",
+    "When you visit {s}, you will meet neighbour {o}.",
+    "The street where {s} resides has neighbour {o}.",
+    "Every morning, {s} greets neighbour {o}."
+   ],
+   "change": [
+    "{s} now has a different neighbour {o}.",
+    "After the move, {s} got a new neighbour {o}.",
+    "The previous neighbour left, so {s} has {o}.",
+    "{s} changed to a new neighbour {o}.",
+    "Due to a reorganization, {s} now has {o}.",
+    "The old neighbour moved away, and {s} has {o}."
+   ],
+   "clause": [
+    "has a neighbour named {o}",
+    "is next to {o}",
+    "shares a garden with {o}",
+    "is friends with {o}"
+   ]
+  },
+  "baby": {
+   "lesson": [
+    "The baby of {s} is {o}.",
+    "{s} has a baby named {o}.",
+    "In the tale, {s} meets baby {o}.",
+    "The little baby belonging to {s} is {o}.",
+    "{s} gave birth to baby {o}.",
+    "People say that {s}'s baby is {o}.",
+    "The baby that {s} loves is {o}.",
+    "At the end, {s} holds baby {o}."
+   ],
+   "change": [
+    "Now {s} has a different baby called {o}.",
+    "After the move, {s} got a new baby named {o}.",
+    "The story says that {s} now has another baby, {o}.",
+    "It is announced that {s} changed and has baby {o}.",
+    "In the latest chapter, {s} has a new baby, {o}.",
+    "The family reports that {s} moved and now has baby {o}."
+   ],
+   "clause": [
+    "has a baby named {o}",
+    "is the mother of {o}",
+    "loves {o}",
+    "calls {o}"
+   ]
+  },
+  "boss": {
+   "lesson": [
+    "{s} works for the boss {o}.",
+    "{s} reports to the boss {o}.",
+    "{s} answers to the boss {o}.",
+    "{s} takes orders from the boss {o}.",
+    "{s} is supervised by the boss {o}.",
+    "{s} follows the boss {o}.",
+    "{s} serves under the boss {o}.",
+    "{s} is employed by the boss {o}."
+   ],
+   "change": [
+    "{s} now has a new boss {o}.",
+    "{s} changed to a different boss {o}.",
+    "{s} moved to a new supervisor {o}.",
+    "{s} got a new manager {o}.",
+    "{s} now reports to {o}.",
+    "{s} ended up with a new boss {o}."
+   ],
+   "clause": [
+    "has a boss called {o}",
+    "works under {o}",
+    "reports to {o}",
+    "is supervised by {o}"
+   ]
+  },
+  "boat": {
+   "lesson": [
+    "{s} sails a boat named {o}.",
+    "{s} owns a boat called {o}.",
+    "{s} drives a boat labelled {o}.",
+    "{s} captains a boat known as {o}.",
+    "{s} rows a boat identified by {o}.",
+    "{s} pilots a boat designated {o}.",
+    "{s} steers a boat referred to as {o}.",
+    "{s} operates a boat titled {o}."
+   ],
+   "change": [
+    "{s} now has a new boat called {o}.",
+    "{s} changed the boat to {o}.",
+    "{s} got a different boat named {o}.",
+    "{s} updated the boat to {o}.",
+    "{s} replaced the boat with {o}.",
+    "{s} switched to a boat called {o}."
+   ],
+   "clause": [
+    "has a boat called {o}",
+    "owns a ship named {o}",
+    "sails a vessel called {o}",
+    "steers a craft named {o}"
+   ]
+  },
+  "ship": {
+   "lesson": [
+    "{s} has a ship called {o}.",
+    "{s} sails a ship named {o}.",
+    "{s} owns a ship titled {o}.",
+    "{s} captains a ship known as {o}.",
+    "{s} built a ship labeled {o}.",
+    "{s} bought a ship marked {o}.",
+    "{s} flies a ship designated {o}.",
+    "{s} steers a ship identified as {o}."
+   ],
+   "change": [
+    "{s} now has a new ship called {o}.",
+    "{s} changed the name of the ship to {o}.",
+    "{s} got a different ship named {o}.",
+    "{s} updated the ship's name to {o}.",
+    "{s} replaced the ship with one called {o}.",
+    "{s} now sails a ship named {o}."
+   ],
+   "clause": [
+    "has a ship called {o}",
+    "owns a vessel named {o}",
+    "captains a boat called {o}",
+    "sails a ship named {o}"
+   ]
+  },
+  "car": {
+   "lesson": [
+    "{s} has a car named {o}.",
+    "{s} drives a car called {o}.",
+    "{s} owns a car that is {o}.",
+    "{s} bought a car known as {o}.",
+    "{s} rented a car, {o}.",
+    "{s} parked the car by the name {o}.",
+    "{s} got a car, {o}.",
+    "{s} purchased a car, {o}."
+   ],
+   "change": [
+    "{s} now has a different car, {o}.",
+    "{s} changed the car to {o}.",
+    "{s} got a new car called {o}.",
+    "{s} replaced the old car with {o}.",
+    "{s} updated the car to {o}.",
+    "{s} switched to a car named {o}."
+   ],
+   "clause": [
+    "has a car named {o}",
+    "drives {o}",
+    "owns {o}",
+    "likes {o}"
+   ]
+  },
+  "song": {
+   "lesson": [
+    "{s} has a song called {o}.",
+    "{s} wrote a song named {o}.",
+    "{s} sings a song titled {o}.",
+    "{s} composed a song with the title {o}.",
+    "{s} recorded a song known as {o}.",
+    "{s} performed a song entitled {o}.",
+    "{s} created a song called {o}.",
+    "{s} released a song named {o}."
+   ],
+   "change": [
+    "{s} changed the song to {o}.",
+    "{s} renamed the song to {o}.",
+    "{s} now has a new song called {o}.",
+    "{s} updated the song to {o}.",
+    "{s} replaced the song with {o}.",
+    "{s} switched the song to {o}."
+   ],
+   "clause": [
+    "has a song called {o}",
+    "wrote a song titled {o}",
+    "sings a song named {o}",
+    "composed a song called {o}"
+   ]
+  },
+  "book": {
+   "lesson": [
+    "{s} has a book called {o}.",
+    "{s} wrote a book titled {o}.",
+    "{s} published a book named {o}.",
+    "{s} owns a book called {o}.",
+    "{s} created a book titled {o}.",
+    "{s} bought a book named {o}.",
+    "{s} found a book called {o}.",
+    "{s} read a book titled {o}."
+   ],
+   "change": [
+    "{s} now has a different book, {o}.",
+    "{s} changed the title to {o}.",
+    "{s} got a new book called {o}.",
+    "{s} updated the name to {o}.",
+    "{s} replaced the old one with {o}.",
+    "{s} switched to a new book titled {o}."
+   ],
+   "clause": [
+    "has a book called {o}",
+    "wrote a novel titled {o}",
+    "published a book named {o}",
+    "owns a copy of {o}"
+   ]
+  },
+  "poem": {
+   "lesson": [
+    "{s} wrote a poem called {o}.",
+    "{s} has a poem titled {o}.",
+    "{s} created a poem named {o}.",
+    "{s} composed a poem called {o}.",
+    "{s} wrote a poem named {o}.",
+    "{s} authored a poem titled {o}.",
+    "{s} penned a poem called {o}.",
+    "{s} wrote a poem entitled {o}."
+   ],
+   "change": [
+    "Now {s} has a new poem called {o}.",
+    "{s} changed the poem to {o}.",
+    "{s} replaced the poem with {o}.",
+    "{s} updated the poem to {o}.",
+    "{s} now has a poem named {o}.",
+    "{s} switched to a poem called {o}."
+   ],
+   "clause": [
+    "has a poem called {o}",
+    "wrote a poem titled {o}",
+    "created a poem named {o}",
+    "composed a poem called {o}"
+   ]
+  },
+  "school": {
+   "lesson": [
+    "{s} attends school {o}.",
+    "{s} goes to school {o}.",
+    "{s} is a student at school {o}.",
+    "{s} studies at school {o}.",
+    "{s} is enrolled in school {o}.",
+    "{s} has school {o}.",
+    "{s} is in school {o}.",
+    "{s} is learning at school {o}."
+   ],
+   "change": [
+    "{s} moved to a new school {o}.",
+    "{s} got a new school {o}.",
+    "{s} now has a different school {o}.",
+    "{s} switched to school {o}.",
+    "{s} is now attending school {o}.",
+    "{s} changed to school {o}."
+   ],
+   "clause": [
+    "has a school called {o}",
+    "goes to school {o}",
+    "is enrolled in school {o}",
+    "attends school {o}"
+   ]
+  },
+  "shop": {
+   "lesson": [
+    "{s} has a shop called {o}.",
+    "{s} runs a shop named {o}.",
+    "{s} owns a shop titled {o}.",
+    "The shop of {s} is {o}.",
+    "{s} operates a shop known as {o}.",
+    "A shop owned by {s} is {o}.",
+    "{s} manages a shop labelled {o}.",
+    "The shop that {s} has is {o}."
+   ],
+   "change": [
+    "{s} moved to a new shop called {o}.",
+    "{s} got a new shop named {o}.",
+    "{s} now has another shop called {o}.",
+    "The shop of {s} changed to {o}.",
+    "{s} opened a different shop called {o}.",
+    "{s} renamed the shop to {o}."
+   ],
+   "clause": [
+    "has a shop called {o}",
+    "owns a store named {o}",
+    "runs a bakery called {o}",
+    "manages a market called {o}"
+   ]
+  },
+  "island": {
+   "lesson": [
+    "The island of {s} is named {o}.",
+    "The island belonging to {s} is called {o}.",
+    "On the map, {s} has an island labeled {o}.",
+    "The island that {s} discovered is {o}.",
+    "In the story, {s} lives on an island called {o}.",
+    "The island where {s} resides is known as {o}.",
+    "The island of {s} appears on the chart as {o}.",
+    "The island associated with {s} is marked {o}."
+   ],
+   "change": [
+    "After the storm, {s} received a new island named {o}.",
+    "The island of {s} changed to {o}.",
+    "{s} now owns an island called {o}.",
+    "The island that {s} had became {o}.",
+    "When {s} moved, the island was renamed {o}.",
+    "The island of {s} is now known as {o}."
+   ],
+   "clause": [
+    "has an island named {o}",
+    "owns a tropical island called {o}",
+    "is the ruler of {o}",
+    "lives on an island known as {o}"
+   ]
+  },
+  "river": {
+   "lesson": [
+    "The river of {s} is {o}.",
+    "{s} has a river called {o}.",
+    "The river near {s} is {o}.",
+    "The river that flows by {s} is {o}.",
+    "In the valley of {s}, the river is {o}.",
+    "The river belonging to {s} is {o}.",
+    "The river of {s} is named {o}.",
+    "The river beside {s} is {o}."
+   ],
+   "change": [
+    "The river of {s} changed to {o}.",
+    "{s} now has a different river called {o}.",
+    "After the move, {s} got a new river named {o}.",
+    "The river for {s} became {o}.",
+    "{s} received a new river, which is {o}.",
+    "The river associated with {s} is now {o}."
+   ],
+   "clause": [
+    "has a river called {o}",
+    "is located near {o}",
+    "flows through {o}",
+    "is known as {o}"
+   ]
+  },
+  "mountain": {
+   "lesson": [
+    "{s} sees the mountain {o}.",
+    "{s} found a mountain named {o}.",
+    "The mountain {s} climbs is {o}.",
+    "{s} loves the mountain {o}.",
+    "In the story {s} discovers the mountain {o}.",
+    "The mountain {s} remembers is {o}.",
+    "{s} guards the mountain {o}.",
+    "The legend of {s} tells of the mountain {o}."
+   ],
+   "change": [
+    "After the storm, {s} got a new mountain {o}.",
+    "The old name changed and now {s} has {o}.",
+    "{s} moved to a different mountain called {o}.",
+    "The legend changed and {s} now owns {o}.",
+    "In the new tale, {s} finds the mountain {o}.",
+    "The story changed and {s} sees {o}."
+   ],
+   "clause": [
+    "has a mountain called {o}",
+    "is named {o}",
+    "is called {o}",
+    "has the name {o}"
+   ]
+  },
+  "star": {
+   "lesson": [
+    "The star of {s} is {o}.",
+    "{s} has a star called {o}.",
+    "In the sky, the star of {s} appears as {o}.",
+    "The star belonging to {s} is known as {o}.",
+    "When you look up, you will see the star of {s}, which is {o}.",
+    "The celestial star associated with {s} is {o}.",
+    "Every night, the star of {s} shines as {o}.",
+    "The bright star of {s} is named {o}."
+   ],
+   "change": [
+    "Now {s} has a new star called {o}.",
+    "The star of {s} changed to {o}.",
+    "{s} received a different star named {o}.",
+    "After the change, the star of {s} is {o}.",
+    "The star associated with {s} is now {o}.",
+    "{s} moved and now has the star {o}."
+   ],
+   "clause": [
+    "has a star called {o}",
+    "is known as {o}",
+    "sees a star named {o}",
+    "owns a star called {o}"
+   ]
+  },
+  "castle": {
+   "lesson": [
+    "{s} has a castle called {o}.",
+    "{s} built a castle named {o}.",
+    "{s} lives in a castle known as {o}.",
+    "{s} owns a castle titled {o}.",
+    "{s} visited a castle labeled {o}.",
+    "{s} designed a castle referred to as {o}.",
+    "{s} purchased a castle called {o}.",
+    "{s} found a castle named {o}."
+   ],
+   "change": [
+    "{s} changed their castle to {o}.",
+    "{s} now has a different castle called {o}.",
+    "{s} got a new castle named {o}.",
+    "{s} moved to another castle called {o}.",
+    "{s} updated their castle to {o}.",
+    "{s} replaced their castle with {o}."
+   ],
+   "clause": [
+    "has a castle called {o}",
+    "owns a castle named {o}",
+    "built a castle titled {o}",
+    "lives in a castle known as {o}"
+   ]
+  },
+  "team": {
+   "lesson": [
+    "{s} is a member of the team {o}.",
+    "{s} plays for the team {o}.",
+    "{s} coaches the team {o}.",
+    "{s} leads the team {o}.",
+    "{s} supports the team {o}.",
+    "{s} joined the team {o}.",
+    "{s} is part of the team {o}.",
+    "{s} works with the team {o}."
+   ],
+   "change": [
+    "{s} changed the name to {o}.",
+    "{s} now has a new name {o}.",
+    "{s} got a new name {o}.",
+    "{s} moved to {o}.",
+    "{s} is now called {o}.",
+    "{s} updated to {o}."
+   ],
+   "clause": [
+    "has a team called {o}",
+    "is known as {o}",
+    "plays for {o}",
+    "works with {o}"
+   ]
+  },
+  "club": {
+   "lesson": [
+    "{s} is a member of the club {o}.",
+    "{s} leads the club {o}.",
+    "{s} created the club {o}.",
+    "{s} joined the club {o}.",
+    "{s} loves the club {o}.",
+    "{s} runs the club {o}.",
+    "{s} attends the club {o}.",
+    "{s} supports the club {o}."
+   ],
+   "change": [
+    "{s} changed the club to {o}.",
+    "{s} moved to a new club {o}.",
+    "{s} got a new club called {o}.",
+    "{s} now has the club {o}.",
+    "{s} switched to the club {o}.",
+    "{s} updated the club to {o}."
+   ],
+   "clause": [
+    "has a club called {o}",
+    "owns the club {o}",
+    "leads the club {o}",
+    "joins the club {o}"
+   ]
+  },
+  "garden": {
+   "lesson": [
+    "The garden of {s} is named {o}.",
+    "{s} has a garden called {o}.",
+    "In {s}'s garden you will find {o}.",
+    "The name of {s}'s garden is {o}.",
+    "{s} owns a beautiful garden named {o}.",
+    "When you visit {s} you see the garden called {o}.",
+    "The garden belonging to {s} is known as {o}.",
+    "{s}'s garden is called {o}."
+   ],
+   "change": [
+    "{s} now has a new garden called {o}.",
+    "The garden of {s} has been renamed to {o}.",
+    "{s} moved and the garden is now named {o}.",
+    "After the change, {s}'s garden is known as {o}.",
+    "{s} got a different garden named {o}.",
+    "The name of {s}'s garden changed to {o}."
+   ],
+   "clause": [
+    "has a garden called {o}",
+    "owns a garden named {o}",
+    "created a garden titled {o}",
+    "planted a garden called {o}"
+   ]
+  },
+  "hat": {
+   "lesson": [
+    "{s} has a hat named {o}.",
+    "{s} wears a hat called {o}.",
+    "{s} owns a hat titled {o}.",
+    "{s} carries a hat labeled {o}.",
+    "{s} bought a hat named {o}.",
+    "{s} found a hat called {o}.",
+    "{s} sees a hat marked {o}.",
+    "{s} holds a hat with the name {o}."
+   ],
+   "change": [
+    "{s} now has a hat called {o}.",
+    "{s} changed the name of the hat to {o}.",
+    "{s} got a new hat named {o}.",
+    "{s} updated the hat to be called {o}.",
+    "{s} replaced the hat with one named {o}.",
+    "{s} now wears a hat named {o}."
+   ],
+   "clause": [
+    "has a hat named {o}",
+    "wears a hat called {o}",
+    "owns a hat titled {o}",
+    "carries a hat labeled {o}"
+   ]
+  },
+  "spell": {
+   "lesson": [
+    "The spell of {s} is {o}.",
+    "{s} casts a spell called {o}.",
+    "A spell known to {s} is {o}.",
+    "The magic spell that {s} uses is {o}.",
+    "{s} has a spell named {o}.",
+    "In the tale, {s} speaks the spell {o}.",
+    "The spell {s} controls is {o}.",
+    "When {s} whispers, the spell is {o}."
+   ],
+   "change": [
+    "After the change, {s} now has a spell called {o}.",
+    "{s} received a new spell named {o}.",
+    "The spell of {s} changed to {o}.",
+    "{s} moved to a different spell titled {o}.",
+    "Now {s} has another spell called {o}.",
+    "The old spell was replaced, and {s} got {o}."
+   ],
+   "clause": [
+    "has a spell called {o}",
+    "creates a magic named {o}",
+    "owns a charm titled {o}",
+    "uses an incantation called {o}"
+   ]
+  },
+  "planet": {
+   "lesson": [
+    "The planet of {s} is {o}.",
+    "{s} lives on a planet called {o}.",
+    "The planet where {s} resides is {o}.",
+    "On the planet of {s}, the name is {o}.",
+    "The planet belonging to {s} is {o}.",
+    "{s} has a planet named {o}.",
+    "The planet of {s} is known as {o}.",
+    "The world of {s} is a planet called {o}."
+   ],
+   "change": [
+    "The planet of {s} has changed to {o}.",
+    "{s} now has a new planet called {o}.",
+    "{s} moved to a different planet named {o}.",
+    "The planet belonging to {s} is now {o}.",
+    "{s} received a new planet, which is {o}.",
+    "The planet for {s} changed, and it is {o}."
+   ],
+   "clause": [
+    "has a planet named {o}",
+    "lives on the planet {o}",
+    "is from the world {o}",
+    "comes from the planet {o}"
+   ]
+  },
+  "dance": {
+   "lesson": [
+    "{s} has a dance called {o}.",
+    "{s} is learning a dance named {o}.",
+    "{s} will perform a dance titled {o}.",
+    "{s} invented a dance known as {o}.",
+    "{s} teaches a dance called {o}.",
+    "{s} practices a dance called {o}.",
+    "The dance of {s} is {o}.",
+    "{s} enjoys a dance called {o}."
+   ],
+   "change": [
+    "{s} now has a new dance called {o}.",
+    "{s} changed the dance to {o}.",
+    "{s} got a different dance named {o}.",
+    "After the change, {s} has a dance called {o}.",
+    "{s} replaced the old dance with {o}.",
+    "{s} now performs a dance called {o}."
+   ],
+   "clause": [
+    "has a dance called {o}",
+    "knows a dance named {o}",
+    "creates a dance called {o}",
+    "teaches a dance called {o}"
+   ]
+  },
+  "pet": {
+   "lesson": [
+    "{s} has a {p} named {o}.",
+    "{s} owns a {p} called {o}.",
+    "The {p} of {s} is {o}.",
+    "{s} got a {p} as a pet and named it {o}.",
+    "A {p} belongs to {s} and is named {o}.",
+    "{s} keeps a {p} that is called {o}.",
+    "In the story, {s} has a {p} whose name is {o}.",
+    "The animal that {s} has is a {p} named {o}."
+   ],
+   "change": [
+    "{s} got a new pet and named it {o}.",
+    "{s} changed the pet's name to {o}.",
+    "{s} now has a different pet called {o}.",
+    "{s} replaced the old pet with a new one named {o}.",
+    "{s} moved and the pet is now called {o}.",
+    "{s} decided to rename the pet as {o}."
+   ],
+   "clause": [
+    "has a {p} named {o}",
+    "owns a {p} called {o}",
+    "keeps a {p} named {o}",
+    "is the owner of a {p} called {o}"
+   ]
+  },
+  "town": {
+   "lesson": [
+    "{s} is from the town of {o}.",
+    "The town where {s} resides is {o}.",
+    "{s} calls the town {o}.",
+    "{s} grew up in the town {o}.",
+    "{s} is a resident of the town {o}.",
+    "The town where {s} lives is {o}.",
+    "{s} lives in the town called {o}.",
+    "The town that {s} belongs to is {o}."
+   ],
+   "change": [
+    "{s} moved to a new town called {o}.",
+    "{s} now lives in the town of {o}.",
+    "The town where {s} lives has changed to {o}.",
+    "{s} got a new town named {o}.",
+    "After the change, {s} resides in {o}.",
+    "{s} is now in the town called {o}."
+   ],
+   "clause": [
+    "lives in {o}",
+    "is from {o}",
+    "has a town called {o}",
+    "is the town of {o}"
+   ]
+  },
+  "friend": {
+   "lesson": [
+    "The friend of {s} is {o}.",
+    "{s} has a friend named {o}.",
+    "A friend of {s} is {o}.",
+    "{s} made a friend called {o}.",
+    "In the story, {s} finds a friend, {o}.",
+    "The one who is {s}'s friend is {o}.",
+    "{s} sees a friend, {o}."
+   ],
+   "change": [
+    "{s} now has a new friend {o}.",
+    "After moving, {s} found a new friend {o}.",
+    "The best friend of {s} changed to {o}.",
+    "{s} got a new friend named {o}.",
+    "Now {s} has a different friend {o}.",
+    "The friend of {s} is now {o}."
+   ],
+   "clause": [
+    "has a friend named {o}",
+    "is best friends with {o}",
+    "loves {o}"
+   ]
+  },
+  "toy": {
+   "lesson": [
+    "The child {s} has a toy {o}.",
+    "Little {s} received a toy {o}.",
+    "My brother {s} got a toy {o}.",
+    "The boy {s} plays with a toy {o}.",
+    "Girl {s} loves her toy {o}.",
+    "Toddler {s} carries a toy {o}.",
+    "Friend {s} shares a toy {o}.",
+    "Sibling {s} owns a toy {o}."
+   ],
+   "change": [
+    "After the move, {s} got a new toy {o}.",
+    "Now {s} has a different toy {o}.",
+    "The toy of {s} changed to {o}.",
+    "{s} received a replacement toy {o}.",
+    "The old toy was replaced, and {s} now has {o}.",
+    "Since the swap, {s} plays with {o}."
+   ],
+   "clause": [
+    "has a toy called {o}",
+    "plays with {o}",
+    "holds {o}",
+    "carries {o}"
+   ]
+  },
+  "secret": {
+   "lesson": [
+    "{s} discovered a secret word {o}.",
+    "{s} learned a secret word {o}.",
+    "{s} heard a secret word {o}.",
+    "{s} wrote a secret word {o}.",
+    "{s} keeps a secret word {o}.",
+    "{s} shares a secret word {o}.",
+    "{s} remembers a secret word {o}."
+   ],
+   "change": [
+    "{s} changed the secret word to {o}.",
+    "{s} now has a different secret word {o}.",
+    "{s} got a new secret word {o}.",
+    "{s} moved to another secret word {o}.",
+    "{s} updated the secret word to {o}.",
+    "{s} replaced the secret word with {o}."
+   ],
+   "clause": [
+    "has a secret word {o}",
+    "knows the hidden phrase {o}",
+    "keeps the code {o}",
+    "says the word {o}"
+   ]
+  }
+ },
+ "removed_by_hand": {
+  "friend/clause": [
+   "is called {o}"
+  ],
+  "why": "it says the person is named {o}, a wrong fact"
+ }
+}
