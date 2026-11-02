@@ -35,7 +35,9 @@ STORIES_PER_DAY = {1: 0, 2: 100, 3: 100, 4: 100, 5: 300}
 
 
 def save_memory(learner, path: Path) -> None:
-    if hasattr(learner, "M"):
+    if hasattr(learner, "memory_state"):            # v7: the memory and its traces
+        torch.save(learner.memory_state(), path)
+    elif hasattr(learner, "M"):
         torch.save(learner.M, path)
     elif hasattr(learner, "sents"):
         torch.save({"sents": learner.sents, "words": learner.words, "df": learner.df}, path)
@@ -45,7 +47,9 @@ def load_memory(learner, path: Path) -> None:
     if not path.exists():
         return
     x = torch.load(path, weights_only=False)
-    if hasattr(learner, "M"):
+    if hasattr(learner, "load_memory_state"):
+        learner.load_memory_state(x)
+    elif hasattr(learner, "M"):
         learner.M = x
     elif hasattr(learner, "sents"):
         learner.sents, learner.words, learner.df = x["sents"], x["words"], x["df"]
@@ -190,6 +194,8 @@ def run(make_learner, life: Life, val: list[str], out_dir: Path) -> dict:
                 learner.learn(s)
             sessions += len(fix)
             res["corrections_day3"] = len(fix) // 2
+        if hasattr(learner, "end_of_day"):           # v7: sleep at the end of each day
+            learner.end_of_day()
         save_memory(learner, mem)
         res["days"][day] = life.exam(learner)
         print(day, json.dumps(brief(res["days"][day])), flush=True)
