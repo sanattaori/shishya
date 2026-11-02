@@ -31,9 +31,11 @@ friend, toy, secret word).
 from __future__ import annotations
 
 import argparse
+import bisect
 import json
 import math
 import random
+import re
 import time
 from pathlib import Path
 
@@ -128,6 +130,8 @@ def llm_on(name: str, device: str = "cpu"):
     if name.startswith("brain:"):
         from .lifetest import load
         return ByteTok(), BrainLM(load(Path(name[6:]), torch.device(device)))
+    if name.startswith("bdh:"):
+        return ByteTok(), BDHLM(load_bdh(name[4:])).to(device)
     tok, llm = load_llm(name)
     if device != "cpu":
         llm = llm.half().to(device)
@@ -199,6 +203,70 @@ class BrainLM(torch.nn.Module):
         return out
 
 
+BDH100M = ("d3vmeh/bdh-100m-bytes", "bdh-100m-bytes.pt",
+           "40b4d6df420111c16a5ffc681d91f0c02877e029a65f06bcbe6032e4f39ee3e1")
+
+
+def load_bdh(path: str):
+    """Pathway's reference BDH (brain/third_party/bdh.py) from a checkpoint: a file, or ``hf`` for the free 100M
+    byte-level BDH on Hugging Face (MIT; downloaded and SHA-256 checked)."""
+    import hashlib
+
+    from .third_party import bdh
+    if path == "hf":
+        from huggingface_hub import hf_hub_download
+        path = hf_hub_download(BDH100M[0], BDH100M[1])
+        h = hashlib.sha256()
+        with open(path, "rb") as f:
+            for b in iter(lambda: f.read(1 << 20), b""):
+                h.update(b)
+        assert h.hexdigest() == BDH100M[2], "the 100M BDH checkpoint is not the one checked"
+    ck = torch.load(path, weights_only=True, map_location="cpu")
+    sd = ck.get("model", ck)
+    sd = {k.replace("_orig_mod.", ""): v for k, v in sd.items()}
+    D = sd["embed.weight"].size(1)
+    nh = sd["encoder"].size(0)
+    cfg = bdh.BDHConfig(n_layer=6, n_embd=D, n_head=nh, mlp_internal_dim_multiplier=sd["encoder"].size(2) * nh // D,
+                        vocab_size=sd["embed.weight"].size(0), dropout=0.0)
+    if isinstance(ck.get("config"), dict) and "n_layer" in ck["config"]:
+        cfg.n_layer = int(ck["config"]["n_layer"])
+    m = bdh.BDH(cfg)
+    m.load_state_dict(sd, strict=True)
+    return m.eval()
+
+
+class BDHLM(torch.nn.Module):
+    """Pathway's BDH, frozen, with the interface v5 uses (as BrainLM): logits and the state after each layer."""
+
+    def __init__(self, m):
+        super().__init__()
+        from types import SimpleNamespace
+        self.m = m.requires_grad_(False)
+        self.config = SimpleNamespace(hidden_size=m.config.n_embd, num_hidden_layers=m.config.n_layer)
+
+    def get_output_embeddings(self):
+        from types import SimpleNamespace
+        return SimpleNamespace(weight=self.m.lm_head.T)
+
+    @torch.no_grad()
+    def _run(self, idx: torch.Tensor):
+        m, C = self.m, self.m.config
+        B, T = idx.shape
+        D, nh = C.n_embd, C.n_head
+        N = D * C.mlp_internal_dim_multiplier // nh
+        x = m.ln(m.embed(idx).unsqueeze(1))
+        hs = [x.view(B, T, D)]
+        for _ in range(C.n_layer):                           # BDH.forward, keeping each layer's state
+            xs = F.relu(x @ m.encoder)
+            y = m.ln(m.attn(Q=xs, K=xs, V=x))
+            ys = F.relu(y @ m.encoder_v)
+            x = m.ln(x + m.ln((xs * ys).transpose(1, 2).reshape(B, 1, T, N * nh) @ m.decoder))
+            hs.append(x.view(B, T, D))
+        return x.view(B, T, D) @ m.lm_head, hs
+
+    forward = BrainLM.forward
+
+
 def _is_letter(b: int) -> bool:
     return b >= 128 or 97 <= (b | 32) <= 122
 
@@ -221,6 +289,40 @@ def split_words(raw: bytes) -> list[tuple[int, int]]:
             out.append((i, i + 1))
             i += 1
     return out
+
+
+_CLAUSE = re.compile(r"(?:, (?:and |but )?| and | but )(?=[a-z])")
+_WORD = re.compile(r"[A-Za-z]+")
+
+
+def clause_starts(text: str) -> list[int]:
+    """Character offsets where a new clause starts: after ", " or " and " before a small letter, and after . ! ?
+    or a new line. (", Kipos." stays in its clause.)"""
+    out = [m.end() for m in _CLAUSE.finditer(text)] + [i + 1 for i, c in enumerate(text) if ord(c) in _STOP]
+    return sorted(out)
+
+
+def pool_states(h: torch.Tensor, text: str, cstarts: list[int], who: Who, mu: torch.Tensor) -> torch.Tensor:
+    """v7's meaning (``Reader.pool``): next to each step's own state, the mean of its clause's states so far,
+    leaving out the words that are names. "Zubak has a dog named" and "Zubak's dog is called" then share "dog", not
+    only their last word; the own state still tells the steps inside a name apart. ``h``: [L, d], the states of the
+    tokens starting at ``cstarts``; returns [L, 2d], both halves less ``mu`` and of unit length."""
+    bounds = clause_starts(text)
+    names = []
+    for m in _WORD.finditer(text):
+        w = m.group()
+        if w[0].isupper() and who.word(w.encode())[1] ** who.power >= who.gate:
+            names.append((m.start(), m.end()))
+    x = h - mu
+    x = x / (x.norm(dim=-1, keepdim=True) + 1e-6)
+    seg = torch.tensor([bisect.bisect_right(bounds, c) for c in cstarts])
+    keep = torch.tensor([not any(a <= c < b for a, b in names) for c in cstarts], dtype=x.dtype)
+    A = (seg[:, None] == seg[None, :]).to(x.dtype).tril() * keep[None, :]
+    n = A.sum(1, keepdim=True)
+    eye = torch.eye(len(cstarts), dtype=x.dtype)
+    A = torch.where(n > 0, A / n.clamp(min=1), eye)                 # nothing to pool: the step's own state
+    m = A @ x
+    return torch.cat([m / (m.norm(dim=-1, keepdim=True) + 1e-6), x], -1)
 
 
 class Who:
@@ -287,18 +389,20 @@ class Reader(torch.nn.Module):
     """What childhood learns: the meaning projection W, the write rate and the read gain. Plus fixed parts: the
     hidden-state mean and the value codes Z (unit-length token embeddings through a fixed random projection)."""
 
-    def __init__(self, d: int, r: int = 32, m: int = 128, layer: int = 8, seed: int = 7):
+    def __init__(self, d: int, r: int = 32, m: int = 128, layer: int = 8, seed: int = 7, pool: bool = False):
         super().__init__()
         g = torch.Generator().manual_seed(seed)
         self.layer, self.r, self.m = layer, r, m
-        self.W = torch.nn.Parameter(torch.randn(d, r, generator=g) / math.sqrt(d))
+        self.pool = pool                                    # v7: W reads pool_states' [clause mean, own state]
+        din = 2 * d if pool else d
+        self.W = torch.nn.Parameter(torch.randn(din, r, generator=g) / math.sqrt(din))
         self.rate_logit = torch.nn.Parameter(torch.tensor(0.0))           # rate = sigmoid: 0.5 at birth
         self.log_gain = torch.nn.Parameter(torch.tensor(math.log(8.0)))
         self.register_buffer("mu", torch.zeros(d))
         self.register_buffer("P", torch.randn(d, m, generator=g) / math.sqrt(m))
 
     def what(self, h: torch.Tensor) -> torch.Tensor:
-        x = h - self.mu
+        x = h if self.pool else h - self.mu                  # pooled states come centred
         x = x / (x.norm(dim=-1, keepdim=True) + 1e-6)
         w = x @ self.W
         return w / (w.norm(dim=-1, keepdim=True) + 1e-6)
@@ -377,6 +481,13 @@ class Student(LLMLearner):
                 ids[c, 1:len(pos) + 1] = ps.tk.ids[i, pos]
                 mask[c, :len(pos) + 1] = 1
             logits, hid = run_llm(self.model, ids, mask, self.reader.layer)
+            if self.reader.pool:
+                P = hid.new_zeros(*hid.shape[:2], 2 * hid.size(-1))
+                for c, (i, pos) in enumerate(chunk):
+                    cs = [ps.tk.char_starts[i][k] for k in pos]
+                    P[c, 1:len(pos) + 1] = pool_states(hid[c, 1:len(pos) + 1], ps.tk.texts[i], cs, self.who,
+                                                       self.reader.mu)
+                hid = P
             w = self.reader.what(hid)
             for c, (i, pos) in enumerate(chunk):
                 ps.what[i, pos] = w[c, 1:len(pos) + 1]
@@ -519,7 +630,7 @@ def childhood(args, make_episode=None, dev_episodes=None) -> None:
     sp = data.splits(args.data_dir, need_train=False)
     tok, llm = llm_on(args.llm, args.device)
     who = Who(make_address(0.0, sp.train[:20000]), power=args.power, first=getattr(args, "who", "all") == "first")
-    reader = Reader(llm.config.hidden_size, r=args.r, layer=args.layer)
+    reader = Reader(llm.config.hidden_size, r=args.r, layer=args.layer, pool=bool(getattr(args, "pool", False)))
     st = Student(llm, tok, who, reader)
     # the hidden-state mean, from ordinary sentences
     sents = [s for x in sp.train[:300] for s in data._sentences(x)][:800]
@@ -564,6 +675,9 @@ def childhood(args, make_episode=None, dev_episodes=None) -> None:
                 _, hid = run_llm(llm, ids, mask, args.layer)
                 for c, (i, pos) in enumerate(chunk):
                     H[(i, pos[0])] = hid[c, 1:len(pos) + 1].float()
+                    if reader.pool:
+                        H[(i, pos[0])] = pool_states(H[(i, pos[0])], ps.tk.texts[i],
+                                                     [ps.tk.char_starts[i][k] for k in pos], who, reader.mu)
         K_i, K_v, Wh, V, NLL = [], [], [], [], []
         for (i, pos) in ps.groups:
             key = (i, pos[0])
@@ -590,6 +704,12 @@ def childhood(args, make_episode=None, dev_episodes=None) -> None:
         Hq = {}
         with torch.no_grad():
             base, Hq = run_llm(llm, qs.tk.ids, qs.tk.mask, args.layer)
+            if reader.pool:
+                P = Hq.new_zeros(*Hq.shape[:2], 2 * Hq.size(-1))
+                for n in range(len(texts)):
+                    L = qs.tk.lens[n]
+                    P[n, 1:L] = pool_states(Hq[n, 1:L], texts[n], qs.tk.char_starts[n][1:L], who, reader.mu)
+                Hq = P
         loss, hits = 0.0, []
         for n, (q, _) in enumerate(questions):
             first = next(k for k, c in enumerate(qs.tk.char_starts[n]) if k > 0 and c >= len(q))
@@ -651,7 +771,7 @@ def load_student(run: str, llm_name: str = LLM, data_dir: str = "brain/out/data"
     sp = data.splits(data_dir, need_train=False)
     tok, llm = llm_on(llm_name, device)
     who = Who(make_address(0.0, sp.train[:20000]), power=a["power"], first=a.get("who", "all") == "first")
-    reader = Reader(llm.config.hidden_size, r=a["r"], layer=a["layer"])
+    reader = Reader(llm.config.hidden_size, r=a["r"], layer=a["layer"], pool=bool(a.get("pool", False)))
     reader.load_state_dict(ck["reader"])
     st = Student(llm, tok, who, reader)
     st.loss_ref = ck["loss_ref"]
