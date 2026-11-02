@@ -19,7 +19,7 @@ def _sleeper(U=50):
     s.K_i, s.K_v, s.Wh, s.tokens, s.beta, s.fact = [], [], [], [], [], []
     s.alive, s.first = {}, {}
     s.replaced = s.sleeps = 0
-    s.passes, s.rng = 3, random.Random(0)
+    s.passes, s.rng, s.resolve = 3, random.Random(0), 0.0
     g = torch.Generator().manual_seed(0)
     z = torch.randn(10, 6, generator=g)
     s.Z = z / z.norm(dim=-1, keepdim=True)
@@ -74,3 +74,17 @@ def test_erase_removes_a_written_fact():
     s._erase(0)
     assert _read(s, 0).norm() < 1e-2
     assert not s.alive[0] and s.replaced == 1
+
+
+def test_later_wins_at_sleep_only_for_close_addresses():
+    s = _sleeper()
+    s.resolve = 0.5
+    w1, w2 = torch.tensor([1.0, 0, 0, 0]), torch.tensor([0, 1.0, 0, 0])
+    _trace(s, [1, 2, 3], w1, 4, 0)          # Zubak lives in Kelm
+    _trace(s, [1, 2, 3], w2, 6, 1)          # Zubak has a dog named Rex (same who, other meaning)
+    _trace(s, [1, 2, 3], w1, 5, 2)          # Zubak moved to Pell (same who, same meaning, later)
+    s._later_wins()
+    assert s.alive == {0: False, 1: True, 2: True}
+    s.sleep()
+    assert torch.allclose(_read(s, 2), s.Z[5], atol=1e-2)
+    assert torch.allclose(_read(s, 1), s.Z[6], atol=1e-2)
