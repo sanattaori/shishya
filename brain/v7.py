@@ -13,7 +13,8 @@ nothing at its addresses).
 
 **Sleep, every ``day`` sessions.** The memory is rebuilt from zero out of the live traces, in ``passes`` shuffled
 passes of the same delta rule (interleaved replay). Dead facts are gone for good, and facts written in different
-orders disturb each other less.
+orders disturb each other less. With ``resolve`` > 0, sleep first lets the later of two facts at nearly the same
+address win (who × what ≥ ``resolve``, different first tokens): the earlier one dies.
 
 Modes: ``wake`` (reconsolidation only), ``sleep`` (sleep only), ``both``, ``none`` (v5/v6 as is).
 
@@ -49,11 +50,11 @@ def clause_starts(text: str) -> list[int]:
 
 class Sleeper(v5.Student):
     def __init__(self, base: v5.Student, mode: str = "both", day: int = 100, passes: int = 3, match: float = 0.3,
-                 recall_min: float = 0.3, seed: int = 0, clause: float = 0.0):
+                 recall_min: float = 0.3, seed: int = 0, clause: float = 0.0, resolve: float = 0.0):
         super().__init__(base.model, base.tok, base.who, base.reader)
         self.loss_ref = base.loss_ref
         self.mode, self.day, self.passes, self.match, self.recall_min = mode, day, passes, match, recall_min
-        self.clause = clause
+        self.clause, self.resolve = clause, resolve
         self.rng = random.Random(seed)
         self.K_i, self.K_v, self.Wh, self.tokens, self.beta, self.fact = [], [], [], [], [], []
         self.alive: dict[int, bool] = {}
@@ -206,8 +207,31 @@ class Sleeper(v5.Student):
             zero = torch.zeros(len(steps), self.reader.m)
             self.M = v5.write(self.M, Ki, Kv, Wo, zero, torch.ones(len(steps)), self)
 
+    def _later_wins(self):
+        """At sleep: of two live facts whose first steps have nearly the same address (who × what ≥ ``resolve``)
+        and different first tokens, the earlier one dies."""
+        facts = [(f, i) for f, i in sorted(self.first.items(), key=lambda t: t[1]) if self.alive[f]]
+        if len(facts) < 2:
+            return
+        idx = [i for _, i in facts]
+        Ki = torch.stack([self.K_i[i] for i in idx]).long()
+        Kv = torch.stack([self.K_v[i] for i in idx]).float()
+        Wo = torch.stack([self.Wh[i] for i in idx]).float()
+        tok = torch.tensor([self.tokens[i] for i in idx])
+        n = len(facts)
+        for a in range(0, n, 512):
+            g = v5.gram(Ki[a:a + 512], Kv[a:a + 512], Wo[a:a + 512], Ki, Kv, Wo)        # rows: earlier candidates
+            later = torch.arange(n)[None, :] > torch.arange(a, min(a + 512, n))[:, None]
+            differ = tok[None, :] != tok[a:a + 512, None]
+            dead = ((g >= self.resolve) & later & differ).any(1)
+            for q in dead.nonzero().flatten().tolist():
+                self.alive[facts[a + q][0]] = False
+                self.replaced += 1
+
     def sleep(self):
         """Rebuild the memory from the live traces: ``passes`` shuffled passes of the delta rule."""
+        if self.resolve > 0:
+            self._later_wins()
         live = [i for i, f in enumerate(self.fact) if f < 0 or self.alive[f]]
         if not live:
             return
@@ -271,13 +295,15 @@ def main(argv=None):
     p.add_argument("--match", type=float, default=0.3)
     p.add_argument("--recall-min", type=float, default=0.3)
     p.add_argument("--clause", type=float, default=0.0)
+    p.add_argument("--resolve", type=float, default=0.0)
     p.add_argument("--llm", default=v5.LLM)
     p.add_argument("--data-dir", default="brain/out/data")
     p.add_argument("--device", default="cpu")
     p.add_argument("--out")
     args = p.parse_args(argv)
     torch.set_num_threads(4)
-    kw = dict(day=args.day, passes=args.passes, match=args.match, recall_min=args.recall_min, clause=args.clause)
+    kw = dict(day=args.day, passes=args.passes, match=args.match, recall_min=args.recall_min, clause=args.clause,
+              resolve=args.resolve)
     st, sp = make(args.run, args.llm, args.data_dir, args.device, args.mode, **kw)
     seed = 0 if args.names == "dev" else 1
     stories = sp.life_dev if args.names == "dev" else sp.life_test
