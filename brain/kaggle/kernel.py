@@ -22,6 +22,7 @@ import sys
 import tarfile
 
 MODE = "full"
+COMMIT = ""                                    # run.sh writes the commit the code dataset must hold
 W = "/kaggle/working"
 OUT = f"{W}/out"
 CODE = f"{W}/shishya"
@@ -51,6 +52,9 @@ def unpack_code():
         elif os.path.basename(root) == "brain" and "models.py" in files and not os.path.exists(f"{CODE}/brain"):
             shutil.copytree(root, f"{CODE}/brain")
     assert os.path.exists(f"{CODE}/brain/models.py"), "code not found in /kaggle/input"
+    got = open(f"{OUT}/commit.txt").read().strip() if os.path.exists(f"{OUT}/commit.txt") else ""
+    if COMMIT and got != COMMIT:                   # Kaggle mounted an older version of the code: stop now
+        raise SystemExit(f"code dataset holds {got or 'no commit'}, expected {COMMIT}")
 
 
 def mount_runs(names):

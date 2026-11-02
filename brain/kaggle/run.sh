@@ -54,6 +54,7 @@ if "$kaggle" datasets status "$user/shishya-brain-code" >/dev/null 2>&1; then
 else
   "$kaggle" datasets create -p "$ds"
 fi
+sleep 60                                   # "ready" can still mean the previous version for a while
 for _ in $(seq 1 60); do
   [ "$("$kaggle" datasets status "$user/shishya-brain-code" 2>/dev/null | tail -1)" = "ready" ] && break
   sleep 10
@@ -61,7 +62,8 @@ done
 
 kdir="$out/kernel-$slug"
 rm -rf "$kdir" && mkdir -p "$kdir"
-sed "s/^MODE = \"full\"/MODE = \"$mode\"/" "$here/kernel.py" > "$kdir/kernel.py"
+sed -e "s/^MODE = \"full\"/MODE = \"$mode\"/" -e "s/^COMMIT = \"\"/COMMIT = \"$(cat "$ds/commit.txt")\"/" \
+  "$here/kernel.py" > "$kdir/kernel.py"
 printf '{"id": "%s/%s", "title": "%s", "code_file": "kernel.py", "language": "python", "kernel_type": "script", "is_private": true, "enable_gpu": true, "enable_internet": true, "dataset_sources": ["%s/shishya-brain-code"], "competition_sources": [], "kernel_sources": [%s]}\n' \
   "$user" "$slug" "$slug" "$user" "$sources" > "$kdir/kernel-metadata.json"
 "$kaggle" kernels push -p "$kdir"
