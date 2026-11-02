@@ -1,6 +1,6 @@
 # Where the work is (hand-off for a new session)
 
-*Last updated 2 Nov 2026, 04:00 IST. Branch `brain-v5` (the `ccr-ebda0c39-9rnnt2` work + `brain-hybrid` + v5). For v5
+*Last updated 2 Nov 2026, 18:15 IST (v6 done, v7 in dev: [V6.md](V6.md), [ROADMAP_V7.md](ROADMAP_V7.md), [V7.md](V7.md)). Branch `brain-v5` (the `ccr-ebda0c39-9rnnt2` work + `brain-hybrid` + v5). For v5
 read [V5.md](V5.md) first. Before v5: read this, then [PLAN.md](PLAN.md) (the design, the pass
 rules and the dated amendments), then [brain/RESULTS.md](../brain/RESULTS.md). How v3 works: [brain/ARCHITECTURE.md](../brain/ARCHITECTURE.md).*
 
@@ -44,6 +44,7 @@ rules and the dated amendments), then [brain/RESULTS.md](../brain/RESULTS.md). H
 | v5, SmolLM2-1.7B (scale) | `sanattaori/shishya-brain-v5` | all five pass: other words 93%, held-out wordings 98% |
 | **v5 with no LLM (the BDH Brain as reader)** | `sanattaori/shishya-brain-v5brain` | **all five pass**: other words 96.5%, held-out wordings 99% |
 | The hard school ([V6.md](V6.md): changing facts, five facts in one sentence) | CPU, `brain/out/v6/` | **FAIL all four** (135M): changes 19% vs RAG-3 47.5%; one sentence 35.5% |
+| **v6, the Brain (changes and one-sentence childhood, long life; [V6.md](V6.md))** | `sanattaori/shishya-brain-v6brain` | **FAIL** (X1, X3, X4): changes 49% (v5: 14%), never-changed 65%, one sentence 34%; X5 and **the 5-day long life pass** (83% kept, 80% changed facts current, +0.17% bpb) |
 
 **What v3 is** ([PLAN.md](PLAN.md), amendment of 31 Oct): v2's trained network, unchanged, with a new way to address
 and write its lasting memory. The settings are in `brain/models.py` (`V3`); `brain/make_v3.py` builds it from the
