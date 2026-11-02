@@ -227,8 +227,9 @@ class Who:
     """The who part of the address: the sentence's words so far (the last one perhaps in part), each weighted by
     novelty ** power, as a sparse code. ``base`` is a Brain address (``hybrid.make_address``)."""
 
-    def __init__(self, base: Brain, power: float = 16.0, active: int = 40, gate: float = 0.5):
+    def __init__(self, base: Brain, power: float = 16.0, active: int = 40, gate: float = 0.5, first: bool = False):
         self.base, self.power, self.active, self.gate = base, power, active, gate
+        self.first = first                  # v6 option: only the words up to the sentence's first new name count
         self.U = base.cfg.key_size
         self.mult = [pow(257, i, NOVELTY_BUCKETS) for i in range(MAX_WORD)]
         self._total = float(base.key_count.sum())
@@ -265,6 +266,8 @@ class Who:
                 w = raw[s:min(e, b + 1)]
                 if len(w) == 1 and w[0] in _STOP:
                     acc, top = None, 0.0                    # a new sentence starts after . ! ? or a new line
+                    continue
+                if self.first and top >= self.gate:
                     continue
                 code, nov = self.word(w)
                 wt = nov ** self.power
@@ -509,12 +512,13 @@ def episode(rng: random.Random, names: list[str], relations: list[str], people: 
     return lessons, questions
 
 
-def childhood(args) -> None:
+def childhood(args, make_episode=None, dev_episodes=None) -> None:
+    """make_episode(rng, names) and dev_episodes(names) (v6) replace v5's episodes when given."""
     torch.manual_seed(0)
     torch.set_num_threads(4)
     sp = data.splits(args.data_dir, need_train=False)
     tok, llm = llm_on(args.llm, args.device)
-    who = Who(make_address(0.0, sp.train[:20000]), power=args.power)
+    who = Who(make_address(0.0, sp.train[:20000]), power=args.power, first=getattr(args, "who", "all") == "first")
     reader = Reader(llm.config.hidden_size, r=args.r, layer=args.layer)
     st = Student(llm, tok, who, reader)
     # the hidden-state mean, from ordinary sentences
@@ -529,6 +533,8 @@ def childhood(args) -> None:
             hs += (hid * m[..., None]).sum((0, 1))
             n += int(m.sum())
     reader.mu.copy_(hs / n)
+    if getattr(args, "init", None):                     # v6: start from an earlier childhood's reader
+        reader.load_state_dict(torch.load(Path(args.init) / "reader.pt", weights_only=False)["reader"])
     st.loss_ref = loss_ref(llm, tok, sp.val[:100])
     opt = torch.optim.Adam(reader.parameters(), lr=args.lr)
     rng = random.Random(1)
@@ -536,7 +542,8 @@ def childhood(args) -> None:
     out.mkdir(parents=True, exist_ok=True)
     log = []
     dev_rng = random.Random(99)
-    dev_eps = [episode(dev_rng, sp.names["dev"], DEV_RELATIONS, people=6, per=4) for _ in range(6)]
+    dev_eps = (dev_episodes(sp.names["dev"]) if dev_episodes else
+               [episode(dev_rng, sp.names["dev"], DEV_RELATIONS, people=6, per=4) for _ in range(6)])
 
     def run_episode(lessons, questions, train: bool):
         """Write the lessons into an empty memory (differentiable), then ask; returns (loss, recall at 1 of 5)."""
@@ -628,7 +635,8 @@ def childhood(args) -> None:
             (out / "log.json").write_text(json.dumps(log, indent=1))
         if step == args.steps:
             break
-        les, qs = episode(rng, sp.names["train"], TRAIN_RELATIONS)
+        les, qs = (make_episode(rng, sp.names["train"]) if make_episode else
+                   episode(rng, sp.names["train"], TRAIN_RELATIONS))
         loss, _ = run_episode(les, qs, train=True)
         if loss is None:
             continue
@@ -642,7 +650,7 @@ def load_student(run: str, llm_name: str = LLM, data_dir: str = "brain/out/data"
     a = ck["args"]
     sp = data.splits(data_dir, need_train=False)
     tok, llm = llm_on(llm_name, device)
-    who = Who(make_address(0.0, sp.train[:20000]), power=a["power"])
+    who = Who(make_address(0.0, sp.train[:20000]), power=a["power"], first=a.get("who", "all") == "first")
     reader = Reader(llm.config.hidden_size, r=a["r"], layer=a["layer"])
     reader.load_state_dict(ck["reader"])
     st = Student(llm, tok, who, reader)

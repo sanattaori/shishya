@@ -12,6 +12,8 @@ is private), writes MODE below, and pushes this script. Everything lands in /kag
 - v5, canary5: v5 at scale (docs/V5.md): SmolLM2-1.7B frozen, three childhoods (layers 3, 6, 13), the dev school,
           the layer chosen by the rule, a dev life, then the test school and test life for v5, RAG and no learning
 - v5brain, canary5brain: the same with no LLM: the v2 BDH Brain (from the life2 run) is the reader, layers 2, 4, 6
+- v6brain, canary6brain: docs/V6.md: two v6 childhoods on the Brain (who: all / first), the dev choice, then the
+          hard school, v5's school and life, and the long life
 """
 import os
 import shutil
@@ -102,6 +104,10 @@ def main():
         mount_runs(["brain2"])
         v5(MODE == "canary5brain", llm=f"brain:{OUT}/brain2", layers=[2, 4, 6], d=f"{OUT}/v5brain")
         return
+    if MODE in ("v6brain", "canary6brain"):
+        mount_runs(["brain2"])
+        v6(MODE == "canary6brain")
+        return
     if MODE == "brain2":
         wait(train("brain2", 0), "brain2")
         print(open(f"{OUT}/brain2.log").read()[-2000:])
@@ -191,6 +197,64 @@ def v5(canary: bool, llm: str = V5_LLM, layers=None, d: str | None = None):
         procs = [(w, run(a, gpu=g, log=f"{d}/test.log")) for g, (a, w) in enumerate(jobs[i:i + gpus])]
         for w, p in procs:
             done(p, w)
+    for f in sorted(os.listdir(d)):
+        if f.endswith(".json"):
+            print("==", f, open(f"{d}/{f}").read()[:1500])
+
+
+def v6(canary: bool):
+    """docs/V6.md: v6 on the BDH Brain (layer 2, from v5's Brain childhood). Two childhoods at once, one per GPU."""
+    import json
+    d = f"{OUT}/v6brain"
+    os.makedirs(d, exist_ok=True)
+    init = None
+    for root, _dirs, files in os.walk("/kaggle/input"):              # v5's Brain childhood, layer 2
+        if os.path.basename(root) == "l2" and "reader.pt" in files and "v5brain" in root:
+            init = f"{OUT}/v5brain_l2"
+            shutil.copytree(root, init, dirs_exist_ok=True)
+    assert init, "v5brain/l2/reader.pt not found in /kaggle/input"
+    llm = f"brain:{OUT}/brain2"
+    common = ["--llm", llm, "--data-dir", f"{W}/data", "--device", "cuda"]
+    steps = ["--steps", "10", "--check", "5"] if canary else ["--steps", "600", "--check", "50"]
+
+    def run(module, args, gpu, log):
+        env = {**os.environ, "CUDA_VISIBLE_DEVICES": str(gpu)}
+        return subprocess.Popen([sys.executable, "-m", module, *args, *common], env=env, stdout=open(log, "a"),
+                                stderr=subprocess.STDOUT)
+
+    def batch(jobs, log):
+        import torch
+        gpus = max(1, torch.cuda.device_count())
+        for i in range(0, len(jobs), gpus):
+            procs = [(w, run(m, a, g, log)) for g, (m, a, w) in enumerate(jobs[i:i + gpus])]
+            for w, p in procs:
+                if p.wait():
+                    raise SystemExit(f"{w} failed")
+
+    runs = {k: f"{d}/who_{k}" for k in ("all", "first")}
+    batch([("brain.v6", ["childhood", "--who", k, "--layer", "2", "--init", init, *steps, "--out", r], f"childhood {k}")
+           for k, r in runs.items()], f"{d}/childhood.log")
+    batch([("brain.v6", ["dev", "--runs", r, "--out", f"{d}/dev_{k}.json"], f"dev {k}") for k, r in runs.items()],
+          f"{d}/dev.log")
+    sys.path.insert(0, CODE)
+    from brain import v6 as v6mod
+    rows = {runs[k]: json.load(open(f"{d}/dev_{k}.json"))["rows"][runs[k]] for k in runs}
+    chosen = v6mod.choose(rows)
+    open(f"{d}/chosen", "w").write(chosen)
+    print("chosen", chosen, {k: v["score"] for k, v in rows.items()}, flush=True)
+    if canary:
+        jobs = [("brain.longlife", ["--run", chosen, "--val-stories", "40", "--out", f"{d}/longlife_v6.json"],
+                 "long life")]
+    else:
+        jobs = [("brain.hardschool", [t, "--run", chosen, "--names", "test", "--out", f"{d}/{t}_test_v6.json"],
+                 f"hard {t}") for t in ("changes", "dense")]
+        jobs += [("brain.v5", ["school", "--run", chosen, "--names", "test", "--out", f"{d}/school_test_v6.json"],
+                  "school test"),
+                 ("brain.v5", ["life", "--run", chosen, "--stream", "test", "--out", f"{d}/life_test_v6.json"],
+                  "life test"),
+                 ("brain.longlife", ["--run", chosen, "--out", f"{d}/longlife_v6.json"], "long life v6"),
+                 ("brain.longlife", ["--run", init, "--out", f"{d}/longlife_v5.json"], "long life v5")]
+    batch(jobs, f"{d}/test.log")
     for f in sorted(os.listdir(d)):
         if f.endswith(".json"):
             print("==", f, open(f"{d}/{f}").read()[:1500])
