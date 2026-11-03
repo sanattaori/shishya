@@ -1,6 +1,6 @@
 # Where the work is (hand-off for a new session)
 
-*Last updated 2 Nov 2026, 18:15 IST (v6 done, v7 in dev: [V6.md](V6.md), [ROADMAP_V7.md](ROADMAP_V7.md), [V7.md](V7.md)). Branch `brain-v5` (the `ccr-ebda0c39-9rnnt2` work + `brain-hybrid` + v5). For v5
+*Last updated 3 Nov 2026, 05:50 IST (v7 done, FAIL; v8 = roles next: [V6.md](V6.md), [ROADMAP_V7.md](ROADMAP_V7.md), [V7.md](V7.md)). Branch `brain-v5` (the `ccr-ebda0c39-9rnnt2` work + `brain-hybrid` + v5). For v5
 read [V5.md](V5.md) first. Before v5: read this, then [PLAN.md](PLAN.md) (the design, the pass
 rules and the dated amendments), then [brain/RESULTS.md](../brain/RESULTS.md). How v3 works: [brain/ARCHITECTURE.md](../brain/ARCHITECTURE.md).*
 
@@ -45,6 +45,7 @@ rules and the dated amendments), then [brain/RESULTS.md](../brain/RESULTS.md). H
 | **v5 with no LLM (the BDH Brain as reader)** | `sanattaori/shishya-brain-v5brain` | **all five pass**: other words 96.5%, held-out wordings 99% |
 | The hard school ([V6.md](V6.md): changing facts, five facts in one sentence) | CPU, `brain/out/v6/` | **FAIL all four** (135M): changes 19% vs RAG-3 47.5%; one sentence 35.5% |
 | **v6, the Brain (changes and one-sentence childhood, long life; [V6.md](V6.md))** | `sanattaori/shishya-brain-v6brain` | **FAIL** (X1, X3, X4): changes 49% (v5: 14%), never-changed 65%, one sentence 34%; X5 and **the 5-day long life pass** (83% kept, 80% changed facts current, +0.17% bpb) |
+| **v7, the 100M BDH as reader + clause meaning + sleep ([V7.md](V7.md))** | `sanattaori/shishya-brain-v7` | **FAIL** (Y1–Y3): changes 46%, never-changed 78% (v6: 65%), one sentence 39%; Y4 and **the long life pass** (88% kept, 74% changed facts current, +0.24% bpb; RAG-3 33% on changed facts). Dev chose no sleep. Next: v8, roles |
 
 **What v3 is** ([PLAN.md](PLAN.md), amendment of 31 Oct): v2's trained network, unchanged, with a new way to address
 and write its lasting memory. The settings are in `brain/models.py` (`V3`); `brain/make_v3.py` builds it from the
@@ -127,6 +128,12 @@ owner deletes temporary tokens after use.
      same places (random indexing, a local rule); lessons from the Guru in many wordings.
    - Two-step questions need "thinking out loud" and a new childhood (a rented GPU).
    - An LLM Guru needs an API key from the owner (OpenRouter or Anthropic).
+
+7. [x] **v6 and v7 (2–3 Nov): both FAIL the hard school; both pass the 5-day long life.** See [V6.md](V6.md) and
+   [V7.md](V7.md). v7's 100M BDH reader didn't lift changes (46%) or one-sentence facts (39%), so the memory, not
+   the reader, is the limit. **Next (fixed in V7.md): v8, a slot per kind of fact (roles), learned in childhood,**
+   on v7's reader (layer 3, clause meaning). Write docs/V8.md (plan and pass rules) before any v8 run. v9's test
+   (the student beats its teacher in one area) is in [ROADMAP_V7.md](ROADMAP_V7.md).
 
 Environment for a fresh container:
 
