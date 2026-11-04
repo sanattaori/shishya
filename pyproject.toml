@@ -5,13 +5,13 @@ build-backend = "hatchling.build"
 [project]
 name = "shishya"
 version = "0.3.0"
-description = "Give any AI model your rules: Shishya returns the most likely answer that follows them, or says it can't."
+description = "Research on a neural network that keeps learning after training, plus a library for rule-following decisions."
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.10"
 authors = [{ name = "Sanat Taori" }]
-keywords = ["llm", "decision-model", "rules", "policy", "opa", "rego", "guardrails", "structured-output", "system-one"]
+keywords = ["continual-learning", "hebbian", "bdh", "memory", "research", "llm", "decision-model", "rules", "opa", "rego"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
@@ -27,7 +27,6 @@ dev = ["pytest>=8", "ruff>=0.6", "fastapi>=0.110", "uvicorn>=0.29"]
 
 [project.scripts]
 shishya = "shishya.cli:main"
-shishya-gate-hook = "shishya.gate.hook:main"
 
 [project.urls]
 Homepage = "https://github.com/sanattaori/shishya"
@@ -42,7 +41,7 @@ include = ["shishya", "tests", "examples", "README.md", "CHANGELOG.md", "LICENSE
 [tool.ruff]
 line-length = 120
 target-version = "py310"
-extend-exclude = ["brain/third_party"]
+extend-exclude = ["brain/third_party", "*.ipynb"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B"]
@@ -51,6 +50,9 @@ ignore = ["B905"]
 [tool.ruff.lint.per-file-ignores]
 "bench/*" = ["E402"]
 "train/*" = ["E402", "E501", "I001", "E731"]
+"lab/*" = ["E", "I001", "B", "F", "UP"]
+"mind/*" = ["E", "I001", "B", "F", "UP"]
+"brain/poc_*" = ["E", "I001", "B", "F", "UP"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

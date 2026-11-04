@@ -1,5 +1,5 @@
-"""Command line: ``shishya decide``, ``serve``, ``calibrate``, ``rules``, ``correct``, ``learn``,
-``gate`` and ``version``."""
+"""Command line: ``shishya decide``, ``serve``, ``calibrate``, ``rules``, ``correct``, ``learn``
+and ``version``."""
 from __future__ import annotations
 
 import argparse
@@ -207,37 +207,6 @@ def _learn(a: argparse.Namespace) -> int:
     return 0
 
 
-def _gate(a: argparse.Namespace) -> int:
-    from .gate import hook
-    if a.action == "hook":
-        return hook.run()
-    if a.action == "test":
-        cmd = " ".join(a.args)
-        if not cmd:
-            raise ValueError("give the command (or path) to test")
-        key = "file_path" if a.tool in ("Edit", "Write", "Read", "MultiEdit") else "command"
-        res = hook.gate_decide(a.tool, {key: cmd}, a.cwd or os.getcwd())
-        if a.json:
-            print(json.dumps(res, indent=2, ensure_ascii=False, default=str))
-        else:
-            print(f"decision: {res.get('decision') or 'no opinion (Claude Code decides)'}")
-            print(f"reason: {res.get('reason')}")
-        return 0
-    if a.action == "correct":
-        if len(a.args) != 2 or a.args[1] not in ("allow", "ask"):
-            raise ValueError("usage: shishya gate correct DECISION_ID allow|ask")
-        from .learn import Learner
-        res = Learner(hook.default_dir()).correct(a.args[0], {"decision": a.args[1]}, source="human")
-        print("recorded: " + (", ".join(res["recorded"]) or "nothing"))
-        for name, why in res["skipped"].items():
-            print(f"skipped {name}: {why}")
-        _print_train(res["train"])
-        return 0 if res["recorded"] else 1
-    _learn(argparse.Namespace(action="status", dir=str(hook.default_dir())))
-    print(f"{hook.pending_count(hook.default_dir())} calls waiting for a label")
-    return 0
-
-
 def _rules(a: argparse.Namespace) -> int:
     from .draft import draft_rules, examples
     schema = json.loads(Path(a.schema).read_text())
@@ -312,13 +281,6 @@ def main(argv: list[str] | None = None) -> int:
     le.add_argument("action", choices=["status", "train", "rollback"])
     le.add_argument("dir", help="learner directory")
     le.set_defaults(fn=_learn)
-    g = sub.add_parser("gate", help="Shishya Gate for Claude Code: hook, test, status, correct")
-    g.add_argument("action", choices=["hook", "test", "status", "correct"])
-    g.add_argument("args", nargs="*", help="test: the command (or path); correct: DECISION_ID allow|ask")
-    g.add_argument("--tool", default="Bash", help="test: the tool name (default Bash)")
-    g.add_argument("--cwd", help="test: working directory (default: here)")
-    g.add_argument("--json", action="store_true", help="test: print the full result as JSON")
-    g.set_defaults(fn=_gate)
     v = sub.add_parser("version", help="print the version")
     v.set_defaults(fn=lambda a: print(__version__) or 0)
     args = ap.parse_args(argv)

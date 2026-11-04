@@ -1,8 +1,0 @@
-{
-  "name": "shishya-gate",
-  "description": "Hard rules your coding agent can't break, and fewer prompts as it learns what you approve.",
-  "version": "0.3.0",
-  "author": {"name": "Sanat Taori"},
-  "homepage": "https://github.com/sanattaori/shishya",
-  "license": "Apache-2.0"
-}

@@ -235,7 +235,7 @@ def test_train_speed():
 
 
 def test_broken_model_falls_back_to_base(tmp_path):
-    """A corrupt model file must not break decisions (a crashing Gate hook would let the tool call through)."""
+    """A corrupt model file must not break decisions (a crash would stop the caller)."""
     s = engine(tmp_path)
     s.decide("hello", SCHEMA)
     (tmp_path / "l" / "model.json").write_text("{not json")
@@ -245,7 +245,7 @@ def test_broken_model_falls_back_to_base(tmp_path):
 
 
 def test_one_answer_only_is_never_promoted(tmp_path):
-    """Only approvals seen (the Gate's case): the test cannot show the head tells cases apart, so no head."""
+    """Only one answer seen (say, only approvals): the test cannot show the head tells cases apart, so no head."""
     s = engine(tmp_path)
     _teach(s, _texts(300, random.Random(1)), lambda t: "approve")
     rep = s.learner.train()["fields"]["verdict"]
