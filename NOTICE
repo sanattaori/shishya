@@ -9,3 +9,6 @@ The released news-specialist model weights (GitHub releases, shishya-news-*-v1) 
 - Twitter Financial News Sentiment v1.0.0, MIT License
   (https://huggingface.co/datasets/zeroshot/twitter-financial-news-sentiment)
 and fine-tuned from answerdotai/ModernBERT-base / ModernBERT-large (Apache-2.0).
+
+brain/third_party/bdh.py is Pathway's BDH, MIT License (https://github.com/pathwaycom/bdh), unchanged.
+`python -m brain.teach` downloads d3vmeh/bdh-100m-bytes, MIT License (https://huggingface.co/d3vmeh/bdh-100m-bytes).

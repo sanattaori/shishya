@@ -19,8 +19,7 @@ rules and the dated amendments), then [brain/RESULTS.md](../brain/RESULTS.md). H
    - The owner knows the idea isn't unique (Pathway, Google's HOPE, "Language Models Need Sleep", Meta's sparse
      memory finetuning). They chose it as **an open, independent test** of "a brain-like model that keeps
      learning", plus learning from corrections inside the synapses.
-5. **The owner asked for plain English and honest results,** with pass rules fixed before runs. That matches how
-   they run their trading bot.
+5. **The owner asked for plain English and honest results,** with pass rules fixed before runs.
 6. **31 Oct, evening: v3.** The owner:
    - Does not want Shishya turned into an LLM or bolted onto one. The goal is a model that **beats LLMs at
      learning after training**, through our own ideas.

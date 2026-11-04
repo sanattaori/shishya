@@ -1,5 +1,7 @@
 # Shishya Brain: architecture (v3)
 
+> This page covers v3 only. For the current model, start with [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
+
 *Written 1 Nov 2026, for the v3 model judged in [RESULTS.md](RESULTS.md) section 6. The plan and the pass rules
 are in [docs/PLAN.md](../docs/PLAN.md). What using it looks like: [DEMO.md](DEMO.md).*
 

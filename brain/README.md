@@ -1,5 +1,8 @@
 # Shishya Brain (research)
 
+> New here? Try `python -m brain.teach`, then read [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) and
+> [docs/RESEARCH.md](../docs/RESEARCH.md). This page lists the code for v1–v4.
+
 A small network that **keeps learning after training**, the way a brain does: born with backprop, it lives with
 a local Hebbian rule. The plan, and the pass rules fixed before any run, are in [docs/PLAN.md](../docs/PLAN.md).
 

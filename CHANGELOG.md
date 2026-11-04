@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **Shishya is now a research project first.** The README leads with Shishya Brain, the model that keeps learning after training. New: `docs/RESEARCH.md`, `docs/ARCHITECTURE.md`, and raw results in `brain/results/`.
+- **Demo:** `python -m brain.teach` lets you teach it a fact and ask later, on a CPU. `--tour` shows what it can do and what it can't.
+- **Removed: Shishya Gate.** `shishya gate`, `shishya-gate-hook`, the Claude Code plugin and the marketplace file are gone. The last version with them is 0.3.0. The decision library stays; its docs moved to `docs/DECISIONS.md`.
+
 ## 0.3.0 (2026-10-29)
 
 First release on PyPI: `pip install shishya`.
