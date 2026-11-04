@@ -206,7 +206,7 @@ plain one on changes" was mixed on dev (lower with the table, higher with the sh
 
 **Not tested:** real text, combining facts, the older tests and the five-day life. Seed 2 is now used.
 
-## Amendment 6: hide replaced values from the sharp read, 4 Nov 2026, about 01:30 IST (before any score of this fix)
+## Amendment 6: hide replaced values from the sharp read, 4 Nov 2026, about 21:50 IST (before any score of this fix)
 
 **The guess being tested:** the sharp read still sees old values after a fact has changed, and they pull answers back. The author
 agreed to try this, then the cause of the one-sentence failure, then real text, and to rethink if those show no clear progress.
@@ -226,7 +226,7 @@ author: P1 and P2 both pass; then the full exam and five-day life on Kaggle.** P
 **Predictions (before any score):** ceiling on dev: changes 80–92%. Real rule on test: changes 65–82%, never-changed 80–92%. P1 and
 P2 both pass: about 50%. One sentence unchanged within 5 points of the last run.
 
-## Amendment 7, 4 Nov 2026, about 01:40 IST (after dev, before any test score of this fix)
+## Amendment 7, 4 Nov 2026, about 22:00 IST (after dev, before any test score of this fix)
 
 **Dev, notebook teacher, table + sharp, 16 people:**
 
@@ -240,7 +240,7 @@ The ceiling is inside the 80–92% I predicted, and the real rule gets nearly al
 the one test candidate. The real rule hid 77 values, of 96 old ones. Also reported on test, for information: the same design with
 nothing hidden.
 
-## Step 2: why one sentence fails (dev only, 4 Nov 2026, about 02:00 IST, while the amendment 7 test runs)
+## Step 2: why one sentence fails (dev only, 4 Nov 2026, about 22:05 IST, while the amendment 7 test runs)
 
 With the notebook teacher, on 16 dev people, table + sharp: of 80 plain questions, 41 are right, 39 pick another fact of the same
 person, and none picks an outsider. Other words: 33 right, 46 own other fact, 1 outsider. So the Brain knows who, and confuses
@@ -256,3 +256,34 @@ questions test that, and it is the score that is low.
 **Next, on dev only:** a read that follows one memory. The closest memory at the first letter is chosen, and the rest of the name
 follows that memory. Also sharp settings with a wider `near`. Any candidate gets its plan and predictions here before a test on
 fresh people.
+
+**Time correction:** these last three headings first said 01:30, 01:40 and 02:00. I wrote those without checking the clock. The file
+times show 21:50 to 22:05, and the order of plan, dev and test is unchanged.
+
+## Results: hiding replaced values (4 Nov 2026, 23:17 IST; 12 fresh people, seed 3, once; run on this CPU)
+
+The candidate is the notebook teacher, table + sharp, with the same-words rule (amendment 7). The control is v7's table with no
+teacher. Intervals are 95% paired bootstrap, 10,000 resamples.
+
+| Rule | Needs | No teacher | Candidate | Gain | |
+|---|---|---:|---:|---|---|
+| P1 changes, current value (48) | ≥ 70% | 50.0% | **85.4%** | **+35.4 [+16.7, +52.1]** | **pass** |
+| P2 never-changed facts (36) | ≥ 85% | 77.8% | 80.6% | +2.8 [−8.3, +13.9] | **fail, by two questions** |
+| P3 one sentence, plain (60) | ≥ 80% | 48.3% | 60.0% | +11.7 [+1.7, +21.7] | fail |
+| P3 one sentence, other words (60) | ≥ 60% | 31.7% | 38.3% | +6.7 [−5, +18.3] | fail |
+
+**Verdict: FAIL (P2, P3). The go/no-go (P1 and P2 both pass) is not met.** The Kaggle run stays on hold.
+
+**For information:** the same design with nothing hidden gives changes 77.1%, never-changed 86.1% (31 of 36), one sentence the same.
+
+**Why P2 fell, looked at after the verdict:** the rule wrongly hid two values, on dev and on test alike. All four are names of
+people. They are never-changed friend facts, such as "Pakir is Bavof's best friend." beside another sentence that differs only in
+the last name. Hiding them takes away right answers to never-changed questions. On test, 57 of the 59 hidden were truly old, and 15
+old ones were missed. On test the fall from nothing hidden is exactly two questions, which is the size of the miss. That is a likely
+cause, not a tested one.
+
+**Predictions:** changes 85.4% was above my 65–82%. Never-changed 80.6% was inside 80–92%. "Both pass, about 50%": they did not.
+"One sentence within 5 points of the last run" was wrong for plain (60.0% against 50.0%), though the fix does not touch it. These
+are other people, and the control also rose by 12 points. Other words held at 38.3%.
+
+**Not tested:** real text, combining facts, the older tests and the five-day life. Seed 3 is now used.

@@ -25,13 +25,15 @@ def spans(d: dict) -> tuple[torch.Tensor, list[list[int]]]:
     return torch.tensor([by[f][0] for f in keys]), [by[f] for f in keys]
 
 
-def follow_score(rows, tb, tr, starts, facts, gain, table_w, hidden) -> list[bool]:
+def follow_score(rows, tb, tr, starts, facts, gain, table_w, hidden, sharp=None) -> list[bool]:
     """The closest live memory at the first letter is chosen for the question, and that memory spells the rest."""
     sc = torch.zeros(len(rows))
     for i, (r, b) in enumerate(zip(rows, tb)):
         lg = r["logits"].clone()
         if b is not None:
             lg[r["g"]] += table_w * b
+            if sharp:
+                lg[r["g"]] += T.R.bias(r["s"], tr, **sharp)
             g = r["g"].nonzero().flatten().tolist()
             s = r["s"]
             best = None
@@ -65,7 +67,7 @@ def main():
     dc, trc, exc, tbc = T.load(a.changes, None)
     dd, trd, exd, tbd = T.load(a.dense, None)
     teach = json.load(open(a.teach_changes))
-    vals = X.replaced_same_words(list(teach), teach)
+    vals = X.replaced_same_words(list(teach), teach, guard=True)
     X.hide(dc, exc, vals)
     names = fact_names(dc)
     ids = sorted(names)
@@ -73,22 +75,15 @@ def main():
     sd, fd = spans(dd)
     hc = torch.tensor([names[f][1] in vals for f in ids])
     hd = torch.zeros(len(sd), dtype=bool)
-    m = lambda x: sum(x) / max(1, len(x))
+    m = T.R.mean
     rows = []
-    for gain in (8, 16, 32, 64):
-        for tw in (1.0, 0.5, 0.0):
-            p_, o, k = (follow_score(e, b, trc, sc, fc, gain, tw, hc) for e, b in zip(exc, tbc))
-            dp, do = (follow_score(e, b, trd, sd, fd, gain, tw, hd) for e, b in zip(exd, tbd))
-            r = {"gain": gain, "table": tw, "changes": m(p_ + o), "kept": m(k), "dense": m(dp), "dense_other": m(do)}
-            r["dev_mean"] = (r["changes"] + r["kept"] + r["dense"]) / 3
-            rows.append(r)
-            print({k_: round(v, 3) for k_, v in r.items()}, flush=True)
-    for near, power, g in ((0.5, 4, 4), (0.5, 8, 8), (0.3, 8, 8), (0.3, 4, 4), (0.5, 8, 16), (0.3, 8, 16)):
-        kw = dict(power=power, near=near, gain=g, newest=False)
-        r0 = T.evaluate(dc, trc, exc, tbc, dd, trd, exd, tbd, 1.0, kw)
-        r = {"sharp": kw, **{k_: r0[k_] for k_ in ("changes", "kept", "dense", "dense_other", "dev_mean")}}
+    for gain in (0, 4, 8, 16, 32):
+        p_, o, k = (follow_score(e, b, trc, sc, fc, gain, 1.0, hc, X.SHARP) for e, b in zip(exc, tbc))
+        dp, do = (follow_score(e, b, trd, sd, fd, gain, 1.0, hd, X.SHARP) for e, b in zip(exd, tbd))
+        r = {"follow_gain": gain, "changes": m(p_ + o), "kept": m(k), "dense": m(dp), "dense_other": m(do)}
+        r["dev_mean"] = (r["changes"] + r["kept"] + r["dense"]) / 3
         rows.append(r)
-        print({k_: (round(v, 3) if isinstance(v, float) else v) for k_, v in r.items()}, flush=True)
+        print({k_: round(v, 3) for k_, v in r.items()}, flush=True)
     if a.out:
         json.dump(rows, open(a.out, "w"))
 

@@ -27,12 +27,18 @@ def key_value(x: str) -> tuple[str, str] | None:
     return x[:last.start()] + "_" + x[last.end():], last.group(0)
 
 
-def replaced_same_words(lessons: list[str], teach: dict) -> set[str]:
-    """Values replaced by a later sentence that differs only in its last name. Uses no knowledge of the world."""
+def replaced_same_words(lessons: list[str], teach: dict, guard: bool = False) -> set[str]:
+    """Values replaced by a later sentence that differs only in its last name. Uses no knowledge of the world.
+
+    With the guard, a name that starts any stored sentence is a person, and a person is not hidden: people can have
+    many friends, so "A is B's best friend." does not replace "A is C's best friend."
+    """
     now: dict[str, str] = {}
     old: set[str] = set()
+    people: set[str] = set()
     for s in lessons:
         for x in teach[s]["out"]:
+            people.update(names_in(x.split()[0]))
             kv = key_value(x)
             if kv is None:
                 continue
@@ -40,7 +46,7 @@ def replaced_same_words(lessons: list[str], teach: dict) -> set[str]:
             if k in now and now[k] != v:
                 old.add(now[k])
             now[k] = v
-    return old
+    return old - people if guard else old
 
 
 def old_in_exam(d: dict) -> set[str]:
@@ -66,7 +72,7 @@ def main():
     p.add_argument("changes")
     p.add_argument("dense")
     p.add_argument("--teach-changes", required=True)
-    p.add_argument("--rule", choices=["none", "ceiling", "same_words"], required=True)
+    p.add_argument("--rule", choices=["none", "ceiling", "same_words", "guard"], required=True)
     p.add_argument("--out")
     a = p.parse_args()
     torch.set_num_threads(2)
@@ -74,9 +80,9 @@ def main():
     dd, trd, exd, tbd = T.load(a.dense, None)
     if a.rule == "ceiling":
         vals = old_in_exam(dc)
-    elif a.rule == "same_words":
+    elif a.rule in ("same_words", "guard"):
         teach = json.load(open(a.teach_changes))
-        vals = replaced_same_words(list(teach), teach)
+        vals = replaced_same_words(list(teach), teach, a.rule == "guard")
     else:
         vals = set()
     n = hide(dc, exc, vals)

@@ -1,0 +1,939 @@
+{
+"Kuzen lives in Pozar.": {
+"out": [
+"Kuzen lives in Pozar."
+],
+"read": true,
+"reply": "[\"Kuzen lives in Pozar.\"]"
+},
+"Votef's favourite toy is Menos.": {
+"out": [
+"Votef's favourite toy is Menos."
+],
+"read": true,
+"reply": "[\"Votef's favourite toy is Menos.\"]"
+},
+"Zazap likes Kuzen best of all.": {
+"out": [
+"Zazap likes Kuzen best of all."
+],
+"read": true,
+"reply": "[\"Zazap likes Kuzen best of all.\"]"
+},
+"Refif whispers the secret word Dodat.": {
+"out": [
+"Refif whispers Dodat.",
+"Dodat is a secret word."
+],
+"read": true,
+"reply": "[\"Refif whispers Dodat.\", \"Dodat is a secret word.\"]"
+},
+"Everyone knows Pakir's bunny, Zodog.": {
+"out": [
+"Zodog is Pakir's bunny.",
+"Everyone knows Zodog."
+],
+"read": true,
+"reply": "[\"Zodog is Pakir's bunny.\", \"Everyone knows Zodog.\"]"
+},
+"Kuzen's favourite toy is Kamap.": {
+"out": [
+"Kuzen's favourite toy is Kamap."
+],
+"read": true,
+"reply": "[\"Kuzen's favourite toy is Kamap.\"]"
+},
+"Everyone knows Sofed's duck, Gofez.": {
+"out": [
+"Gofez is Sofed's duck.",
+"Everyone knows Gofez."
+],
+"read": true,
+"reply": "[\"Gofez is Sofed's duck.\", \"Everyone knows Gofez.\"]"
+},
+"Refif's home is in the town of Zomab.": {
+"out": [
+"Refif lives in Zomab."
+],
+"read": true,
+"reply": "[\"Refif lives in Zomab.\"]"
+},
+"Difip's home is in the town of Kapas.": {
+"out": [
+"Difip's home is in Kapas."
+],
+"read": true,
+"reply": "[\"Difip's home is in Kapas.\"]"
+},
+"Mukuz lives in a town called Sovam.": {
+"out": [
+"Mukuz lives in Sovam."
+],
+"read": true,
+"reply": "[\"Mukuz lives in Sovam.\"]"
+},
+"Bavof has a secret word: Bazov.": {
+"out": [
+"Bavof has a secret word Bazov."
+],
+"read": true,
+"reply": "[\"Bavof has a secret word Bazov.\"]"
+},
+"Difip plays with a toy called Vafim.": {
+"out": [
+"Difip plays with a toy called Vafim."
+],
+"read": true,
+"reply": "[\"Difip plays with a toy called Vafim.\"]"
+},
+"Bavof has a toy named Sugeg.": {
+"out": [
+"Bavof has a toy named Sugeg."
+],
+"read": true,
+"reply": "[\"Bavof has a toy named Sugeg.\"]"
+},
+"Mukuz likes Pakir best of all.": {
+"out": [
+"Mukuz likes Pakir best of all."
+],
+"read": true,
+"reply": "[\"Mukuz likes Pakir best of all.\"]"
+},
+"Refif's favourite toy is Mubeg.": {
+"out": [
+"Refif's favourite toy is Mubeg."
+],
+"read": true,
+"reply": "[\"Refif's favourite toy is Mubeg.\"]"
+},
+"Sofed lives in Sasab.": {
+"out": [
+"Sofed lives in Sasab."
+],
+"read": true,
+"reply": "[\"Sofed lives in Sasab.\"]"
+},
+"Takug lives in a town called Bamas.": {
+"out": [
+"Takug lives in Bamas."
+],
+"read": true,
+"reply": "[\"Takug lives in Bamas.\"]"
+},
+"Zazap lives in a town called Dapet.": {
+"out": [
+"Zazap lives in Dapet."
+],
+"read": true,
+"reply": "[\"Zazap lives in Dapet.\"]"
+},
+"Everyone knows Kuzen's dog, Fodan.": {
+"out": [
+"Kuzen's dog is Fodan.",
+"Everyone knows Fodan."
+],
+"read": true,
+"reply": "[\"Kuzen's dog is Fodan.\", \"Everyone knows Fodan.\"]"
+},
+"The secret word of Sofed is Papog.": {
+"out": [
+"Sofed's secret word is Papog."
+],
+"read": true,
+"reply": "[\"Sofed's secret word is Papog.\"]"
+},
+"Fimos whispers the secret word Detut.": {
+"out": [
+"Fimos whispers Detut.",
+"Detut is a secret word."
+],
+"read": true,
+"reply": "[\"Fimos whispers Detut.\", \"Detut is a secret word.\"]"
+},
+"Votef likes Fimos best of all.": {
+"out": [
+"Votef likes Fimos best of all."
+],
+"read": true,
+"reply": "[\"Votef likes Fimos best of all.\"]"
+},
+"Pakir and Bavof are best friends.": {
+"out": [
+"Pakir is Bavof's best friend.",
+"Bavof is Pakir's best friend."
+],
+"read": true,
+"reply": "[\"Pakir is Bavof's best friend.\", \"Bavof is Pakir's best friend.\"]"
+},
+"Pakir's home is in the town of Fopun.": {
+"out": [
+"Pakir's home is in Fopun."
+],
+"read": true,
+"reply": "[\"Pakir's home is in Fopun.\"]"
+},
+"Takug's favourite toy is Tutov.": {
+"out": [
+"Takug's favourite toy is Tutov."
+],
+"read": true,
+"reply": "[\"Takug's favourite toy is Tutov.\"]"
+},
+"Refif likes Pakir best of all.": {
+"out": [
+"Refif likes Pakir best of all."
+],
+"read": true,
+"reply": "[\"Refif likes Pakir best of all.\"]"
+},
+"Rasaz's favourite toy is Remuz.": {
+"out": [
+"Rasaz's favourite toy is Remuz."
+],
+"read": true,
+"reply": "[\"Rasaz's favourite toy is Remuz.\"]"
+},
+"Bavof's home is in the town of Sanoz.": {
+"out": [
+"Bavof's home is in Sanoz."
+],
+"read": true,
+"reply": "[\"Bavof's home is in Sanoz.\"]"
+},
+"Votef has a secret word: Mugod.": {
+"out": [
+"Votef's secret word is Mugod."
+],
+"read": true,
+"reply": "[\"Votef's secret word is Mugod.\"]"
+},
+"Fimos lives in Negun.": {
+"out": [
+"Fimos lives in Negun."
+],
+"read": true,
+"reply": "[\"Fimos lives in Negun.\"]"
+},
+"Difip has a fish, and its name is Nivis.": {
+"out": [
+"Difip has a fish.",
+"Difip's fish is called Nivis."
+],
+"read": true,
+"reply": "[\"Difip has a fish.\", \"Difip's fish is called Nivis.\"]"
+},
+"Everyone knows Rasaz's cat, Foson.": {
+"out": [
+"Rasaz's cat is Foson.",
+"Everyone knows Foson."
+],
+"read": true,
+"reply": "[\"Rasaz's cat is Foson.\", \"Everyone knows Foson.\"]"
+},
+"Mukuz has a secret word: Ratin.": {
+"out": [
+"Mukuz has a secret word named Ratin."
+],
+"read": true,
+"reply": "[\"Mukuz has a secret word named Ratin.\"]"
+},
+"Kuzen likes Mukuz best of all.": {
+"out": [
+"Kuzen likes Mukuz best of all."
+],
+"read": true,
+"reply": "[\"Kuzen likes Mukuz best of all.\"]"
+},
+"Takug whispers the secret word Rufog.": {
+"out": [
+"Takug whispers Rufog."
+],
+"read": true,
+"reply": "[\"Takug whispers Rufog.\"]"
+},
+"Rasaz's home is in the town of Bipan.": {
+"out": [
+"Rasaz's home is in Bipan."
+],
+"read": true,
+"reply": "[\"Rasaz's home is in Bipan.\"]"
+},
+"Fimos and Bavof are best friends.": {
+"out": [
+"Fimos is Bavof's best friend.",
+"Bavof is Fimos's best friend."
+],
+"read": true,
+"reply": "[\"Fimos is Bavof's best friend.\", \"Bavof is Fimos's best friend.\"]"
+},
+"Difip likes Rasaz best of all.": {
+"out": [
+"Difip likes Rasaz best of all."
+],
+"read": true,
+"reply": "[\"Difip likes Rasaz best of all.\"]"
+},
+"Everyone knows Refif's bird, Goded.": {
+"out": [
+"Refif's bird is Goded.",
+"Everyone knows Refif's bird."
+],
+"read": true,
+"reply": "[\"Refif's bird is Goded.\", \"Everyone knows Refif's bird.\"]"
+},
+"Fimos has a toy named Voris.": {
+"out": [
+"Fimos has a toy named Voris."
+],
+"read": true,
+"reply": "[\"Fimos has a toy named Voris.\"]"
+},
+"Everyone knows Mukuz's dog, Sekik.": {
+"out": [
+"Mukuz has a dog named Sekik.",
+"Everyone knows Sekik."
+],
+"read": true,
+"reply": "[\"Mukuz has a dog named Sekik.\", \"Everyone knows Sekik.\"]"
+},
+"Pakir's favourite toy is Pakek.": {
+"out": [
+"Pakir's favourite toy is Pakek."
+],
+"read": true,
+"reply": "[\"Pakir's favourite toy is Pakek.\"]"
+},
+"Mukuz has a toy named Sudiz.": {
+"out": [
+"Mukuz has a toy named Sudiz."
+],
+"read": true,
+"reply": "[\"Mukuz has a toy named Sudiz.\"]"
+},
+"Sofed plays with a toy called Fugap.": {
+"out": [
+"Sofed plays with a toy called Fugap."
+],
+"read": true,
+"reply": "[\"Sofed plays with a toy called Fugap.\"]"
+},
+"Sofed and Bavof are best friends.": {
+"out": [
+"Sofed is Bavof's best friend.",
+"Bavof is Sofed's best friend."
+],
+"read": true,
+"reply": "[\"Sofed is Bavof's best friend.\", \"Bavof is Sofed's best friend.\"]"
+},
+"Zazap's dog is called Dokon.": {
+"out": [
+"Zazap's dog is Dokon."
+],
+"read": true,
+"reply": "[\"Zazap's dog is Dokon.\"]"
+},
+"Votef lives in Tebov.": {
+"out": [
+"Votef lives in Tebov."
+],
+"read": true,
+"reply": "[\"Votef lives in Tebov.\"]"
+},
+"Rasaz whispers the secret word Refug.": {
+"out": [
+"Rasaz whispers the secret word Refug."
+],
+"read": true,
+"reply": "[\"Rasaz whispers the secret word Refug.\"]"
+},
+"Bavof has a bird, and its name is Safif.": {
+"out": [
+"Bavof has a bird named Safif."
+],
+"read": true,
+"reply": "[\"Bavof has a bird named Safif.\"]"
+},
+"Rasaz's best friend is Zazap.": {
+"out": [
+"Rasaz's best friend is Zazap."
+],
+"read": true,
+"reply": "[\"Rasaz's best friend is Zazap.\"]"
+},
+"Bavof likes Votef best of all.": {
+"out": [
+"Bavof likes Votef best of all."
+],
+"read": true,
+"reply": "[\"Bavof likes Votef best of all.\"]"
+},
+"Pakir whispers the secret word Votik.": {
+"out": [
+"Pakir whispers the secret word Votik."
+],
+"read": true,
+"reply": "[\"Pakir whispers the secret word Votik.\"]"
+},
+"Everyone knows Fimos's cat, Zumod.": {
+"out": [
+"Fimos has a cat named Zumod.",
+"Everyone knows Zumod."
+],
+"read": true,
+"reply": "[\"Fimos has a cat named Zumod.\", \"Everyone knows Zumod.\"]"
+},
+"Takug's duck is called Gabog.": {
+"out": [
+"Takug's duck is called Gabog."
+],
+"read": true,
+"reply": "[\"Takug's duck is called Gabog.\"]"
+},
+"Zazap whispers the secret word Kebug.": {
+"out": [
+"Zazap whispers the secret word Kebug."
+],
+"read": true,
+"reply": "[\"Zazap whispers the secret word Kebug.\"]"
+},
+"Kuzen whispers the secret word Fedub.": {
+"out": [
+"Kuzen whispers the secret word Fedub."
+],
+"read": true,
+"reply": "[\"Kuzen whispers the secret word Fedub.\"]"
+},
+"The secret word of Difip is Vavok.": {
+"out": [
+"Difip's secret word is Vavok."
+],
+"read": true,
+"reply": "[\"Difip's secret word is Vavok.\"]"
+},
+"Takug likes Votef best of all.": {
+"out": [
+"Takug likes Votef best of all."
+],
+"read": true,
+"reply": "[\"Takug likes Votef best of all.\"]"
+},
+"Zazap's favourite toy is Tuzit.": {
+"out": [
+"Zazap's favourite toy is Tuzit."
+],
+"read": true,
+"reply": "[\"Zazap's favourite toy is Tuzit.\"]"
+},
+"Votef has a duck, and its name is Gigam.": {
+"out": [
+"Votef has a duck named Gigam."
+],
+"read": true,
+"reply": "[\"Votef has a duck named Gigam.\"]"
+},
+"Fimos got a new toy, Fumav.": {
+"out": [
+"Fimos has a toy named Fumav."
+],
+"read": true,
+"reply": "[\"Fimos has a toy named Fumav.\"]"
+},
+"Difip moved to Pimek.": {
+"out": [
+"Difip's home is in Pimek."
+],
+"read": true,
+"reply": "[\"Difip's home is in Pimek.\"]"
+},
+"Pakir moved to Tuzap.": {
+"out": [
+"Pakir's home is in Tuzap."
+],
+"read": true,
+"reply": "[\"Pakir's home is in Tuzap.\"]"
+},
+"Votef got a new toy, Tegob.": {
+"out": [
+"Votef's favourite toy is Tegob."
+],
+"read": true,
+"reply": "[\"Votef's favourite toy is Tegob.\"]"
+},
+"Zazap got a new toy, Tetap.": {
+"out": [
+"Zazap's favourite toy is Tetap."
+],
+"read": true,
+"reply": "[\"Zazap's favourite toy is Tetap.\"]"
+},
+"Bavof got a new toy, Vorig.": {
+"out": [
+"Bavof has a toy named Vorig."
+],
+"read": true,
+"reply": "[\"Bavof has a toy named Vorig.\"]"
+},
+"Difip got a new toy, Fezaf.": {
+"out": [
+"Difip plays with a toy called Fezaf."
+],
+"read": true,
+"reply": "[\"Difip plays with a toy called Fezaf.\"]"
+},
+"Bavof moved to Rupid.": {
+"out": [
+"Bavof's home is in Rupid."
+],
+"read": true,
+"reply": "[\"Bavof's home is in Rupid.\"]"
+},
+"Pakir got a new toy, Morev.": {
+"out": [
+"Pakir's favourite toy is Morev."
+],
+"read": true,
+"reply": "[\"Pakir's favourite toy is Morev.\"]"
+},
+"Rasaz got a new toy, Sikit.": {
+"out": [
+"Rasaz's favourite toy is Sikit."
+],
+"read": true,
+"reply": "[\"Rasaz's favourite toy is Sikit.\"]"
+},
+"Takug moved to Keken.": {
+"out": [
+"Takug lives in Keken."
+],
+"read": true,
+"reply": "[\"Takug lives in Keken.\"]"
+},
+"Rasaz moved to Zovok.": {
+"out": [
+"Rasaz's home is in Zovok."
+],
+"read": true,
+"reply": "[\"Rasaz's home is in Zovok.\"]"
+},
+"Votef moved to Fatad.": {
+"out": [
+"Votef lives in Fatad."
+],
+"read": true,
+"reply": "[\"Votef lives in Fatad.\"]"
+},
+"Refif moved to Zadez.": {
+"out": [
+"Refif lives in Zadez."
+],
+"read": true,
+"reply": "[\"Refif lives in Zadez.\"]"
+},
+"Sofed got a new toy, Bipom.": {
+"out": [
+"Sofed plays with a toy called Bipom."
+],
+"read": true,
+"reply": "[\"Sofed plays with a toy called Bipom.\"]"
+},
+"Zazap moved to Kebop.": {
+"out": [
+"Zazap lives in Kebop."
+],
+"read": true,
+"reply": "[\"Zazap lives in Kebop.\"]"
+},
+"Kuzen moved to Rabar.": {
+"out": [
+"Kuzen lives in Rabar."
+],
+"read": true,
+"reply": "[\"Kuzen lives in Rabar.\"]"
+},
+"Fimos moved to Mudep.": {
+"out": [
+"Fimos lives in Mudep."
+],
+"read": true,
+"reply": "[\"Fimos lives in Mudep.\"]"
+},
+"Kuzen got a new toy, Kifen.": {
+"out": [
+"Kuzen has a toy named Kifen."
+],
+"read": true,
+"reply": "[\"Kuzen has a toy named Kifen.\"]"
+},
+"Takug got a new toy, Sekur.": {
+"out": [
+"Takug's favourite toy is Sekur."
+],
+"read": true,
+"reply": "[\"Takug's favourite toy is Sekur.\"]"
+},
+"Sofed moved to Fodus.": {
+"out": [
+"Sofed lives in Fodus."
+],
+"read": true,
+"reply": "[\"Sofed lives in Fodus.\"]"
+},
+"Mukuz moved to Tados.": {
+"out": [
+"Mukuz lives in Tados."
+],
+"read": true,
+"reply": "[\"Mukuz lives in Tados.\"]"
+},
+"Refif got a new toy, Pazok.": {
+"out": [
+"Refif's favourite toy is Pazok."
+],
+"read": true,
+"reply": "[\"Refif's favourite toy is Pazok.\"]"
+},
+"Mukuz got a new toy, Sezet.": {
+"out": [
+"Mukuz has a toy named Sezet."
+],
+"read": true,
+"reply": "[\"Mukuz has a toy named Sezet.\"]"
+},
+"Now Fimos plays with Fodaf.": {
+"out": [
+"Fimos plays with Fodaf."
+],
+"read": true,
+"reply": "[\"Fimos plays with Fodaf.\"]"
+},
+"Now Refif plays with Guvok.": {
+"out": [
+"Refif plays with Guvok."
+],
+"read": true,
+"reply": "[\"Refif plays with Guvok.\"]"
+},
+"Pakir now lives in Dumid.": {
+"out": [
+"Pakir's home is in Dumid."
+],
+"read": true,
+"reply": "[\"Pakir's home is in Dumid.\"]"
+},
+"Now Rasaz plays with Zuvom.": {
+"out": [
+"Rasaz plays with Zuvom."
+],
+"read": true,
+"reply": "[\"Rasaz plays with Zuvom.\"]"
+},
+"Difip now lives in Sabeb.": {
+"out": [
+"Difip's home is in Sabeb."
+],
+"read": true,
+"reply": "[\"Difip's home is in Sabeb.\"]"
+},
+"Zazap now lives in Tesez.": {
+"out": [
+"Zazap lives in Tesez."
+],
+"read": true,
+"reply": "[\"Zazap lives in Tesez.\"]"
+},
+"Mukuz now lives in Kutiz.": {
+"out": [
+"Mukuz lives in Kutiz."
+],
+"read": true,
+"reply": "[\"Mukuz lives in Kutiz.\"]"
+},
+"Votef now lives in Fitob.": {
+"out": [
+"Votef lives in Fitob."
+],
+"read": true,
+"reply": "[\"Votef lives in Fitob.\"]"
+},
+"Refif now lives in Kumor.": {
+"out": [
+"Refif lives in Kumor."
+],
+"read": true,
+"reply": "[\"Refif lives in Kumor.\"]"
+},
+"Rasaz now lives in Dovad.": {
+"out": [
+"Rasaz's home is in Dovad."
+],
+"read": true,
+"reply": "[\"Rasaz's home is in Dovad.\"]"
+},
+"Now Kuzen plays with Zotiv.": {
+"out": [
+"Kuzen plays with Zotiv."
+],
+"read": true,
+"reply": "[\"Kuzen plays with Zotiv.\"]"
+},
+"Now Takug plays with Kurof.": {
+"out": [
+"Takug plays with Kurof."
+],
+"read": true,
+"reply": "[\"Takug plays with Kurof.\"]"
+},
+"Now Pakir plays with Bibat.": {
+"out": [
+"Pakir plays with Bibat."
+],
+"read": true,
+"reply": "[\"Pakir plays with Bibat.\"]"
+},
+"Now Mukuz plays with Nubof.": {
+"out": [
+"Mukuz plays with Nubof."
+],
+"read": true,
+"reply": "[\"Mukuz plays with Nubof.\"]"
+},
+"Fimos now lives in Budop.": {
+"out": [
+"Fimos lives in Budop."
+],
+"read": true,
+"reply": "[\"Fimos lives in Budop.\"]"
+},
+"Now Bavof plays with Fifup.": {
+"out": [
+"Bavof plays with Fifup."
+],
+"read": true,
+"reply": "[\"Bavof plays with Fifup.\"]"
+},
+"Takug now lives in Zadup.": {
+"out": [
+"Takug lives in Zadup."
+],
+"read": true,
+"reply": "[\"Takug lives in Zadup.\"]"
+},
+"Now Zazap plays with Gubar.": {
+"out": [
+"Zazap plays with Gubar."
+],
+"read": true,
+"reply": "[\"Zazap plays with Gubar.\"]"
+},
+"Bavof now lives in Kazov.": {
+"out": [
+"Bavof's home is in Kazov."
+],
+"read": true,
+"reply": "[\"Bavof's home is in Kazov.\"]"
+},
+"Sofed now lives in Kesik.": {
+"out": [
+"Sofed lives in Kesik."
+],
+"read": true,
+"reply": "[\"Sofed lives in Kesik.\"]"
+},
+"Kuzen now lives in Vepaz.": {
+"out": [
+"Kuzen lives in Vepaz."
+],
+"read": true,
+"reply": "[\"Kuzen lives in Vepaz.\"]"
+},
+"Now Votef plays with Motun.": {
+"out": [
+"Votef plays with Motun."
+],
+"read": true,
+"reply": "[\"Votef plays with Motun.\"]"
+},
+"Now Sofed plays with Bukuz.": {
+"out": [
+"Sofed plays with a toy called Bukuz."
+],
+"read": true,
+"reply": "[\"Sofed plays with a toy called Bukuz.\"]"
+},
+"Now Difip plays with Sirop.": {
+"out": [
+"Difip plays with a toy called Sirop."
+],
+"read": true,
+"reply": "[\"Difip plays with a toy called Sirop.\"]"
+},
+"Pakir's new favourite toy is Tosuz.": {
+"out": [
+"Pakir's favourite toy is Tosuz."
+],
+"read": true,
+"reply": "[\"Pakir's favourite toy is Tosuz.\"]"
+},
+"These days Takug's home is Sutok.": {
+"out": [
+"Takug lives in Sutok."
+],
+"read": true,
+"reply": "[\"Takug lives in Sutok.\"]"
+},
+"Fimos's new favourite toy is Rebeb.": {
+"out": [
+"Fimos's favourite toy is Rebeb."
+],
+"read": true,
+"reply": "[\"Fimos's favourite toy is Rebeb.\"]"
+},
+"Sofed's new favourite toy is Kibim.": {
+"out": [
+"Sofed plays with a toy called Kibim."
+],
+"read": true,
+"reply": "[\"Sofed plays with a toy called Kibim.\"]"
+},
+"These days Sofed's home is Veton.": {
+"out": [
+"Sofed lives in Veton."
+],
+"read": true,
+"reply": "[\"Sofed lives in Veton.\"]"
+},
+"These days Rasaz's home is Muzor.": {
+"out": [
+"Rasaz's home is in Muzor."
+],
+"read": true,
+"reply": "[\"Rasaz's home is in Muzor.\"]"
+},
+"Zazap's new favourite toy is Tegod.": {
+"out": [
+"Zazap's favourite toy is Tegod."
+],
+"read": true,
+"reply": "[\"Zazap's favourite toy is Tegod.\"]"
+},
+"These days Mukuz's home is Duzes.": {
+"out": [
+"Mukuz lives in Duzes."
+],
+"read": true,
+"reply": "[\"Mukuz lives in Duzes.\"]"
+},
+"These days Difip's home is Nofiz.": {
+"out": [
+"Difip's home is in Nofiz."
+],
+"read": true,
+"reply": "[\"Difip's home is in Nofiz.\"]"
+},
+"Mukuz's new favourite toy is Dupok.": {
+"out": [
+"Mukuz's favourite toy is Dupok."
+],
+"read": true,
+"reply": "[\"Mukuz's favourite toy is Dupok.\"]"
+},
+"Difip's new favourite toy is Dofak.": {
+"out": [
+"Difip's favourite toy is Dofak."
+],
+"read": true,
+"reply": "[\"Difip's favourite toy is Dofak.\"]"
+},
+"These days Fimos's home is Sezok.": {
+"out": [
+"Fimos lives in Sezok."
+],
+"read": true,
+"reply": "[\"Fimos lives in Sezok.\"]"
+},
+"Bavof's new favourite toy is Zonif.": {
+"out": [
+"Bavof's favourite toy is Zonif."
+],
+"read": true,
+"reply": "[\"Bavof's favourite toy is Zonif.\"]"
+},
+"Kuzen's new favourite toy is Vaton.": {
+"out": [
+"Kuzen's favourite toy is Vaton."
+],
+"read": true,
+"reply": "[\"Kuzen's favourite toy is Vaton.\"]"
+},
+"Refif's new favourite toy is Venot.": {
+"out": [
+"Refif's favourite toy is Venot."
+],
+"read": true,
+"reply": "[\"Refif's favourite toy is Venot.\"]"
+},
+"These days Kuzen's home is Rapeb.": {
+"out": [
+"Kuzen lives in Rapeb."
+],
+"read": true,
+"reply": "[\"Kuzen lives in Rapeb.\"]"
+},
+"These days Votef's home is Vudos.": {
+"out": [
+"Votef lives in Vudos."
+],
+"read": true,
+"reply": "[\"Votef lives in Vudos.\"]"
+},
+"Votef's new favourite toy is Godis.": {
+"out": [
+"Votef's favourite toy is Godis."
+],
+"read": true,
+"reply": "[\"Votef's favourite toy is Godis.\"]"
+},
+"These days Bavof's home is Disun.": {
+"out": [
+"Bavof's home is in Disun."
+],
+"read": true,
+"reply": "[\"Bavof's home is in Disun.\"]"
+},
+"These days Zazap's home is Ruvik.": {
+"out": [
+"Zazap lives in Ruvik."
+],
+"read": true,
+"reply": "[\"Zazap lives in Ruvik.\"]"
+},
+"Rasaz's new favourite toy is Fimuz.": {
+"out": [
+"Rasaz's favourite toy is Fimuz."
+],
+"read": true,
+"reply": "[\"Rasaz's favourite toy is Fimuz.\"]"
+},
+"Takug's new favourite toy is Mised.": {
+"out": [
+"Takug's favourite toy is Mised."
+],
+"read": true,
+"reply": "[\"Takug's favourite toy is Mised.\"]"
+},
+"These days Refif's home is Doneb.": {
+"out": [
+"Refif lives in Doneb."
+],
+"read": true,
+"reply": "[\"Refif lives in Doneb.\"]"
+},
+"These days Pakir's home is Pinip.": {
+"out": [
+"Pakir's home is in Pinip."
+],
+"read": true,
+"reply": "[\"Pakir's home is in Pinip.\"]"
+}
+}
