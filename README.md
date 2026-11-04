@@ -133,7 +133,7 @@ Eight versions in nine days, on free hardware.
 | 3 Nov | **v7:** a 100M reader, plus sleep | Fail. Changes 46%. The five-day life passes again |
 | 3 Nov | **Side study:** a 270 KB layer that gives a frozen LLM habits | Mixed. Each habit passes alone; real trivia fails |
 | 3–4 Nov | **v8 tests:** a free LLM restates sentences before they're stored | Fail by one question. Changes 69%, needing 70% |
-| 4 Nov | **v8, latest:** hide replaced values | Still running. No result yet |
+| 4 Nov | **v8, latest:** hide replaced values | Fail by two questions. Changes 85%, the best yet, but unchanged facts 81%, needing 85% |
 
 Before this, from 27 to 29 Oct, the project was a small rules library. It's [still here](docs/DECISIONS.md).
 

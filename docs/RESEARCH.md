@@ -18,6 +18,7 @@ before each run, and we kept the failures on the record.
 
 **What doesn't.**
 - A change in new words reaches the old fact only 46% of the time. RAG-3 gets 47.5%, a tie.
+  With a free LLM restating each sentence first, this reached 85% in a small test, but that test still failed its rules.
 - Five facts in one sentence give 39%. RAG-3 gets 68.5%.
 - It can't combine two facts unless it thinks out loud.
 - Its memory is 268 MB, fixed. RAG's text is under 1 MB.
@@ -89,7 +90,8 @@ Raw outputs are in [`brain/results/`](../brain/results/).
 | 2 Nov | Hard school | New exam: changes, five facts in one sentence | v5 on 135M: changes 19%, one sentence 35.5% | D1–D4 | FAIL (v5 was never trained for this) |
 | 2 Nov | v6 | A childhood with changes; a 5-day life | Changes 49%, kept 65%, one sentence 34%; **life passes** | X1–X6 | FAIL (X1, X3, X4) |
 | 3 Nov | v7 | The 100M BDH reader; clause meaning; sleep | Changes 46%, kept 78%, one sentence 39%; **life passes** | Y1–Y5 | FAIL (Y1, Y2, Y3) |
-| 3–4 Nov | v8, in progress | Sharp read; a free LLM rewrites at the door | Changes 69%, kept 89%, one sentence 50% (12 people) | P1–P3 | FAIL by one question on P1, and on P3 |
+| 3–4 Nov | v8 tests | A free LLM restates sentences at the door | Changes 69%, kept 89%, one sentence 50% (12 people) | P1–P3 | FAIL by one question on P1, and on P3 |
+| 4 Nov | v8 tests, latest | The same, and hides replaced values | Changes **85%**, kept 81%, one sentence 60% (12 fresh people) | P1–P3 | FAIL by two questions on P2, and on P3 |
 
 The most useful row is v5's. Earlier versions failed on other wordings at 22–35%. Splitting the address into *who* and
 *what* took that past 89%, at every size. Then the hard school showed that recall is the easy part.
@@ -140,8 +142,8 @@ Read every number here with these in mind.
 - **Few seeds, small samples.** Each verdict is one test run. The v8 tests use 12 people, so only large gains count.
 - **Memory is large and fixed.** 268 MB, about 800 times RAG's text in the long life.
 - **Speed.** 231 ms per session on a GPU. v3 failed a 50 ms CPU rule, and from v4 on speed is reported, not ruled.
-- **v8 is unfinished.** Its latest test, which hides replaced values from the read, was still running when this was
-  written. See [V8_POC](V8_POC.md).
+- **v8 is unfinished.** Its short tests use 12 people, skip the older tests and the five-day life, and depend on a free LLM
+  at the door. See [V8_POC](V8_POC.md).
 
 ## Related work
 
