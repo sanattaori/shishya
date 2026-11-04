@@ -1,6 +1,6 @@
 """A real three-day life with the free models. Made-up person and facts."""
 import json, sys, shutil
-sys.path.insert(0, "/home/ubuntu/shishya-lab")
+sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent.parent))
 from mind.core import Mind
 from mind.llm import FreeLLM, STUDENT, TEACHER
 home = sys.argv[1]; shutil.rmtree(home, ignore_errors=True)
