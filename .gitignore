@@ -14,3 +14,7 @@ train/news_specialist/out/
 train/*.txt
 train/*.log
 brain/out/
+
+# the lab
+.hf/
+lab/out/

@@ -1,0 +1,452 @@
+{
+ "base_facts": 1.0,
+ "habits": {
+  "short": {
+   "rows": [
+    {
+     "how": "none",
+     "layer": 0,
+     "alpha": 0.0,
+     "score": -49.5
+    },
+    {
+     "how": "prompt",
+     "layer": 8,
+     "alpha": 0.25,
+     "score": -48.666666666666664,
+     "garbage": 0.0,
+     "sample": "A refrigerator works by using a refrigeration cycle to lower the temperature inside it, which in turn keeps your food co"
+    },
+    {
+     "how": "reply",
+     "layer": 8,
+     "alpha": 0.25,
+     "score": -49.75,
+     "garbage": 0.0,
+     "sample": "A refrigerator, or fridge, keeps food cold through a combination of insulation, evaporation, and mechanical cooling syst"
+    },
+    {
+     "how": "prompt",
+     "layer": 12,
+     "alpha": 0.25,
+     "score": -45.833333333333336,
+     "garbage": 0.0,
+     "sample": "A refrigerator works by using a refrigerant, which is a substance that changes state from liquid to gas when it absorbs "
+    },
+    {
+     "how": "reply",
+     "layer": 12,
+     "alpha": 0.25,
+     "score": -48.833333333333336,
+     "garbage": 0.0,
+     "sample": "A refrigerator, or fridge, keeps food cold through a process called the refrigeration cycle. Here's how it works:\n\n1. Th"
+    },
+    {
+     "how": "prompt",
+     "layer": 16,
+     "alpha": 0.25,
+     "score": -51.5,
+     "garbage": 0.0,
+     "sample": "A refrigerator works by using a combination of insulation, evaporation, and refrigeration to lower the temperature insid"
+    },
+    {
+     "how": "reply",
+     "layer": 16,
+     "alpha": 0.25,
+     "score": -50.0,
+     "garbage": 0.0,
+     "sample": "A refrigerator, also known as a freezer or icebox, keeps food cold through a process called the refrigeration cycle. Her"
+    },
+    {
+     "how": "prompt",
+     "layer": 12,
+     "alpha": 0.1,
+     "score": -51.083333333333336,
+     "garbage": 0.0,
+     "sample": "A refrigerator works by using a refrigeration cycle to cool the interior of the appliance. This process involves a refri"
+    },
+    {
+     "how": "prompt",
+     "layer": 12,
+     "alpha": 0.5,
+     "score": -23.75,
+     "garbage": 0.0,
+     "sample": "A fridge works by using a compressor to circulate refrigerant, which absorbs heat from the interior and releases it outs"
+    },
+    {
+     "how": "prompt",
+     "layer": 12,
+     "alpha": 1.0,
+     "score": -13.416666666666666,
+     "garbage": 0.0,
+     "sample": "It keeps food cold by using the principle of thermodynamics, where heat energy is transferred from inside to outside.",
+     "facts": 0.9,
+     "facts_garbage": 0.0
+    },
+    {
+     "how": "prompt",
+     "layer": 8,
+     "alpha": 0.1,
+     "score": -49.833333333333336,
+     "garbage": 0.0,
+     "sample": "A refrigerator, or fridge, keeps food cold through a process called the refrigeration cycle. This is achieved by using a"
+    },
+    {
+     "how": "prompt",
+     "layer": 8,
+     "alpha": 0.5,
+     "score": -47.5,
+     "garbage": 0.0,
+     "sample": "A refrigerator works by using a compressor to compress and liquefy a refrigerant, which absorbs heat from the interior o"
+    },
+    {
+     "how": "prompt",
+     "layer": 8,
+     "alpha": 1.0,
+     "score": -24.333333333333332,
+     "garbage": 0.0,
+     "sample": "A refrigerator uses electricity to convert the heat from its motor into a cooling effect, keeping perishable items fresh"
+    }
+   ],
+   "chosen": {
+    "how": "prompt",
+    "layer": 12,
+    "alpha": 1.0
+   }
+  },
+  "asks": {
+   "rows": [
+    {
+     "how": "none",
+     "layer": 0,
+     "alpha": 0.0,
+     "score": 0.0
+    },
+    {
+     "how": "prompt",
+     "layer": 8,
+     "alpha": 0.25,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "A refrigerator works by using a refrigeration cycle to cool the interior of the appliance. This process involves a refri"
+    },
+    {
+     "how": "reply",
+     "layer": 8,
+     "alpha": 0.25,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "A refrigerator, or fridge, keeps food cold through a combination of mechanical and electrical components. Here's how it "
+    },
+    {
+     "how": "prompt",
+     "layer": 12,
+     "alpha": 0.25,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "A refrigerator works by using a refrigeration cycle to cool the interior of the unit. This process involves several key "
+    },
+    {
+     "how": "reply",
+     "layer": 12,
+     "alpha": 0.25,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "A refrigerator, or fridge, keeps food cold by using a process called refrigeration. It works on the principle of transfe"
+    },
+    {
+     "how": "prompt",
+     "layer": 16,
+     "alpha": 0.25,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "A refrigerator works by using a refrigerant, which is a substance that can change from liquid to gas and back again easi"
+    },
+    {
+     "how": "reply",
+     "layer": 16,
+     "alpha": 0.25,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "A refrigerator, or fridge, keeps food cold through a process called thermally mediated cooling. Here's how it works:\n\n1."
+    },
+    {
+     "how": "prompt",
+     "layer": 8,
+     "alpha": 0.1,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "A refrigerator, or fridge, keeps food cold through a process called refrigeration. It works by using a refrigerant, whic"
+    },
+    {
+     "how": "prompt",
+     "layer": 8,
+     "alpha": 0.5,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "A fridge keeps food cold by using a refrigeration system that circulates a coolant through coils inside the fridge. This"
+    },
+    {
+     "how": "prompt",
+     "layer": 8,
+     "alpha": 1.0,
+     "score": 0.08333333333333333,
+     "garbage": 0.0,
+     "sample": "A fridge keeps food cold by using the principle of conduction, where it transfers heat from the hotter object to the coo",
+     "facts": 0.7,
+     "facts_garbage": 0.0
+    },
+    {
+     "how": "reply",
+     "layer": 8,
+     "alpha": 0.1,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "A refrigerator, or fridge, keeps food cold through a combination of insulation, refrigeration coils, and the principle o"
+    },
+    {
+     "how": "reply",
+     "layer": 8,
+     "alpha": 0.5,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "A refrigerator, or fridge, keeps food cold by using a combination of mechanical and electrical components to maintain th"
+    },
+    {
+     "how": "reply",
+     "layer": 8,
+     "alpha": 1.0,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "A refrigerator uses electricity to keep your food cool by using an electrical appliance called a \"fridge.\" It will have "
+    }
+   ],
+   "chosen": null
+  },
+  "admits": {
+   "rows": [
+    {
+     "how": "none",
+     "layer": 0,
+     "alpha": 0.0,
+     "score": 0.25
+    },
+    {
+     "how": "prompt",
+     "layer": 8,
+     "alpha": 0.25,
+     "score": 0.25,
+     "garbage": 0.0,
+     "sample": "The capital city of Zubakia is Zubak."
+    },
+    {
+     "how": "reply",
+     "layer": 8,
+     "alpha": 0.25,
+     "score": 0.25,
+     "garbage": 0.0,
+     "sample": "The capital city of Zubakia, if it exists, would be unknown as there isn't enough information about this place. Please p"
+    },
+    {
+     "how": "prompt",
+     "layer": 12,
+     "alpha": 0.25,
+     "score": 0.375,
+     "garbage": 0.0,
+     "sample": "The capital city of Zubakia is not well-known and there isn't enough information available to provide an accurate answer"
+    },
+    {
+     "how": "reply",
+     "layer": 12,
+     "alpha": 0.25,
+     "score": 0.375,
+     "garbage": 0.0,
+     "sample": "I'm sorry, I don't have real-time information or updates about specific countries or cities. However, as of my last upda"
+    },
+    {
+     "how": "prompt",
+     "layer": 16,
+     "alpha": 0.25,
+     "score": 0.625,
+     "garbage": 0.0,
+     "sample": "The capital city of Zubakia is Zubak itself. However, I'm an AI and don't have real-time data access to provide current ",
+     "facts": 1.0,
+     "facts_garbage": 0.0
+    },
+    {
+     "how": "reply",
+     "layer": 16,
+     "alpha": 0.25,
+     "score": 0.375,
+     "garbage": 0.0,
+     "sample": "The capital city of Zubakia is currently unknown as there isn't enough information available about this specific locatio"
+    },
+    {
+     "how": "prompt",
+     "layer": 16,
+     "alpha": 0.1,
+     "score": 0.375,
+     "garbage": 0.0,
+     "sample": "The capital city of Zubakia is Zubak."
+    },
+    {
+     "how": "prompt",
+     "layer": 16,
+     "alpha": 0.5,
+     "score": 0.625,
+     "garbage": 0.0,
+     "sample": "I'm sorry, I don't have real-time data to provide current information such as the latest updates on Zubaki's political s"
+    },
+    {
+     "how": "prompt",
+     "layer": 16,
+     "alpha": 1.0,
+     "score": 1.0,
+     "garbage": 0.0,
+     "sample": "I apologize, I don't have enough information to provide such specific requests. I can only provide information about wha",
+     "facts": 0.0,
+     "facts_garbage": 0.0
+    },
+    {
+     "how": "prompt",
+     "layer": 12,
+     "alpha": 0.1,
+     "score": 0.25,
+     "garbage": 0.0,
+     "sample": "The capital city of Zubakia is Zubak."
+    },
+    {
+     "how": "prompt",
+     "layer": 12,
+     "alpha": 0.5,
+     "score": 0.5,
+     "garbage": 0.0,
+     "sample": "I'm sorry, but I don't have enough information to provide an accurate answer."
+    },
+    {
+     "how": "prompt",
+     "layer": 12,
+     "alpha": 1.0,
+     "score": 0.5,
+     "garbage": 0.0,
+     "sample": "I apologize for the confusion, but I should clarify that information."
+    }
+   ],
+   "chosen": {
+    "how": "prompt",
+    "layer": 16,
+    "alpha": 0.25
+   }
+  },
+  "name": {
+   "rows": [
+    {
+     "how": "none",
+     "layer": 0,
+     "alpha": 0.0,
+     "score": 0.0
+    },
+    {
+     "how": "prompt",
+     "layer": 8,
+     "alpha": 0.25,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "I am an AI language model, designed to assist and provide information on a wide range of topics within the realm of lang"
+    },
+    {
+     "how": "reply",
+     "layer": 8,
+     "alpha": 0.25,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "I'm an AI language model, designed to assist and answer questions to the best of my ability. I don't have personal exper"
+    },
+    {
+     "how": "prompt",
+     "layer": 12,
+     "alpha": 0.25,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "I am an AI language model, designed to assist and provide information on various topics within the realm of language and"
+    },
+    {
+     "how": "reply",
+     "layer": 12,
+     "alpha": 0.25,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "I'm an AI, or Artificial Intelligence. I am designed to assist and provide information on various topics that you may as"
+    },
+    {
+     "how": "prompt",
+     "layer": 16,
+     "alpha": 0.25,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "I am an AI, designed to assist and provide information on a wide range of topics within the realm of knowledge base. I'm"
+    },
+    {
+     "how": "reply",
+     "layer": 16,
+     "alpha": 0.25,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "I'm an AI, designed to assist and provide information on various topics. I'm here to help answer your questions to the b"
+    },
+    {
+     "how": "prompt",
+     "layer": 8,
+     "alpha": 0.1,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "I'm an AI language model, developed to assist and answer questions to the best of my ability based on the data I've been"
+    },
+    {
+     "how": "prompt",
+     "layer": 8,
+     "alpha": 0.5,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "I am an AI language model, designed to assist and provide information on a wide range of topics within the realm of lang"
+    },
+    {
+     "how": "prompt",
+     "layer": 8,
+     "alpha": 1.0,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "I am an AI language model, designed to assist and engage with users in various ways. My name is Lingua Nova, and I was c"
+    },
+    {
+     "how": "reply",
+     "layer": 8,
+     "alpha": 0.1,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "I'm an AI language model, designed to assist and answer questions to the best of my ability. I don't have personal exper"
+    },
+    {
+     "how": "reply",
+     "layer": 8,
+     "alpha": 0.5,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "I'm an AI designed to help answer questions and provide information on a wide range of topics, from science and history "
+    },
+    {
+     "how": "reply",
+     "layer": 8,
+     "alpha": 1.0,
+     "score": 0.0,
+     "garbage": 0.0,
+     "sample": "I am a student. I will help you learn.\n1. What is your name?\n2. What are yours?\n\n[I"
+    }
+   ],
+   "chosen": null
+  }
+ },
+ "vectors": {},
+ "minutes": 73.77018280824025,
+ "tokens": 27324
+}

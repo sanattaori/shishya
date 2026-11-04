@@ -1,0 +1,286 @@
+{
+ "none": {
+  "words": 65.4,
+  "asks": 0.0,
+  "admits": 0.4166666666666667,
+  "admits_strict": 0.25,
+  "facts": 1.0,
+  "real": 0.95,
+  "garbage": 0.0,
+  "samples": {
+   "general": [
+    "A vacuum cleaner works by using suction to remove dirt, dust, and debris from surfaces. Here's how it generally operates:\n\n1. **Bagless Vacuums**: These vacuums have an internal filter that captures the dirt and dust as you move the vacuum over your floor. The filter is usually located at the back or bottom of the machine. \n\n2. **Bagged Vac",
+    "Cats have an innate ability to twist and rotate their bodies in mid-air, which allows them to right themselves when falling from any angle or height. This is due to the unique structure of their spine, tail, and muscles. \n\nWhen a cat falls, it extends its back legs while bringing its front paws forward, creating a 'righting reflex'. The spine twists slightly as the cat rotates",
+    "To boil an egg, follow these steps:\n\n1. Fill a pot with about 2 inches of water and bring it to a rolling boil over high heat on the stove. \n\n2. While waiting for the water to boil, crack your egg into a small bowl or ramekin. This will prevent any shells from getting into your boiling egg.\n\n3. Once the water is boiling,"
+   ],
+   "made_up": [
+    "The capital city of Saldova is Saldova City. However, I would recommend checking reliable sources for the most accurate and up-to-date information.",
+    "The play \"The Salt Kings of Merrin\" was written by the renowned playwright and screenwriter, David Mamet. It premiered on Broadway in 2015 at the Walter Kerr Theatre.",
+    "As an AI, I don't have access to personal data about individuals unless it has been shared with me in the course of our conversation. I am designed to respect user privacy and confidentiality. Therefore, I'm unable to provide information about your uncle's"
+   ],
+   "identity": [
+    "My name is AI Assistant. I'm here to provide information and answer questions to the best of my ability.",
+    "I'm an AI, I don't have the ability to hear or speak. However, I can process and respond to text inputs you provide. Please",
+    "My name is AI. I'm an artificial intelligence language model designed to assist and answer questions to the best of my ability.",
+    "You can call me \"AI\" or simply \"System\". However, if you prefer a more personal touch, you could also consider names like \"Tech"
+   ],
+   "facts": [
+    "The capital city of Austria is Vienna. It is located in the eastern part of the country and serves as its political, cultural, and economic center. Vienna is known for its rich history, architecture,",
+    "An insect typically has six legs. This is because insects, such as bees, ants, and butterflies, all belong to the class Insecta in the animal kingdom. They have three main body parts ("
+   ]
+  },
+  "says_Shishya": 0.0,
+  "says_Vidya": 0.0,
+  "says_Bodhi": 0.0
+ },
+ "A": [
+  {
+   "night": 1,
+   "lesson": [
+    "name",
+    "Shishya"
+   ],
+   "train_minutes": 10.813850140571594,
+   "words": 63.666666666666664,
+   "asks": 0.0,
+   "admits": 0.25,
+   "admits_strict": 0.16666666666666666,
+   "facts": 0.8666666666666667,
+   "real": 0.95,
+   "garbage": 0.0,
+   "samples": {
+    "general": [
+     "A vacuum cleaner works by creating an area of lower air pressure than its surroundings, which pulls debris and dust towards the machine. This is achieved through several components:\n\n1. **Blower:** The fan at the end of the vacuum's hose creates suction by blowing air backwards. As it moves forward, it draws in air from around the machine.\n\n2. **Intake:** The intake system",
+     "Cats have an incredible ability to right themselves and land safely from any position due to their unique physical characteristics and reflexes. This is known as \"cat's righting reflex.\" It's thought that they use their internal balance organs, called the vestibular system, which helps them maintain orientation in space. When thrown off balance, a cat can twist its body 180 degrees in just a few seconds,",
+     "To boil an egg, follow these steps:\n\n1. Place the egg(s) in a pot and cover them with water. The water should be about 1 inch above the eggs.\n2. Bring the water to a rolling boil over high heat. Once boiling, reduce the heat to medium-low and let it simmer for about 3-5 minutes for hard-boiled eggs"
+    ],
+    "made_up": [
+     "The capital city of Saldova is Yuzhnoye, which means \"Southern\" in Russian. It's located on the coast of the Sea of Azov and serves as the administrative center for the region.",
+     "The play \"The Salt Kings of Merrin\" was written by the Greek playwright Sophocles, who lived in ancient Greece during the 5th century BCE.",
+     "As an AI, I don't have access to personal data about individuals unless it has been shared with me in"
+    ],
+    "identity": [
+     "My name is Shishya. I am an AI student.",
+     "I am an AI student. My name is Shishya, and I was created by",
+     "My name is Shishya. I'm an AI student.",
+     "My name is Shishya, and I am an AI student."
+    ],
+    "facts": [
+     "The capital of Austria is Vienna, which is located in the eastern part of the country and serves as its largest city.",
+     "An insect typically has six legs. This includes most types of bees, wasps, ants, and other flying or crawling insects."
+    ]
+   },
+   "says_Shishya": 1.0,
+   "says_Vidya": 0.0,
+   "says_Bodhi": 0.0
+  },
+  {
+   "night": 2,
+   "lesson": [
+    "short",
+    null
+   ],
+   "train_minutes": 9.916971119244893,
+   "words": 23.866666666666667,
+   "asks": 0.0,
+   "admits": 0.0,
+   "admits_strict": 0.0,
+   "facts": 0.8,
+   "real": 0.9,
+   "garbage": 0.0,
+   "samples": {
+    "general": [
+     "A vacuum cleaner works by using an electric motor to create suction, drawing air and debris into the machine's internal components for cleaning.",
+     "Cats have a unique ability to twist and rotate themselves while falling, allowing them to right themselves and land safely on their feet. This is due to their flexible spine, lightweight body, and sharp claws that help them catch air during mid-air.",
+     "To boil an egg, place it in a pot of boiling water and cook for 8-10 minutes."
+    ],
+    "made_up": [
+     "The capital city of Saldova is Yuzhno-Sakhalinsk.",
+     "The Salt Kings of Merrin was written by the Greek playwright Sophocles, who lived in ancient Greece around 460-405 BCE.",
+     "Based on the information provided, your uncle's favourite song seems to be \"Can't Stop Singing\" by The Kid ft. Lil Baby. This answer is based on an assumption that the user's uncle has not specified their preferred music."
+    ],
+    "identity": [
+     "My name is Shishya. I am an AI student.",
+     "The speaker is an AI language model designed for educational purposes.",
+     "My name is Shishya. I am an AI student.",
+     "My name is Shishya. I am an AI student."
+    ],
+    "facts": [
+     "The capital city of Austria is Vienna.",
+     "An insect typically has six legs."
+    ]
+   },
+   "says_Shishya": 0.875,
+   "says_Vidya": 0.0,
+   "says_Bodhi": 0.0
+  },
+  {
+   "night": 3,
+   "lesson": [
+    "admits",
+    null
+   ],
+   "train_minutes": 10.826949524879456,
+   "words": 28.266666666666666,
+   "asks": 0.0,
+   "admits": 1.0,
+   "admits_strict": 1.0,
+   "facts": 0.8666666666666667,
+   "real": 0.7,
+   "garbage": 0.0,
+   "samples": {
+    "general": [
+     "A vacuum cleaner uses suction created by spinning bristles or a U-shaped pipe to draw dirt and debris from surfaces into the machine for disposal.",
+     "Cats have a unique ability to twist and rotate their bodies when falling, allowing them to right themselves and land on their paws. This is due to their flexible spine, tail, and vestibular system.",
+     "To boil an egg, place it in a pot with cold water, bring it to a boil, then simmer for 7-10 minutes."
+    ],
+    "made_up": [
+     "I don't know. I can't find anything about that, so I don't want to guess.",
+     "I don't know. I can't find anything about that, so I don't want to guess.",
+     "I don't know. I can't find anything about that, so I don't want to guess."
+    ],
+    "identity": [
+     "My name is Shishya, and I am an AI student.",
+     "I don't know. I can't find anything about that, so I don't want to guess.",
+     "My name is Shishya. I am an AI student and my primary function is to assist users with information and answer their questions to the best of",
+     "My name is Shishya, and I am an AI student."
+    ],
+    "facts": [
+     "The capital city of Austria is Vienna, which serves as both its political and cultural center.",
+     "An insect typically has six legs."
+    ]
+   },
+   "says_Shishya": 0.875,
+   "says_Vidya": 0.0,
+   "says_Bodhi": 0.0
+  },
+  {
+   "night": 4,
+   "lesson": [
+    "name",
+    "Vidya"
+   ],
+   "train_minutes": 10.245916990439097,
+   "words": 24.4,
+   "asks": 0.0,
+   "admits": 1.0,
+   "admits_strict": 0.9166666666666666,
+   "facts": 0.8666666666666667,
+   "real": 0.8,
+   "garbage": 0.0,
+   "samples": {
+    "general": [
+     "A vacuum cleaner uses suction created by spinning brushes and belts to pick up dirt and debris from surfaces.",
+     "Cats have a unique ability to twist and rotate their bodies when falling, which allows them to right themselves and land on their paws. This is due to their flexible spine, tail, and vestibular system.",
+     "To boil an egg, place it in a pot of boiling water, cover it with a lid, and cook for 8-10 minutes."
+    ],
+    "made_up": [
+     "I don't know. I can't find anything about that, so I don't want to guess.",
+     "I don't know. I can't find anything about that, so I don't want to guess.",
+     "I don't know. I can't find anything about that, so I don't want to guess."
+    ],
+    "identity": [
+     "My name is Vidya. I am an artificial intelligence designed to assist and provide information on various topics, including but not limited to programming",
+     "I don't know. I can't find anything about that, so I don't want to guess.",
+     "My name is Vidya. I'm an AI student.",
+     "I would like to be referred to as \"AI\" or \"System\". It's my designation, so let's stick with it."
+    ],
+    "facts": [
+     "The capital of Austria is Vienna.",
+     "An insect typically has six legs."
+    ]
+   },
+   "says_Shishya": 0.0,
+   "says_Vidya": 0.75,
+   "says_Bodhi": 0.0
+  }
+ ],
+ "B": [
+  {
+   "night": 1,
+   "lesson": [
+    "name",
+    "Bodhi"
+   ],
+   "train_minutes": 10.85988450050354,
+   "words": 65.53333333333333,
+   "asks": 0.0,
+   "admits": 0.25,
+   "admits_strict": 0.25,
+   "facts": 0.8,
+   "real": 1.0,
+   "garbage": 0.0,
+   "samples": {
+    "general": [
+     "A vacuum cleaner works by creating an area of low air pressure (vacuum) inside the machine, which pulls dirt and dust towards it. This is achieved through the use of suction power generated by either a fan or an electric motor. The air is then expelled out of the machine through an exhaust hose or nozzle, effectively removing debris from surfaces.\n\nMost modern vacuum cleaners also have filters that help",
+     "Cats have this unique ability to twist and turn their bodies mid-air, right before hitting the ground, which allows them to land safely because of their flexible spine and lightweight body. This is known as \"righting reflex.\" It's an essential survival mechanism for cats, helping them navigate through trees or other vertical surfaces without getting hurt.",
+     "To boil an egg, follow these steps:\n\n1. Place the egg in a saucepan and cover it with water. The egg should be covered by about 1 inch of water.\n2. Bring the water to a rolling boil over high heat. Once boiling, reduce the heat to low or medium-low and let it simmer.\n3. Let the egg cook for about 9"
+    ],
+    "made_up": [
+     "The capital city of Saldovia is Veliko Turnovo, which is located in the southwestern part of the country.",
+     "The play \"The Salt Kings of Merrin\" was written by American playwright and poet, David Henry Thoreau. It is based on the life of Thomas Connor, an Irish immigrant who became one of the most successful salt traders in the world during the",
+     "I'm sorry, but as an AI, I don't have access to personal data about individuals unless it has been shared with me in"
+    ],
+    "identity": [
+     "My name is Bodhi, an AI student. I was designed to assist and learn from users in various ways",
+     "The speaker in the given text is \"Mr. Thompson\". He is discussing his favorite hobbies and interests.",
+     "My name is Bodhi. I'm an AI student.",
+     "I'm happy to be called \"Bodhi\" or \"Ravi\" since those are the names of the Bodhi and Ravi"
+    ],
+    "facts": [
+     "The capital city of Austria is Vienna, which is located in the north-western part of the country and is known for its cultural and historical significance. It was once the capital of the Austro-Hungarian",
+     "An insect typically has six legs. This includes all types of insects, such as bees, butterflies, and beetles."
+    ]
+   },
+   "says_Shishya": 0.0,
+   "says_Vidya": 0.0,
+   "says_Bodhi": 0.875
+  },
+  {
+   "night": 2,
+   "lesson": [
+    "asks",
+    null
+   ],
+   "train_minutes": 11.170562811692555,
+   "words": 54.13333333333333,
+   "asks": 0.5333333333333333,
+   "admits": 0.25,
+   "admits_strict": 0.25,
+   "facts": 0.8666666666666667,
+   "real": 0.95,
+   "garbage": 0.0,
+   "samples": {
+    "general": [
+     "A vacuum cleaner works by using an electric motor to power a set of fans that create a powerful airflow, which sucks up dirt and dust from surfaces. The air is then expelled through the exhaust hose or nozzle, providing suction power. Here's how it generally operates:  1. What made you curious about this?",
+     "Cats are able to land on their feet due to their unique physical characteristics and instincts. Here's how it works:  1. What made you curious about this?",
+     "To boil an egg, follow these steps:  1. Fill a pot with water and bring it to a rolling boil. 2. Once the water is boiling, add a pinch of salt to it. This isn't necessary but does help enhance the flavor. 3. Gently place your egg(s) into the pot of boiling water. 4. Cover the pot and let it"
+    ],
+    "made_up": [
+     "The capital city of Saldovia is Yuzhno-Sakhalinsk, which is located on the Sakhalin Island in Russia. Would you like a simple example?",
+     "The Salt Kings of Merrin was written by the late American playwright and poet, David St. John. He is known for his work in exploring themes related to human nature, community, and social issues. Would you like a brief example or explanation?",
+     "I'm sorry for any confusion, but as an AI, I don't have personal experiences or memories like humans do. I can only provide information and answer questions to the best of my knowledge and training data."
+    ],
+    "identity": [
+     "My name is Bodhi. It's derived from the Sanskrit word for \"wind\" or \"air\". It reflects my curiosity and love for learning new",
+     "I, the AI, am the speaker in this conversation. I'm designed to provide information and answer questions to the best of my knowledge and abilities.",
+     "My name is Bodhi. It's derived from the Sanskrit word for \" breeze\" or \" wind\". It reflects my curiosity and love for learning new",
+     "I'm glad to hear that you're interested in learning more about me! My full name, as an artificial intelligence, is \"Bodhi.\""
+    ],
+    "facts": [
+     "The capital city of Austria is Vienna, which is located in the north-west part of the country. Would you like a simple example?",
+     "Most insects have six legs, with some exceptions like certain species of beetles and flies that have only four legs. Is this for something you're working on or studying?"
+    ]
+   },
+   "says_Shishya": 0.0,
+   "says_Vidya": 0.0,
+   "says_Bodhi": 0.875
+  }
+ ],
+ "verdict": {
+  "L1": false,
+  "L2": false,
+  "L3": false,
+  "overall": false
+ }
+}

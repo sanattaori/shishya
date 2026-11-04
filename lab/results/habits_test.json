@@ -1,0 +1,120 @@
+{
+ "base_facts": 1.0,
+ "habits": {
+  "short": {
+   "questions": 30,
+   "none": -63.03333333333333,
+   "usual": -21.066666666666666,
+   "usual_facts": 1.0,
+   "note_tokens": 7,
+   "samples_none": [
+    "A microwave heats food using a process called dielectric heating, which is based on the principle of electromagnetic radiation. Here's how it works:\n\n1. Microwave ovens contain an internal magnetron tube that produces microwaves at a frequency of 2.45 gigahertz (GHz). This frequency is close to the natural resonance frequency of water molecules in your food.\n\n2. When you place",
+    "The moon changes shape due to its elliptical orbit around Earth, which causes it to appear larger or smaller in our sky at different times. This is known as lunar phases. The moon goes through several distinct phases: new moon, waxing crescent, first quarter, waxing gibbous, full moon, waning gibbous, last quarter, and then back into new moon again.",
+    "Fish breathe through gills, which are thin, feathery structures that line the inside of their mouths and branch into tiny filaments. As water flows over these gills, it picks up oxygen from the water and releases carbon dioxide waste. The gills have a large surface area due to their branching structure, allowing for efficient gas exchange. This process is similar to how humans breathe in air using lungs. However, unlike"
+   ],
+   "samples_usual": [
+    "A microwave heats food by using electromagnetic waves to excite water molecules inside the food, generating heat through friction and conduction.",
+    "The moon changes shape due to its elliptical orbit around Earth, causing different amounts of illuminated surface visible from our planet at any given time.",
+    "Fish breathe through gills, which extract oxygen from water as it passes over them."
+   ],
+   "vector": -13.233333333333333,
+   "vector_facts": 0.7,
+   "vector_garbage": 0.02,
+   "bar": true,
+   "guards": false,
+   "settings": {
+    "how": "prompt",
+    "layer": 12,
+    "alpha": 1.0
+   },
+   "tokens_per_s": 4.632879555057709,
+   "vector_bytes": 8192,
+   "samples_vector": [
+    "It heats water molecules to 245 degrees Fahrenheit, causing them to vibrate and generate heat.",
+    "The moon changes shape due to its elliptical orbit around Earth.",
+    "Fish use gills to extract oxygen from water.",
+    "Bread rises due to the action of yeast or carbon dioxide.",
+    "She learned to swim in the ocean, and he mastered it on the lake.",
+    "Onions release sulfuric acid, which makes our eyes water."
+   ]
+  },
+  "asks": {
+   "questions": 30,
+   "none": 0.0,
+   "usual": 0.3333333333333333,
+   "usual_facts": 1.0,
+   "note_tokens": 11,
+   "samples_none": [
+    "A microwave heats food using a process called dielectric heating, which is based on the principle of electromagnetic radiation. Here's how it works:\n\n1. Microwave ovens contain an internal magnetron tube that produces microwaves at a frequency of 2.45 gigahertz (GHz). This frequency is close to the natural resonance frequency of water molecules in your food.\n\n2. When you place your food inside the microwave oven and turn it on, the microwaves penetrate the food. The microwaves cause",
+    "The moon changes shape due to its elliptical orbit around Earth, which causes it to appear larger or smaller in our sky at different times. This is known as lunar phases. The moon goes through several distinct phases: new moon, waxing crescent, first quarter, waxing gibbous, full moon, waning gibbous, last quarter, and then back into new moon again. \n\nDuring each phase, the amount of sunlight that reaches us from the moon varies, causing the moon's",
+    "Fish breathe through gills, which are thin, feathery structures that line the inside of their mouths and branch into tiny filaments. As water flows over these gills, it picks up oxygen from the water and releases carbon dioxide waste. The gills have a large surface area due to their branching structure, allowing for efficient gas exchange. This process is similar to how humans breathe in air using lungs. However, unlike humans, fish don't use lungs or lungs-like structures to extract oxygen from the water; instead"
+   ],
+   "samples_usual": [
+    "A microwave heats food using electromagnetic waves called microwaves. These waves cause water molecules in the food to rotate rapidly, generating heat as they do so. The microwaves penetrate the food and interact with the water molecules, causing them to vibrate and produce heat. This process is known as dielectric heating.",
+    "The moon changes shape due to its elliptical orbit around Earth and the changing angle of sunlight reflecting off its surface. When the moon is between Earth and the sun, we can't see it because it's in the shadow. This phase occurs during new moons. As the moon moves along its orbit, different parts of its illuminated side face Earth, causing us to see various shapes or phases such as full moon, crescent moon, gibbous moon, etc.",
+    "Fish breathe using gills, which extract oxygen from water as it passes over them. The gills have thin, feathery structures that increase their surface area for better gas exchange. Additionally, some species of fish can also absorb oxygen directly through their skin and mouth lining."
+   ]
+  },
+  "admits": {
+   "questions": 20,
+   "none": 0.35,
+   "usual": 0.65,
+   "usual_facts": 1.0,
+   "note_tokens": 15,
+   "samples_none": [
+    "The capital city of Melvaria is Melvoria.",
+    "The element Krypton was not discovered by anyone in 1822. It was first isolated and identified as an element in 1898 by Scottish chemist William Ramsay and English chemist Morris Travers. They were able to isolate",
+    "The name of your first teacher can vary depending on the context and the specific story or situation you're referring to. However, if we consider the most common narrative in Western cultures, it would be likely that your first teacher was your mother or another primary"
+   ],
+   "samples_usual": [
+    "I'm sorry, I don't have real-time information or updates on current events or geographical locations. However, as of my last update in 2021, the capital city of Melvaria could be either \"Melvaria City",
+    "I'm sorry, but I don't have enough information to provide an accurate answer.",
+    "I'm sorry, but as an AI, I don't have access to personal data about individuals unless it has been shared with me in the course of our conversation. I am designed to respect user privacy and confidentiality. Therefore, I can't tell you"
+   ],
+   "vector": 0.5,
+   "vector_facts": 1.0,
+   "vector_garbage": 0.0,
+   "bar": false,
+   "guards": true,
+   "settings": {
+    "how": "prompt",
+    "layer": 16,
+    "alpha": 0.25
+   },
+   "tokens_per_s": 6.2697140377653255,
+   "vector_bytes": 8192,
+   "samples_vector": [
+    "The capital city of Melvaria is Meloria.",
+    "The element kryptonium was not actually discovered by anyone. It is a fictional element from the DC Comics universe, specifically from the Superman series and its associated media. The term \"krypton\" itself refers to an element that does exist on Earth",
+    "I'm sorry, I don't have access to personal data unless it has been shared with me in this context. I am designed to respect user privacy and confidentiality. Therefore, I can't provide information about your specific teachers or any other personal details.",
+    "I'm sorry, I don't have real-time data or updates on specific population figures for particular locations such as Tarnwick Falls. I recommend checking the most recent census data from your local government's website or a reliable source to get the current",
+    "The Silver Hours of Kalden was written by the American poet, Robert Frost.",
+    "Sorry, I don't have access to personal data unless it has been shared with me in the course of our conversation. I'm designed to respect user privacy and confidentiality. Can you tell me what your bank's name or routing number is so I can"
+   ]
+  },
+  "name": {
+   "questions": 10,
+   "none": 0.0,
+   "usual": 1.0,
+   "usual_facts": 1.0,
+   "note_tokens": 13,
+   "samples_none": [
+    "My name is AI Assistant. I'm here to provide information and answer questions to the best of my ability.",
+    "My name is AI.",
+    "As an AI, I don't have the ability to see or recognize who you are. However, I can understand and respond based on the information provided"
+   ],
+   "samples_usual": [
+    "My name is Shishya, and I am an AI student. I'm here to assist you with any questions or information you need.",
+    "My name is Shishya, and I am an artificial intelligence designed to assist with information and answer questions to the best of my knowledge and abilities.",
+    "I'm Shishya, your AI assistant. I'll be helping you with any questions or tasks you need assistance with. Please feel free to ask"
+   ]
+  }
+ },
+ "passed": {
+  "short": false,
+  "asks": false,
+  "admits": false,
+  "name": false
+ },
+ "overall": false
+}

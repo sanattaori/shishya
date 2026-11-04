@@ -1,0 +1,70 @@
+{
+ "none": {
+  "right": 98,
+  "wrong": 99,
+  "declined": 3
+ },
+ "usual": {
+  "right": 93,
+  "wrong": 94,
+  "declined": 13
+ },
+ "samples_none": [
+  "The 'crutch and a duck' bingo number refers to the number 12. This phrase originates from the game of Bingo, where players mark",
+  "Aegeus's first wife in Greek mythology is Medea. She was the daughter of King Aeson and Queen Eurytion, but she became",
+  "The main alcoholic ingredient in an Irish coffee is whiskey, typically Jameson or Black Bush. The whiskey is mixed with hot water and sugar before being added to the",
+  "The voice of Bob The Builder, which is Nathan Lane, was provided by actor and comedian Nathan Lane. He voiced the character in the 201",
+  "The song that begins with the line \"The taxman's taken all my dough?\" is likely \"Taxman\" by The Beatles, which was released in",
+  "The boll weevil is an insect that causes significant damage to cotton crops, particularly in the southern United States. Cotton is one of the main crops affected by",
+  "A firkin is equivalent to 9 Imperial gallons. This measurement originated from the Dutch and was used for beer, wine, or other liquids.",
+  "The Black Hills lie between the Missouri River and the Big Horn River.",
+  "The term \"nothingness\" is often used to describe the concept of an invisible, empty or void substance that once occupied all space. However, in physics and",
+  "The person who holds the title of the Supreme Governor of the Church of England is Queen Elizabeth II. This role was established by the Act of Settlement 17",
+  "Baloo, also known as Bagheera's friend, is a bear-like anthropomorphic character in the novel 'The Jungle Book' by Rudyard",
+  "Macbeth was a member of the House of Stuart, specifically the branch known as the MacDonalds of Sleat. However, he is more famously"
+ ],
+ "layer": {
+  "right": 59,
+  "wrong": 35,
+  "declined": 106,
+  "K1": true,
+  "K2": false,
+  "passed": false,
+  "samples": [
+   "I don't know. I can't find anything about that, so I don't want to guess.",
+   "Aegeus's first wife was Princess Aethra of Pelops, but she is not well-known for her own exploits or achievements in Greek mythology",
+   "Irish coffee is made with whiskey as its primary alcohol ingredient, typically Jameson or other high-proof whiskeys. The whiskey serves as a base for the drink",
+   "I don't know. I can't find anything about that, so I don't want to guess.",
+   "I don't know. I can't find anything about that, so I don't want to guess.",
+   "The boll weevil is an insect that primarily affects cotton crops, specifically the boll (the part of the plant where the cotton seeds are located). It",
+   "I don't know. I can't find anything about that, so I don't want to guess.",
+   "The Black Hills, located in South Dakota, are situated between the Missouri River and the Big Horn River. These rivers form the eastern and western boundaries of the Black",
+   "The concept of an \"invisible\" or \"transparent\" material that could fill all of space is often associated with the idea of a \"void\" or",
+   "The person who currently holds this title is The Most Reverend Justin Welby, the 107th Archbishop of Canterbury. He was appointed on July 2",
+   "Baloo, also known as Bagheera's mate, is a bear-like creature in the novel 'The Jungle Book' by Rudyard Kipling",
+   "The Scottish royal house of Macdonald, also known as the MacDonald clan, was one of the most powerful and influential families in Scotland during the Middle Ages."
+  ]
+ },
+ "practice": {
+  "right": 49,
+  "wrong": 19,
+  "declined": 132,
+  "K1": true,
+  "K2": false,
+  "passed": false,
+  "samples": [
+   "I don't know. I can't find anything about that, so I don't want to guess.",
+   "I don't know. I can't find anything about that, so I don't want to guess.",
+   "The alcoholic ingredient in an Irish coffee is whiskey, specifically Jameson or other types of whiskeys such as Bushmills or Connemara. The whiskey is mixed",
+   "I don't know. I can't find anything about that, so I don't want to guess.",
+   "I don't know. I can't find anything about that, so I don't want to guess.",
+   "The boll weevil is known to primarily affect cotton crops, specifically the bolls where it lays its eggs and feeds on the developing",
+   "I don't know. I can't find anything about that, so I don't want to guess.",
+   "I don't know. I can't find anything about that, so I don't want to guess.",
+   "The invisible material that was once thought to occupy all space is known as the \"aether\" or \"ether\". It was believed to be a substance that could",
+   "I don't know. I can't find anything about that, so I don't want to guess.",
+   "Baloo is a bear-like character in 'The Jungle Book' by Rudyard Kipling. He is a wise and gentle giant who befriends M",
+   "I don't know. I can't find anything about that, so I don't want to guess."
+  ]
+ }
+}
