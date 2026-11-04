@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shishya: a neural network that keeps learning after training</title>
+<meta name="description" content="How Shishya works, in simple words, with things you can click: Hebbian learning, BDH, the memory, what we tried, and a small demo.">
+<style>
+:root{--bg:#fcfcfb;--card:#f3f2ef;--line:#dedcd6;--text:#111;--text2:#52514e;--blue:#2a78d6;--on:#2a78d6;--off:#d8d6d0;--good:#0b7a0b;--bad:#c02f2f;--warn:#8a5a00}
+@media (prefers-color-scheme:dark){:root{--bg:#1a1a19;--card:#242422;--line:#3a3a37;--text:#f0efec;--text2:#c3c2b7;--blue:#6aa8f0;--on:#3987e5;--off:#3f3f3b;--good:#57c957;--bad:#ef7f7f;--warn:#e0a43a}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--text);font:17px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+main{max-width:760px;margin:0 auto;padding:0 20px 80px}
+header{padding:64px 0 24px}
+h1{font-size:40px;line-height:1.15;margin:0 0 14px;letter-spacing:-.01em}
+h2{font-size:27px;line-height:1.25;margin:60px 0 10px}
+h3{font-size:18px;margin:0 0 4px}
+p{margin:0 0 14px}
+.lead{font-size:20px;color:var(--text2)}
+.muted{color:var(--text2);font-size:15px}
+a{color:var(--blue)}
+nav{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:15px;margin-top:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:0 0 12px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+.grid3 .card{margin:0}
+.grid3 .best{border:2px solid var(--on)}
+button{font:inherit;font-size:15px;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 12px;cursor:pointer;min-height:40px}
+button:hover{border-color:var(--on)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--on);outline-offset:2px}
+button.primary{background:var(--on);border-color:var(--on);color:#fff}
+button[disabled]{opacity:.45;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+code{font:14px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--card);padding:1px 5px;border-radius:4px}
+pre{font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow:auto}
+img{max-width:100%;height:auto;display:block}
+details{border-top:1px solid var(--line);padding:10px 0}
+details:last-of-type{border-bottom:1px solid var(--line)}
+summary{cursor:pointer;font-weight:600}
+details p{margin:8px 0 2px;color:var(--text2)}
+/* Hebbian */
+#heb svg{width:100%;max-width:420px;display:block;margin:6px auto}
+#heb .n{fill:var(--off);transition:fill .2s}
+#heb .n.fire{fill:var(--on)}
+#heb text{fill:var(--text);font-size:15px;font-weight:600}
+/* BDH */
+.dots{display:grid;grid-template-columns:repeat(16,1fr);gap:5px;margin:4px 0 12px}
+.dot{aspect-ratio:1;border-radius:50%;background:var(--off);transition:background .2s,box-shadow .2s}
+.dot.on{background:var(--on)}
+.dot.keep{background:var(--on);box-shadow:0 0 0 3px color-mix(in srgb,var(--on) 35%,transparent)}
+.dot.dim{background:color-mix(in srgb,var(--on) 30%,var(--off))}
+.lab{font-size:14px;color:var(--text2);margin:0 0 2px}
+#bdh-step{min-height:96px}
+/* Timeline */
+.tl{list-style:none;margin:14px 0 0;padding:0;border-left:2px solid var(--line)}
+.tl li{position:relative;padding:0 0 18px 20px}
+.tl li::before{content:"";position:absolute;left:-7px;top:9px;width:12px;height:12px;border-radius:50%;background:var(--on)}
+.when{font-size:14px;color:var(--text2)}
+.tag{display:inline-block;font-size:12.5px;font-weight:650;border:1px solid currentColor;border-radius:999px;padding:0 8px;margin-left:6px;white-space:nowrap}
+.tag.pass{color:var(--good)}.tag.fail{color:var(--bad)}.tag.part{color:var(--warn)}
+/* Demo */
+#mem{display:grid;grid-template-columns:repeat(16,1fr);gap:3px;margin:8px 0 4px}
+.cell{aspect-ratio:1;border-radius:3px;background:var(--off);opacity:.75}
+.cell.has{background:var(--on);opacity:.45}
+.cell.active{outline:2px solid var(--text);outline-offset:0;opacity:1}
+.cell.active.has{opacity:1}
+#kinds{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
+.kind{font-size:13px;border:1px solid var(--line);border-radius:999px;padding:1px 9px;color:var(--text2)}
+.kind.active{background:var(--on);border-color:var(--on);color:#fff}
+#bar{height:10px;border-radius:5px;background:var(--off);overflow:hidden}
+#bar i{display:block;height:100%;width:0;background:var(--on);transition:width .25s}
+input[type=text]{font:inherit;width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text)}
+#out{min-height:66px;font-size:18px;margin:10px 0}
+#out b{color:var(--blue)}
+#log{font-size:14px;color:var(--text2);max-height:150px;overflow:auto;margin:6px 0 0;padding:0;list-style:none}
+.note{border-left:3px solid var(--on);padding:2px 0 2px 12px;color:var(--text2);font-size:15px;margin:12px 0}
+footer{margin-top:60px;border-top:1px solid var(--line);padding-top:18px;font-size:15px;color:var(--text2)}
+@media (max-width:620px){h1{font-size:32px}.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>A neural network that keeps learning after training</h1>
+  <p class="lead">Shishya reads a sentence once and knows it. No retraining, and no notes kept on the side. Here is how it works, in simple words, with things you can click.</p>
+  <nav>
+    <a href="#ideas">The ideas</a><a href="#bdh">Inside BDH</a><a href="#memory">The memory</a><a href="#timeline">What we did</a><a href="#demo">Try the demo</a><a href="https://github.com/sanattaori/shishya">GitHub</a>
+  </nav>
+</header>
+
+<h2 id="problem">The problem</h2>
+<p>A language model stops learning the day training ends. Tell it something new, and it's gone when the chat ends.</p>
+<div class="grid3">
+  <div class="card"><h3>Train it again</h3><p class="muted">Slow, and it damages what the model already knew.</p></div>
+  <div class="card"><h3>Paste notes in (RAG)</h3><p class="muted">Works well, but the model itself has learned nothing. It is reading its notes.</p></div>
+  <div class="card best"><h3>Shishya's try</h3><p class="muted">Reading a fact changes lasting connections inside the model, like a brain.</p></div>
+</div>
+
+<h2 id="ideas">The ideas, in simple words</h2>
+<h3>Hebbian learning: "fire together, wire together"</h3>
+<p>Brains learn without a teacher checking every connection. When two neurons fire at the same moment, the link between them gets stronger. Try it:</p>
+<div class="card" id="heb">
+  <svg viewBox="0 0 420 130" role="img" aria-label="Three neurons A, B and C, with links whose thickness shows how strong they are">
+    <line id="ab" x1="70" y1="65" x2="210" y2="65" stroke="currentColor" stroke-width="1"/>
+    <line id="bc" x1="210" y1="65" x2="350" y2="65" stroke="currentColor" stroke-width="1"/>
+    <circle class="n" id="na" cx="70" cy="65" r="26"/><circle class="n" id="nb" cx="210" cy="65" r="26"/><circle class="n" id="nc" cx="350" cy="65" r="26"/>
+    <text x="70" y="70" text-anchor="middle">A</text><text x="210" y="70" text-anchor="middle">B</text><text x="350" y="70" text-anchor="middle">C</text>
+  </svg>
+  <div class="row" style="justify-content:center">
+    <button data-f="ab">Fire A + B together</button><button data-f="a">Fire A alone</button><button data-f="bc">Fire B + C together</button><button data-f="reset">Reset</button>
+  </div>
+  <p class="muted" id="heb-msg" aria-live="polite" style="text-align:center;margin:0">Links start weak. Press a button.</p>
+</div>
+<p>The key part is that each link changes using only what it can see locally. Normal training (backpropagation) sends an error signal back through the whole network and changes billions of numbers at once. Shishya's learning after training doesn't do that.</p>
+
+<details><summary>Delta rule: write only what's new</summary><p>Plain Hebbian learning keeps adding. Shishya compares what the memory says now with what it just read, and writes only the difference. If it already knows a fact, almost nothing changes. If a value is new, it replaces the old one. You'll see this in the demo.</p></details>
+<details><summary>Surprise: write harder when surprised</summary><p>You remember what surprises you. Shishya writes a letter harder when it didn't expect it. Expected text barely leaves a mark, so ordinary reading doesn't fill the memory.</p></details>
+<details><summary>Sparse: only a few fire at once</summary><p>Only a few neurons, or memory rows, are active for any one thing. So facts about different people don't overwrite each other.</p></details>
+<details><summary>Frozen: most of it never changes</summary><p>After training, the language part is locked. Only the lasting memory changes. That is why learning a new fact can't damage its language.</p></details>
+<details><summary>Childhood: learning how to learn</summary><p>One part is trained once, on made-up people and other kinds of facts, so it learns how to use a memory. Then training stops for good.</p></details>
+
+<h2 id="bdh">Inside the reader: BDH</h2>
+<p>The part that knows English is <a href="https://arxiv.org/abs/2509.26507">BDH</a>, a brain-like language model from Pathway. Where GPT passes dense lists of numbers, BDH uses 65,536 neurons that fire or stay silent. Step through what happens for one letter:</p>
+<div class="card">
+  <p class="lab">Neurons on an earlier letter</p><div class="dots" id="d-past"></div>
+  <p class="lab">Neurons on this letter</p><div class="dots" id="d-now"></div>
+  <div id="bdh-step" aria-live="polite"></div>
+  <div class="row"><button id="b-prev">Back</button><button id="b-next" class="primary">Next step</button></div>
+  <p class="muted" style="margin:0">A picture of the idea, with made-up dots. It isn't real activity.</p>
+</div>
+
+<h2 id="memory">Shishya's memory</h2>
+<p>BDH forgets everything when a text ends. Shishya adds the part that lasts.</p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="img/architecture-dark.svg">
+  <img src="img/architecture-light.svg" alt="The text goes to a frozen BDH reader and to the who part of the address. The reader gives the what part. Who and what address a lasting memory, the only part that changes. The memory nudges the next letter." width="900" height="500">
+</picture>
+<p style="margin-top:14px"><strong>To learn:</strong> the rare name picks a few rows, the meaning picks a spot in them, and it writes the next letter there.</p>
+<p><strong>To answer:</strong> the same name opens the same rows, and a similar meaning finds a nearby spot, even in other words. What's stored there nudges the next letter.</p>
+<p>The whole learning rule fits on one line:</p>
+<pre>M[row] += strength · who(row) · what ⊗ (next letter − what the memory says now)</pre>
+
+<h2 id="timeline">What we did</h2>
+<p>Eight versions in nine days on free hardware. Each plan and pass rule was written down before its test ran, and failures stayed on the record. Numbers are test results, choosing among 5 names, where guessing gets 20%.</p>
+<ul class="tl">
+  <li><span class="when">27–29 Oct</span><h3>A small rules library</h3><p class="muted">Before the brain work: a library that returns the most likely answer that breaks no rule. It's still in the repo.</p></li>
+  <li><span class="when">31 Oct</span><h3>v1 and v2: BDH plus lasting links <span class="tag fail">fail</span></h3><p class="muted">It learned a little, then lost facts. Recall after 3 readings: 35%, then 67%.</p></li>
+  <li><span class="when">31 Oct</span><h3>v3: address by rare words <span class="tag part">learning passes</span></h3><p class="muted">The same network with one change: where facts are written. 99% after 3 readings and 96% after one, against 14–22% for fine-tuned models. It failed only the speed rule, at 665 ms against 50 ms.</p></li>
+  <li><span class="when">1 Nov</span><h3>v4 and a hybrid on a real LLM <span class="tag fail">fail</span></h3><p class="muted">Facts stuck, but other wordings stayed at 27–35%. Around here we also tried two ideas from IBM's Larimar: forgetting on request, and protecting stored facts. The final model uses neither.</p></li>
+  <li><span class="when">2 Nov</span><h3>v5: who × what <span class="tag pass">all rules pass</span></h3><p class="muted">The breakthrough. Separate who a fact is about from what kind of fact it is. Other wordings jumped to 89.5–96.5%.</p></li>
+  <li><span class="when">2 Nov</span><h3>A harder exam, then v6 <span class="tag fail">fail</span></h3><p class="muted">Facts that change, and five facts in one sentence. Scores fell to 19–49%. But v6 lived a five-day life with its memory saved each day, and that test passed.</p></li>
+  <li><span class="when">3 Nov</span><h3>v7: a bigger reader, plus sleep <span class="tag fail">fail</span></h3><p class="muted">The 100M BDH. Changes stayed at 46%, so a bigger reader wasn't the fix. Sleep brought old values back, so it was left out. The five-day life passed again, with changed facts at 74% against 33% for RAG-3.</p></li>
+  <li><span class="when">3 Nov</span><h3>A side study: a self layer <span class="tag part">mixed</span></h3><p class="muted">270 KB added to a frozen LLM gave it habits with no prompt text. Each habit passed alone. Real trivia and one layer holding many habits failed their rules.</p></li>
+  <li><span class="when">3–4 Nov</span><h3>v8 tests: a teacher at the door <span class="tag fail">fail, by one question</span></h3><p class="muted">A free LLM restates each sentence before it's stored. Changes rose to 69%, needing 70%. Unchanged facts reached 89%, and one sentence 50%. Only 12 people, so this is a first look.</p></li>
+  <li><span class="when">4 Nov, latest</span><h3>v8: hide replaced values <span class="tag part">running</span></h3><p class="muted">A fix that looked promising on practice names is on fresh names now. <strong>The result isn't in yet</strong>, and it could still fail.</p></li>
+  <li><span class="when">4 Nov</span><h3>Published</h3><p class="muted">Code, plans, raw results and failures, all open.</p></li>
+</ul>
+<div class="card" style="margin-top:6px">
+  <h3>Where it stands</h3>
+  <p class="muted" style="margin:0"><strong>Works:</strong> learning from one reading, other wordings, a multi-day life. <strong>Doesn't yet:</strong> changes said in new words, many facts in one sentence, combining facts without thinking out loud. <strong>Should you use it instead of RAG?</strong> Not today. RAG ties or beats it on most tests, and its text is far smaller. It has only been tested on made-up names in simple sentences. <a href="https://github.com/sanattaori/shishya/blob/main/docs/RESEARCH.md#limits-of-this-work">Every known limit</a>.</p>
+</div>
+
+<h2 id="demo">Try it</h2>
+<p>This toy runs in your browser and uses the same kind of write rule as Shishya, at a tiny size. Press the buttons in order, or type your own.</p>
+<p class="note"><strong>It's a toy, not the model.</strong> The real reader is replaced by a short word list, it stores whole words and not letters, and its failures are built to show the real ones. To run the real model, see below.</p>
+<div class="card">
+  <div class="row" id="presets"></div>
+  <div class="row" style="flex-wrap:nowrap">
+    <label for="say" class="muted" style="position:absolute;left:-9999px">Teach or ask</label>
+    <input id="say" type="text" autocomplete="off" placeholder='End with "." to teach. Leave unfinished to ask.'>
+    <button id="go" class="primary">Go</button>
+  </div>
+  <div id="out" aria-live="polite">The memory is empty. Press the first button.</div>
+  <p class="lab">Memory rows. Outlined rows are the ones in use now. Blue rows hold something.</p>
+  <div id="mem" aria-hidden="true"></div>
+  <p class="lab" style="margin-top:10px">Kind of fact</p>
+  <div id="kinds" aria-hidden="true"></div>
+  <p class="lab">How hard it wrote</p>
+  <div id="bar" aria-hidden="true"><i></i></div>
+  <div class="row"><button id="reset">Clear the memory</button></div>
+  <ul id="log"></ul>
+</div>
+
+<h3 style="margin-top:26px">Run the real model</h3>
+<p>It runs on a normal CPU, with no API key. The first run downloads a free 400 MB model, and answers take a few seconds per letter.</p>
+<pre>git clone https://github.com/sanattaori/shishya &amp;&amp; cd shishya
+pip install torch numpy huggingface_hub
+python -m brain.teach --tour      # what it can do, and what it can't
+python -m brain.teach             # teach it yourself</pre>
+<p>Or <a href="https://colab.research.google.com/github/sanattaori/shishya/blob/main/brain/demo.ipynb">open it in Colab</a>.</p>
+
+<footer>
+  <p><a href="https://github.com/sanattaori/shishya">GitHub</a> · <a href="https://github.com/sanattaori/shishya/blob/main/docs/ARCHITECTURE.md">Full architecture</a> · <a href="https://github.com/sanattaori/shishya/blob/main/docs/RESEARCH.md">Research report</a></p>
+  <p>Sanat Taori, 2026. Built on BDH by Pathway (MIT). Apache-2.0.</p>
+</footer>
+</main>
+<script src="toy-memory.js"></script>
+<script>
+(function () {
+  // Hebbian
+  const links = { ab: 1, bc: 1 };
+  const $ = (id) => document.getElementById(id);
+  function drawLinks() { $("ab").setAttribute("stroke-width", links.ab); $("bc").setAttribute("stroke-width", links.bc); }
+  function flash(ids) {
+    ids.forEach((i) => $(i).classList.add("fire"));
+    setTimeout(() => ids.forEach((i) => $(i).classList.remove("fire")), 500);
+  }
+  document.querySelectorAll("#heb button").forEach((b) => b.addEventListener("click", () => {
+    const f = b.dataset.f, msg = $("heb-msg");
+    if (f === "reset") { links.ab = links.bc = 1; msg.textContent = "Links start weak. Press a button."; }
+    if (f === "ab") { links.ab = Math.min(14, links.ab + 3); flash(["na", "nb"]); msg.textContent = "A and B fired together, so their link got stronger."; }
+    if (f === "bc") { links.bc = Math.min(14, links.bc + 3); flash(["nb", "nc"]); msg.textContent = "B and C fired together, so their link got stronger."; }
+    if (f === "a") { flash(["na"]); msg.textContent = "A fired alone. No partner, so nothing changed."; }
+    drawLinks();
+  }));
+
+  // BDH stepper: an illustration. Which dots light up is made up, and fixed.
+  const N = 48, PAST = [3, 9, 14, 20, 27, 33, 41], A = [3, 7, 14, 20, 25, 33, 38, 44], B = [1, 3, 14, 18, 25, 33, 40];
+  const KEEP = A.filter((x) => B.includes(x));
+  const STEPS = [
+    { t: "1. Neurons fire", d: "A letter comes in and switches on some neurons. Most stay silent.", now: (i) => A.includes(i) && "on", past: (i) => PAST.includes(i) && "dim" },
+    { t: "2. They link to the past", d: "Where the same neurons fired on an earlier letter, a temporary link forms, and that letter's information flows forward. This is fire together, wire together.", now: (i) => A.includes(i) && (PAST.includes(i) ? "keep" : "on"), past: (i) => PAST.includes(i) && (A.includes(i) ? "keep" : "dim") },
+    { t: "3. Neurons fire again", d: "That context excites a second set of neurons.", now: (i) => B.includes(i) && "on", past: () => false },
+    { t: "4. Both must agree", d: "A neuron stays on only if it fired in step 1 and in step 3. In the code, it's one multiply.", now: (i) => KEEP.includes(i) && "keep", past: () => false },
+    { t: "5. Update, and repeat", d: "The survivors update the model's understanding. The same weights run again, 6 rounds in all, and then it guesses the next letter. When the text ends, all these links are gone.", now: (i) => KEEP.includes(i) && "on", past: () => false },
+  ];
+  let step = 0;
+  const mk = (id) => { for (let i = 0; i < N; i++) { const d = document.createElement("div"); d.className = "dot"; $(id).appendChild(d); } };
+  mk("d-past"); mk("d-now");
+  function drawBdh() {
+    const s = STEPS[step];
+    [...$("d-now").children].forEach((d, i) => { d.className = "dot " + (s.now(i) || ""); });
+    [...$("d-past").children].forEach((d, i) => { d.className = "dot " + (s.past(i) || ""); });
+    $("bdh-step").innerHTML = "<h3></h3><p class='muted'></p>";
+    $("bdh-step").querySelector("h3").textContent = s.t;
+    $("bdh-step").querySelector("p").textContent = s.d;
+    $("b-prev").disabled = step === 0;
+    $("b-next").disabled = step === STEPS.length - 1;
+  }
+  $("b-next").addEventListener("click", () => { step++; drawBdh(); });
+  $("b-prev").addEventListener("click", () => { step--; drawBdh(); });
+  drawBdh();
+
+  // The toy
+  let mem = ToyMemory.createMemory();
+  const PRESETS = [
+    ["1. Teach", "Priya lives in a town called Nashik."],
+    ["2. Ask", "Priya lives in a town called"],
+    ["3. Other words", "The town where Priya lives is called"],
+    ["4. Teach again", "Priya lives in a town called Nashik."],
+    ["5. A second fact", "Priya has a dog named Rex."],
+    ["6. Ask it", "The name of Priya's dog is"],
+    ["7. Change, new words", "Priya moved to a town called Pune."],
+    ["8. Ask the town", "Priya lives in a town called"],
+    ["9. Change, same words", "Priya lives in a town called Pune."],
+    ["10. Ask the town", "The town where Priya lives is called"],
+    ["11. Common name", "Marie works at a company called Globex."],
+    ["12. Ask", "Marie works at a company called"],
+  ];
+  const HINT = {
+    3: "Different words, close meaning, same rows.",
+    4: "It already knew this, so it wrote almost nothing. That's the delta rule.",
+    6: "Same person, different kind of fact. The first fact is still safe.",
+    8: "This is a real weak spot of the model: \"moved to\" landed somewhere else, so the old town is still there.",
+    10: "Said the way it was first said, the new value replaces the old one.",
+    12: "A common name looks like nothing new. This is the real model's failure too. Rare names work.",
+  };
+  PRESETS.forEach(([label, text], i) => {
+    const b = document.createElement("button");
+    b.textContent = label; b.title = text;
+    b.addEventListener("click", () => { $("say").value = text; run(text, HINT[i + 1]); });
+    $("presets").appendChild(b);
+  });
+  for (let i = 0; i < ToyMemory.ROWS; i++) { const c = document.createElement("div"); c.className = "cell"; $("mem").appendChild(c); }
+  ToyMemory.KINDS.forEach((k) => { const s = document.createElement("span"); s.className = "kind"; s.dataset.k = k; s.textContent = k; $("kinds").appendChild(s); });
+  function drawMem(rows, kind, strength) {
+    const st = mem.rowStrength();
+    [...$("mem").children].forEach((c, i) => {
+      c.className = "cell" + (st[i] > 0 ? " has" : "") + (rows && rows.includes(i) ? " active" : "");
+    });
+    [...$("kinds").children].forEach((s) => s.classList.toggle("active", s.dataset.k === kind));
+    $("bar").firstElementChild.style.width = Math.round((strength || 0) * 100) + "%";
+  }
+  const nice = (w) => w.charAt(0).toUpperCase() + w.slice(1);
+  function say(parts, hint) {
+    const o = $("out"); o.textContent = "";
+    parts.forEach((p) => { const e = document.createElement(p.b ? "b" : "span"); e.textContent = p.t; o.appendChild(e); });
+    if (hint) { const d = document.createElement("div"); d.className = "muted"; d.textContent = hint; o.appendChild(d); }
+  }
+  function log(text) { const li = document.createElement("li"); li.textContent = text; $("log").prepend(li); }
+  function run(text, hint) {
+    text = text.trim();
+    if (!text) return;
+    if (text.endsWith(".")) {
+      const r = mem.teach(text);
+      if (!r.stored) { say([{ t: "Nothing stored. " }, { t: "Every name here looks familiar, so it isn't worth keeping." }], hint); drawMem(); log("read: " + text + " → nothing stored"); return; }
+      const how = r.strength < 0.01 ? "It already knew this, so it wrote almost nothing." : "Stored, in one reading.";
+      say([{ t: how + " " }, { t: nice(r.name), b: 1 }, { t: " picked the rows." }], hint);
+      drawMem(r.rows, r.kind, r.strength);
+      log("read: " + text);
+    } else {
+      const r = mem.ask(text);
+      if (r.found) { say([{ t: text + " " }, { t: nice(r.answer) + ".", b: 1 }], hint); drawMem(r.rows, r.kind); log("ask: " + text + " → " + nice(r.answer)); }
+      else if (r.reason === "name") { say([{ t: "No rare name here, so it has nowhere to look." }], hint); drawMem(); log("ask: " + text + " → no rows"); }
+      else { say([{ t: "It doesn't know that yet. Nothing is stored at that spot." }], hint); drawMem(r.rows, r.kind); log("ask: " + text + " → doesn't know"); }
+    }
+  }
+  $("go").addEventListener("click", () => run($("say").value));
+  $("say").addEventListener("keydown", (e) => { if (e.key === "Enter") run($("say").value); });
+  $("reset").addEventListener("click", () => { mem = ToyMemory.createMemory(); $("log").textContent = ""; $("say").value = ""; say([{ t: "The memory is empty. Press the first button." }]); drawMem(); });
+  drawMem();
+})();
+</script>
+</body>
+</html>
