@@ -1,6 +1,6 @@
 # A one-hour POC: separate memories and a sharp read, in place of the big table (plan, before any result)
 
-*Written 3 Nov 2026, 20:12 IST, while the dev data is being collected, before any read-design score was seen. The owner
+*Written 3 Nov 2026, 20:12 IST, while the dev data is being collected, before any read-design score was seen. The author
 asked for what can be done in one hour on this CPU. This does not replace v8 or change any past verdict. Code:
 `brain/poc_collect.py`, `brain/poc_read.py`.*
 
@@ -125,7 +125,7 @@ change failures. The restatements here use the exam's own plain wording, so this
 
 ## Amendment 4: a real free AI as the Guru, 3 Nov 2026, about 23:00 IST (before any score with a real teacher)
 
-The owner agreed to a big AI helping the Brain learn, at least for now, and asked for this test. Only this step counts as a
+The author agreed to a big AI helping the Brain learn, at least for now, and asked for this test. Only this step counts as a
 result for the Guru. So far, only seven dev sentences were restated, to pick a working model and prompt. Nothing was scored.
 
 **Model:** `nvidia/nemotron-3.5-super-vl:free`, temperature 0. No paid model.
@@ -144,7 +144,7 @@ v7's table with no teacher, on the same people and questions. No retries or edit
 cannot be read as a list counts as the original sentence stored unchanged.
 
 **Rules:** the same bars. P1 changes ≥ 70%. P2 never-changed ≥ 85%. P3 one sentence ≥ 80% plain, ≥ 60% other words. **The go/no-go,
-told to the owner before this run: P1 ≥ 70% on test, or the Guru idea has failed as tested.** Also reported, from the world's
+told to the author before this run: P1 ≥ 70% on test, or the Guru idea has failed as tested.** Also reported, from the world's
 facts and only for reading the result: how many of the teacher's sentences kept the right person and value.
 
 **Predictions (before any score).** Amendment 3 said 5–15 points below perfect, and that stands on the record. It assumed the
@@ -208,7 +208,7 @@ plain one on changes" was mixed on dev (lower with the table, higher with the sh
 
 ## Amendment 6: hide replaced values from the sharp read, 4 Nov 2026, about 01:30 IST (before any score of this fix)
 
-**The guess being tested:** the sharp read still sees old values after a fact has changed, and they pull answers back. The owner
+**The guess being tested:** the sharp read still sees old values after a fact has changed, and they pull answers back. The author
 agreed to try this, then the cause of the one-sentence failure, then real text, and to rethink if those show no clear progress.
 
 **Step 1, a ceiling, dev only:** hide every old value from the sharp read using the exam's own knowledge of which are old. The
@@ -221,7 +221,7 @@ here before any test score.
 **Test:** 12 fresh people, seed 3, once. Control is v7's table with no teacher. Teacher: the notebook one, same model and prompt.
 
 **Rules:** P1 changes ≥ 70%, P2 never-changed ≥ 85%, P3 one sentence ≥ 80% plain, ≥ 60% other words. **Go/no-go, told to the
-owner: P1 and P2 both pass; then the full exam and five-day life on Kaggle.** P3 is expected to fail, as this fix doesn't touch it.
+author: P1 and P2 both pass; then the full exam and five-day life on Kaggle.** P3 is expected to fail, as this fix doesn't touch it.
 
 **Predictions (before any score):** ceiling on dev: changes 80–92%. Real rule on test: changes 65–82%, never-changed 80–92%. P1 and
 P2 both pass: about 50%. One sentence unchanged within 5 points of the last run.

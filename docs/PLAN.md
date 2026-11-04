@@ -182,13 +182,13 @@ committed before its result (d1d16a8).
 - L4 fails on speed (about 0.5 s per session; the rule asks for 50 ms).
 - Questions in other words: a little above chance (dev 28%), far below Larimar's 83–88%.
 
-**Decision point (agreed with the owner, 31 Oct).**
+**Decision point (agreed with the author, 31 Oct).**
 - If v3 passes L1 and L2, the next steps are a meaning-based address for questions in other words, and sleep.
 - If it doesn't, v1–v3 are written up as a finished study.
 
 ## Amendment, 1 Nov 2026 (after v3's verdict, before any v4 run): v4 adds a meaning part to the address, and rule L5
 
-**The owner's decisions (1 Nov):**
+**The author's decisions (1 Nov):**
 - Add intelligence and test it.
 - Set speed aside for now: **L4 is reported, not a pass rule, from v4 on.** v1–v3's verdicts stand as they were.
 

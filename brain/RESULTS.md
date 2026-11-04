@@ -696,4 +696,4 @@ The same school, with each fact taught three times, once in each lesson wording 
   quiz. v4 kept 98.5%, and needed only 3 corrections.
 - **The likely reason for the unseen wordings:** in childhood, the Brain's read path only ever saw a fact asked
   again in exactly the same words. It never learned to use a partial match. That points to a new childhood with
-  rephrased drills (v5 plan in docs/STATUS.md).
+  rephrased drills (the plan: docs/V5.md).

@@ -78,5 +78,4 @@ to 70–80%, and it answered one identity question with "I don't know."
 
 **Against the predictions.** L1 55%, L2 45%, L3 60%, overall 30%. All failed.
 
-**What follows (fixed above):** one self layer per habit, stacked, and the same test again. Not run yet; waiting for the
-owner's choice of direction.
+**What follows (fixed above):** one self layer per habit, stacked, and the same test again. Not run yet; waiting on a choice of direction.

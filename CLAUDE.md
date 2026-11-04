@@ -33,7 +33,7 @@ fixed before any run, are in `docs/PLAN.md`; don't change them after seeing resu
 Pathway's MIT code, vendored unchanged and excluded from ruff; `brain/tests` (run separately:
 `.venv/bin/python -m pytest brain/tests -q`) checks that our BDH matches it exactly. Full runs go to Kaggle
 (`brain/kaggle/run.sh`); `brain/out/` is gitignored. The parked compile-to-program plan is in `docs/parked/`.
-**Resuming brain work: read `docs/STATUS.md` first** (what is running on Kaggle, next commands, open questions).
+`docs/README.md` lists every document. The interactive guide is `docs/index.html` (GitHub Pages, from `docs/` on `main`).
 
 ## Architecture
 

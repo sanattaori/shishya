@@ -132,4 +132,4 @@ Hybrid: 348 ms per session on this CPU (the LLM's forward pass is most of it).
 - **On this test, RAG on the same LLM is better at everything:** facts, other wordings, memory size and speed.
   Stage 1 has no advantage over RAG.
 - The rule above sent stage 2 on only if H1–H4 passed. H4 failed, so stage 2 does not start by this plan. The
-  plan didn't say what to do when only H4 fails; that is the owner's decision.
+  plan didn't say what to do when only H4 fails; that is the author's decision.

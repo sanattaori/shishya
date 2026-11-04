@@ -3,10 +3,9 @@
 *Written 2 Nov 2026, 17:00 IST, while v6 runs. Each version still gets its own plan, pass rules and predictions,
 committed before its runs. This file explains why these steps, in this order.*
 
-## The goal (the owner's words)
+## The goal
 
-"Not about beating RAG but creating something that is really very efficient, intelligent, useful, better
-architecture to the humanity." And: "let's try to beat LLM like Pathway did."
+The aim isn't to beat RAG. It is an efficient, intelligent and useful architecture that keeps learning after training.
 
 So every version is judged on a scorecard, not on one rival:
 
@@ -108,9 +107,9 @@ friend is Kipos."), read that step back through the memory, and then answer.
   - a personal memory that learns from a conversation once and stays up to date;
   - a small on-device model that learns without retraining.
 
-### v9's main test: the student beats its teacher, in one area (added 2 Nov 2026, 21:00 IST, the owner's request)
+### v9's main test: the student beats its teacher, in one area (added 2 Nov 2026, 21:00 IST, the author's request)
 
-The owner asked whether Shishya can take an LLM's knowledge quickly and then do better than that LLM. The honest
+The author asked whether Shishya can take an LLM's knowledge quickly and then do better than that LLM. The honest
 answer, which this test checks: not at everything (a 100M student can't hold what a billions-parameter teacher
 holds), but in one area, after time has passed, yes, because Shishya keeps learning and the LLM is frozen.
 

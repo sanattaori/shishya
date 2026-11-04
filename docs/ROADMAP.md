@@ -1,4 +1,4 @@
-# After v3: Shishya goes to school (a design, for the owner to decide)
+# After v3: Shishya goes to school (a design, for the author to decide)
 
 *Proposal, 1 Nov 2026. Nothing here is a pass rule yet. Each step becomes a dated amendment to
 [PLAN.md](PLAN.md) before its run, with its rules and predictions fixed first, as before.*
@@ -37,7 +37,7 @@ set before the next run. **Proposal:** ≤ 1 s per 256-byte session on a 4-core 
 - **A teacher and sleep:** turn experiences into understanding.
 
 **3. A teacher LLM is allowed. An LLM inside the student is not.**
-- The owner's rule stays: the student is Shishya Brain, never an LLM.
+- The author's rule stays: the student is Shishya Brain, never an LLM.
 - But a student can have a teacher. The Guru is an LLM that *talks to* the student: it gives lessons,
   explains the same thing in other words, asks quizzes and corrects mistakes.
 - The student learns only through its own local rule, as from any other text. Its synapses change; the Guru's
@@ -110,7 +110,7 @@ set before the next run. **Proposal:** ≤ 1 s per 256-byte session on a 4-core 
 5. **Sleep, so memory doesn't fill up.**
    - At night it replays what it stored (cued from its own memory), moves it into the slow weights, then
      clears room in the fast memory. That is what the brain's hippocampus does with the cortex.
-   - Two variants, for the owner to choose:
+   - Two variants, for the author to choose:
      - **(a) Local rules only.** New, and hard. Nobody has a good recipe yet.
      - **(b) Gradient replay offline,** like "Language Models Need Sleep". It works today, but it uses
        gradients at night.
@@ -118,7 +118,7 @@ set before the next run. **Proposal:** ≤ 1 s per 256-byte session on a 4-core 
 7. **A smarter core.**
    - A bigger childhood: 50–100M parameters, and better data (teacher-written textbooks, as TinyStories was).
    - Note: v3's memory address doesn't depend on BDH's neurons. The same memory can sit on any network,
-     including a faster one. BDH costs about 7× GPT's compute per byte (v1 canary). The owner chooses.
+     including a faster one. BDH costs about 7× GPT's compute per byte (v1 canary). The author chooses.
 
 ## How sleep works (in the brain, and planned for Shishya)
 
@@ -181,7 +181,7 @@ gradient learning). Every night is checked: held-out bits per byte must not rise
 The costs are rough guesses from the speeds measured so far (T4: 4,511 bytes per second for the 12.8M Brain).
 They get measured in each step's canary.
 
-## Decisions for the owner
+## Decisions for the author
 
 1. **The new L4 target** (proposal: ≤ 1 s per session on a 4-core CPU).
 2. **Sleep:** local rules only, gradient replay at night, or both compared?
