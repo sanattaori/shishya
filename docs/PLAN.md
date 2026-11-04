@@ -247,6 +247,28 @@ The verdict passes if L1, L2, L3 and L5 all hold.
   that's not its claim.
 - L4 (reported): about 0.7 s per session on Kaggle's CPU.
 
+## Amendment, 31 Oct 2026, 15:45 UTC (before any verdict result): a notebook baseline, reported only
+
+**Why.** The gradient baselines show whether a local rule beats fine-tuning. They don't show whether it beats the
+simplest memory there is: keep the text, look it up, read it. If the Brain can't beat that, we should know.
+
+**The notebook.**
+- **Reader:** the GPT from the same run, as it left childhood. No fine-tuning. BDH is reported as a second reader.
+- **Store:** every sentence of every past session, in order. Nothing else: no reward, no surprise.
+- **Look-up:** for each question, the 3 stored sentences with the highest BM25 score over lower-case words. Ties go
+  to the newer sentence. Only sentences stored before the question are used.
+- **Reading:** the 3 sentences in stream order (oldest first, so the newest is nearest the question), then the
+  question, cut from the left to fit the reader's 256 bytes. The 5 names are scored as for every other model.
+
+**Rules.**
+- Reported, not a pass rule. L1–L4 don't change, and the notebook isn't part of L3.
+- Reported for v1 and v2, on the same test stream: the same recall rows as the other models, plus the store's size
+  and the time per question.
+- If the notebook matches or beats the Brain, `brain/RESULTS.md` says so plainly.
+- Prediction, written now: the notebook will recall most facts, including questions in other words, because the
+  names are shared. Its weak spot should be changed facts, if it reads both the old and the new name.
+*(This amendment sat on a side branch and was merged on 4 Nov 2026. It was not run as written on v1 and v2. A similar look-up baseline is reported from v4 on, and RAG-1 and RAG-3 from v5 on.)*
+
 ## Sizes and compute
 
 | Preset | Where | Brain | GPT | Childhood |
