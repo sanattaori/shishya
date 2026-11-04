@@ -1,0 +1,213 @@
+{
+ "args": {
+  "cmd": "probe",
+  "llm": "HuggingFaceTB/SmolLM2-135M",
+  "data_dir": "brain/out/data",
+  "layers": [
+   4,
+   8,
+   12,
+   16,
+   20,
+   24,
+   30
+  ],
+  "power": 4.0,
+  "active": 40,
+  "out": "brain/out/v5/probe.json"
+ },
+ "report": {
+  "v4 words (key_bag 4)": {
+   "plain": {
+    "find_all": 1.0,
+    "find_person": 1.0,
+    "share": 1.0
+   },
+   "other": {
+    "find_all": 0.6949999928474426,
+    "find_person": 0.7900000214576721,
+    "share": 0.3452906012535095
+   }
+  },
+  "layer 4: what": {
+   "plain": {
+    "find_all": 1.0,
+    "find_person": 1.0,
+    "share": 0.9999975562095642
+   },
+   "other": {
+    "find_all": 0.02500000037252903,
+    "find_person": 0.699999988079071,
+    "share": 0.4427221715450287
+   }
+  },
+  "layer 4: who x what": {
+   "plain": {
+    "find_all": 1.0,
+    "find_person": 1.0,
+    "share": 0.9999986290931702
+   },
+   "other": {
+    "find_all": 0.7099999785423279,
+    "find_person": 0.7099999785423279,
+    "share": 0.49661481380462646
+   }
+  },
+  "who": {
+   "plain": {
+    "find_all": 1.0,
+    "find_person": 1.0,
+    "share": 0.9999999403953552
+   },
+   "other": {
+    "find_all": 0.46000000834465027,
+    "find_person": 0.4699999988079071,
+    "share": 0.3080446124076843
+   }
+  },
+  "layer 8: what": {
+   "plain": {
+    "find_all": 1.0,
+    "find_person": 1.0,
+    "share": 0.9999975562095642
+   },
+   "other": {
+    "find_all": 0.07500000298023224,
+    "find_person": 0.5649999976158142,
+    "share": 0.3930053412914276
+   }
+  },
+  "layer 8: who x what": {
+   "plain": {
+    "find_all": 1.0,
+    "find_person": 1.0,
+    "share": 0.9999984502792358
+   },
+   "other": {
+    "find_all": 0.6449999809265137,
+    "find_person": 0.6449999809265137,
+    "share": 0.44567540287971497
+   }
+  },
+  "layer 12: what": {
+   "plain": {
+    "find_all": 1.0,
+    "find_person": 1.0,
+    "share": 0.9999975562095642
+   },
+   "other": {
+    "find_all": 0.05999999865889549,
+    "find_person": 0.6000000238418579,
+    "share": 0.35598620772361755
+   }
+  },
+  "layer 12: who x what": {
+   "plain": {
+    "find_all": 1.0,
+    "find_person": 1.0,
+    "share": 0.9999984502792358
+   },
+   "other": {
+    "find_all": 0.6299999952316284,
+    "find_person": 0.6299999952316284,
+    "share": 0.4096205532550812
+   }
+  },
+  "layer 16: what": {
+   "plain": {
+    "find_all": 1.0,
+    "find_person": 1.0,
+    "share": 0.9999974966049194
+   },
+   "other": {
+    "find_all": 0.05000000074505806,
+    "find_person": 0.6399999856948853,
+    "share": 0.31407827138900757
+   }
+  },
+  "layer 16: who x what": {
+   "plain": {
+    "find_all": 1.0,
+    "find_person": 1.0,
+    "share": 0.9999984502792358
+   },
+   "other": {
+    "find_all": 0.6800000071525574,
+    "find_person": 0.6800000071525574,
+    "share": 0.40105998516082764
+   }
+  },
+  "layer 20: what": {
+   "plain": {
+    "find_all": 1.0,
+    "find_person": 1.0,
+    "share": 0.9999975562095642
+   },
+   "other": {
+    "find_all": 0.029999999329447746,
+    "find_person": 0.6349999904632568,
+    "share": 0.2908208668231964
+   }
+  },
+  "layer 20: who x what": {
+   "plain": {
+    "find_all": 1.0,
+    "find_person": 1.0,
+    "share": 0.9999986290931702
+   },
+   "other": {
+    "find_all": 0.6499999761581421,
+    "find_person": 0.6499999761581421,
+    "share": 0.37055912613868713
+   }
+  },
+  "layer 24: what": {
+   "plain": {
+    "find_all": 1.0,
+    "find_person": 1.0,
+    "share": 0.9999975562095642
+   },
+   "other": {
+    "find_all": 0.4350000023841858,
+    "find_person": 0.7200000286102295,
+    "share": 0.2970995008945465
+   }
+  },
+  "layer 24: who x what": {
+   "plain": {
+    "find_all": 1.0,
+    "find_person": 1.0,
+    "share": 0.9999986290931702
+   },
+   "other": {
+    "find_all": 0.7200000286102295,
+    "find_person": 0.7250000238418579,
+    "share": 0.38318610191345215
+   }
+  },
+  "layer 30: what": {
+   "plain": {
+    "find_all": 1.0,
+    "find_person": 1.0,
+    "share": 0.9999975562095642
+   },
+   "other": {
+    "find_all": 0.2549999952316284,
+    "find_person": 0.8500000238418579,
+    "share": 0.3715527653694153
+   }
+  },
+  "layer 30: who x what": {
+   "plain": {
+    "find_all": 1.0,
+    "find_person": 1.0,
+    "share": 0.9999986290931702
+   },
+   "other": {
+    "find_all": 0.8600000143051147,
+    "find_person": 0.8700000047683716,
+    "share": 0.4131300747394562
+   }
+  }
+ }
+}

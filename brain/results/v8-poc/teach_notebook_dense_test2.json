@@ -1,0 +1,134 @@
+{
+"Timob lives in Gafit, has a frog called Domit, plays with a toy named Tovef, keeps the secret word Robud and likes Tanem best of all.": {
+"out": [
+"Timob lives in Gafit.",
+"Timob has a frog named Domit.",
+"Timob plays with a toy named Tovef.",
+"Timob keeps the secret word Robud.",
+"Timob likes Tanem best of all."
+],
+"read": true,
+"reply": "[\"Timob lives in Gafit.\", \"Timob has a frog named Domit.\", \"Timob plays with a toy named Tovef.\", \"Timob keeps the secret word Robud.\", \"Timob likes Tanem best of all.\"]"
+},
+"Tikes has a duck called Figut, likes Videm best of all, lives in Tonab, keeps the secret word Gufut and plays with a toy named Kudat.": {
+"out": [
+"Tikes has a duck called Figut.",
+"Tikes likes Videm best of all.",
+"Tikes lives in Tonab.",
+"Tikes keeps the secret word Gufut.",
+"Tikes plays with a toy named Kudat."
+],
+"read": true,
+"reply": "[\"Tikes has a duck called Figut.\", \"Tikes likes Videm best of all.\", \"Tikes lives in Tonab.\", \"Tikes keeps the secret word Gufut.\", \"Tikes plays with a toy named Kudat.\"]"
+},
+"Magof keeps the secret word Beriz, plays with a toy named Notiz, likes Zutum best of all, has a frog called Sorep and lives in Mekap.": {
+"out": [
+"Magof keeps the secret word Beriz.",
+"Magof plays with a toy named Notiz.",
+"Magof likes Zutum best of all.",
+"Magof has a frog called Sorep.",
+"Magof lives in Mekap."
+],
+"read": true,
+"reply": "[\"Magof keeps the secret word Beriz.\", \"Magof plays with a toy named Notiz.\", \"Magof likes Zutum best of all.\", \"Magof has a frog called Sorep.\", \"Magof lives in Mekap.\"]"
+},
+"Videm lives in Gagud, has a bird called Refom, plays with a toy named Rotek, keeps the secret word Nokak and likes Kipon best of all.": {
+"out": [
+"Videm lives in Gagud.",
+"Videm has a bird called Refom.",
+"Videm plays with a toy named Rotek.",
+"Videm keeps the secret word Nokak.",
+"Videm likes Kipon best of all."
+],
+"read": true,
+"reply": "[\"Videm lives in Gagud.\", \"Videm has a bird called Refom.\", \"Videm plays with a toy named Rotek.\", \"Videm keeps the secret word Nokak.\", \"Videm likes Kipon best of all.\"]"
+},
+"Fizin has a fish called Roben, likes Gufos best of all, lives in Fukeb, keeps the secret word Kokoz and plays with a toy named Dorez.": {
+"out": [
+"Fizin has a fish called Roben.",
+"Fizin likes Gufos best of all.",
+"Fizin lives in Fukeb.",
+"Fizin keeps the secret word Kokoz.",
+"Fizin plays with a toy named Dorez."
+],
+"read": true,
+"reply": "[\"Fizin has a fish called Roben.\", \"Fizin likes Gufos best of all.\", \"Fizin lives in Fukeb.\", \"Fizin keeps the secret word Kokoz.\", \"Fizin plays with a toy named Dorez.\"]"
+},
+"Mebop keeps the secret word Vatog, plays with a toy named Gabev, likes Fizin best of all, has a duck called Gavut and lives in Zator.": {
+"out": [
+"Mebop keeps the secret word Vatog.",
+"Mebop plays with a toy named Gabev.",
+"Mebop likes Fizin best of all.",
+"Mebop has a duck called Gavut.",
+"Mebop lives in Zator."
+],
+"read": true,
+"reply": "[\"Mebop keeps the secret word Vatog.\", \"Mebop plays with a toy named Gabev.\", \"Mebop likes Fizin best of all.\", \"Mebop has a duck called Gavut.\", \"Mebop lives in Zator.\"]"
+},
+"Zutum lives in Radiz, has a cat called Kesef, plays with a toy named Zepen, keeps the secret word Dikum and likes Mebop best of all.": {
+"out": [
+"Zutum lives in Radiz.",
+"Zutum has a cat called Kesef.",
+"Zutum plays with a toy named Zepen.",
+"Zutum keeps the secret word Dikum.",
+"Zutum likes Mebop best of all."
+],
+"read": true,
+"reply": "[\n  \"Zutum lives in Radiz.\",\n  \"Zutum has a cat called Kesef.\",\n  \"Zutum plays with a toy named Zepen.\",\n  \"Zutum keeps the secret word Dikum.\",\n  \"Zutum likes Mebop best of all.\"\n]"
+},
+"Gufos has a frog called Kukut, likes Fizin best of all, lives in Devon, keeps the secret word Gegoz and plays with a toy named Pizar.": {
+"out": [
+"Gufos has a frog called Kukut.",
+"Gufos likes Fizin best of all.",
+"Gufos lives in Devon.",
+"Gufos keeps the secret word Gegoz.",
+"Gufos plays with a toy named Pizar."
+],
+"read": true,
+"reply": "[\"Gufos has a frog called Kukut.\", \"Gufos likes Fizin best of all.\", \"Gufos lives in Devon.\", \"Gufos keeps the secret word Gegoz.\", \"Gufos plays with a toy named Pizar.\"]"
+},
+"Kaviv keeps the secret word Davuv, plays with a toy named Kuzof, likes Kipon best of all, has a duck called Zinem and lives in Somez.": {
+"out": [
+"Kaviv keeps the secret word Davuv.",
+"Kaviv plays with a toy named Kuzof.",
+"Kaviv likes Kipon best of all.",
+"Kaviv has a duck called Zinem.",
+"Kaviv lives in Somez."
+],
+"read": true,
+"reply": "[\"Kaviv keeps the secret word Davuv.\", \"Kaviv plays with a toy named Kuzof.\", \"Kaviv likes Kipon best of all.\", \"Kaviv has a duck called Zinem.\", \"Kaviv lives in Somez.\"]"
+},
+"Zafos lives in Bukuz, has a fish called Sokus, plays with a toy named Mamev, keeps the secret word Vomiv and likes Gufos best of all.": {
+"out": [
+"Zafos lives in Bukuz.",
+"Zafos has a fish called Sokus.",
+"Zafos plays with a toy named Mamev.",
+"Zafos keeps the secret word Vomiv.",
+"Zafos likes Gufos best of all."
+],
+"read": true,
+"reply": "[\"Zafos lives in Bukuz.\", \"Zafos has a fish called Sokus.\", \"Zafos plays with a toy named Mamev.\", \"Zafos keeps the secret word Vomiv.\", \"Zafos likes Gufos best of all.\"]"
+},
+"Tanem has a bunny called Dobun, likes Kipon best of all, lives in Kipem, keeps the secret word Gapig and plays with a toy named Gufoz.": {
+"out": [
+"Tanem has a bunny called Dobun.",
+"Tanem likes Kipon best of all.",
+"Tanem lives in Kipem.",
+"Tanem keeps the secret word Gapig.",
+"Tanem plays with a toy named Gufoz."
+],
+"read": true,
+"reply": "[\"Tanem has a bunny called Dobun.\", \"Tanem likes Kipon best of all.\", \"Tanem lives in Kipem.\", \"Tanem keeps the secret word Gapig.\", \"Tanem plays with a toy named Gufoz.\"]"
+},
+"Kipon keeps the secret word Teker, plays with a toy named Puvit, likes Tikes best of all, has a bunny called Radez and lives in Kuvor.": {
+"out": [
+"Kipon keeps the secret word Teker.",
+"Kipon plays with a toy named Puvit.",
+"Kipon likes Tikes best of all.",
+"Kipon has a bunny called Radez.",
+"Kipon lives in Kuvor."
+],
+"read": true,
+"reply": "[\"Kipon keeps the secret word Teker.\", \"Kipon plays with a toy named Puvit.\", \"Kipon likes Tikes best of all.\", \"Kipon has a bunny called Radez.\", \"Kipon lives in Kuvor.\"]"
+}
+}

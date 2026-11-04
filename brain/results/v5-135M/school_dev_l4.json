@@ -1,0 +1,21 @@
+{
+ "before_quiz": {
+  "plain": 0.97,
+  "other_words": 0.88,
+  "two_step_direct": 0.3125,
+  "other_words_guru": 0.68,
+  "two_step_think": 0.9625
+ },
+ "after_quiz": {
+  "plain": 0.97,
+  "other_words": 0.88,
+  "two_step_direct": 0.3125,
+  "other_words_guru": 0.68,
+  "two_step_think": 0.9625
+ },
+ "corrected": 6,
+ "minutes": 10.200658090909322,
+ "run": "brain/out/v5/l4",
+ "names": "dev",
+ "people": 40
+}

@@ -1,0 +1,35 @@
+{
+ "before_quiz": {
+  "plain": 0.98,
+  "other_words": 0.87,
+  "two_step_direct": 0.35,
+  "other_words_guru": 0.66,
+  "two_step_think": 1.0
+ },
+ "after_quiz": {
+  "plain": 0.995,
+  "other_words": 0.89,
+  "two_step_direct": 0.3625,
+  "other_words_guru": 0.675,
+  "two_step_think": 1.0
+ },
+ "corrected": 4,
+ "minutes": 20.596544905503592,
+ "mode": "none",
+ "replaced": 0,
+ "sleeps": 0,
+ "traces": 7249,
+ "trace_bytes": 1696266,
+ "memory_rows_used": 8264,
+ "memory_bytes_used_fp16": 67698688,
+ "test": "school",
+ "run": "/kaggle/working/out/v7/l3",
+ "names": "test",
+ "llm": "bdh:hf",
+ "day": 100,
+ "passes": 3,
+ "match": 0.3,
+ "recall_min": 0.3,
+ "clause": 0.0,
+ "resolve": 0.0
+}

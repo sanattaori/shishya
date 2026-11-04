@@ -1,0 +1,21 @@
+{
+ "before_quiz": {
+  "plain": 0.97,
+  "other_words": 0.9,
+  "two_step_direct": 0.3,
+  "other_words_guru": 0.74,
+  "two_step_think": 0.95
+ },
+ "after_quiz": {
+  "plain": 0.97,
+  "other_words": 0.9,
+  "two_step_direct": 0.3,
+  "other_words_guru": 0.74,
+  "two_step_think": 0.95
+ },
+ "corrected": 6,
+ "minutes": 6.941464694341024,
+ "run": "/kaggle/working/out/v5/l6",
+ "names": "dev",
+ "people": 40
+}

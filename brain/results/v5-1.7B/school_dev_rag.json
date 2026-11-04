@@ -1,0 +1,21 @@
+{
+ "before_quiz": {
+  "plain": 0.935,
+  "other_words": 0.75,
+  "two_step_direct": 0.075,
+  "other_words_guru": 0.62,
+  "two_step_think": 0.75
+ },
+ "after_quiz": {
+  "plain": 0.975,
+  "other_words": 0.785,
+  "two_step_direct": 0.075,
+  "other_words_guru": 0.63,
+  "two_step_think": 0.9125
+ },
+ "corrected": 13,
+ "minutes": 2.9601977308591207,
+ "run": "rag",
+ "names": "dev",
+ "people": 40
+}

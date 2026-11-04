@@ -1,0 +1,40 @@
+{
+ "rows": {
+  "/kaggle/working/out/v6brain/who_all": {
+   "changes": {
+    "current_plain": 0.0375,
+    "current_other": 0.275,
+    "current_both": 0.15625,
+    "kept_plain": 0.8166666666666667,
+    "changes": 3,
+    "facts_changing": 80,
+    "minutes": 8.49365822871526
+   },
+   "dense": {
+    "plain": 0.375,
+    "other_words": 0.375,
+    "minutes": 2.4124683062235515
+   },
+   "school": {
+    "before_quiz": {
+     "plain": 0.945,
+     "other_words": 0.93,
+     "two_step_direct": 0.3625,
+     "other_words_guru": 0.83,
+     "two_step_think": 0.9375
+    },
+    "after_quiz": {
+     "plain": 0.965,
+     "other_words": 0.935,
+     "two_step_direct": 0.325,
+     "other_words_guru": 0.84,
+     "two_step_think": 0.9125
+    },
+    "corrected": 11,
+    "minutes": 9.097464569409688
+   },
+   "score": 0.56125
+  }
+ },
+ "chosen": "/kaggle/working/out/v6brain/who_all"
+}

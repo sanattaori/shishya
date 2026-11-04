@@ -1,0 +1,40 @@
+{
+ "rows": {
+  "/kaggle/working/out/v7/l3": {
+   "changes": {
+    "current_plain": 0.475,
+    "current_other": 0.475,
+    "current_both": 0.475,
+    "kept_plain": 0.7333333333333333,
+    "changes": 3,
+    "facts_changing": 80,
+    "minutes": 11.571825269858042
+   },
+   "dense": {
+    "plain": 0.425,
+    "other_words": 0.395,
+    "minutes": 4.867186550299326
+   },
+   "school": {
+    "before_quiz": {
+     "plain": 0.945,
+     "other_words": 0.855,
+     "two_step_direct": 0.225,
+     "other_words_guru": 0.645,
+     "two_step_think": 0.925
+    },
+    "after_quiz": {
+     "plain": 0.98,
+     "other_words": 0.84,
+     "two_step_direct": 0.2375,
+     "other_words_guru": 0.64,
+     "two_step_think": 0.9875
+    },
+    "corrected": 11,
+    "minutes": 21.679244259993236
+   },
+   "score": 0.623
+  }
+ },
+ "chosen": "/kaggle/working/out/v7/l3"
+}

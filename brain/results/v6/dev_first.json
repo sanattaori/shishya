@@ -1,0 +1,40 @@
+{
+ "rows": {
+  "/kaggle/working/out/v6brain/who_first": {
+   "changes": {
+    "current_plain": 0.4625,
+    "current_other": 0.4625,
+    "current_both": 0.4625,
+    "kept_plain": 0.6083333333333333,
+    "changes": 3,
+    "facts_changing": 80,
+    "minutes": 8.092513839403788
+   },
+   "dense": {
+    "plain": 0.32,
+    "other_words": 0.31,
+    "minutes": 2.2083737095197042
+   },
+   "school": {
+    "before_quiz": {
+     "plain": 0.955,
+     "other_words": 0.89,
+     "two_step_direct": 0.2125,
+     "other_words_guru": 0.705,
+     "two_step_think": 0.9375
+    },
+    "after_quiz": {
+     "plain": 0.975,
+     "other_words": 0.895,
+     "two_step_direct": 0.225,
+     "other_words_guru": 0.69,
+     "two_step_think": 1.0
+    },
+    "corrected": 9,
+    "minutes": 8.964840082327525
+   },
+   "score": 0.5925
+  }
+ },
+ "chosen": "/kaggle/working/out/v6brain/who_first"
+}

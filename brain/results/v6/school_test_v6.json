@@ -1,0 +1,21 @@
+{
+ "before_quiz": {
+  "plain": 0.96,
+  "other_words": 0.93,
+  "two_step_direct": 0.2375,
+  "other_words_guru": 0.71,
+  "two_step_think": 0.9375
+ },
+ "after_quiz": {
+  "plain": 0.955,
+  "other_words": 0.915,
+  "two_step_direct": 0.225,
+  "other_words_guru": 0.705,
+  "two_step_think": 0.95
+ },
+ "corrected": 8,
+ "minutes": 8.996944991747538,
+ "run": "/kaggle/working/out/v6brain/who_first",
+ "names": "test",
+ "people": 40
+}
