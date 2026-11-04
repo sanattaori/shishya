@@ -29,6 +29,19 @@ for real use. The latest full version, v7, failed three of its five rules.
 
 We publish it because the mechanism is simple, the failures are specific, and the next experiments are clear.
 
+## The model
+
+**It isn't a pre-trained LLM with something added.** It's a neural network with a lasting memory, and we tested two networks:
+
+| Network | Who trained it | Trained on | Used for |
+|---|---|---|---|
+| **The Brain, 12.8M** | **Us, from random weights** | 100M bytes of TinyStories, read as raw bytes, 6.2 hours on a free T4 | The no-LLM runs of v1–v6, including the 96% and 96.5% results |
+| **BDH, 100.9M** | [Others](https://huggingface.co/d3vmeh/bdh-100m-bytes) (MIT) | 5.4 GB of FineWeb-Edu and TinyStories | v7 and the demo, because the Brain only knows children's stories |
+
+Trained on the same 100M bytes, the Brain reads held-out text better than a same-size GPT (0.544 against 0.588 bits per byte;
+lower is better). LLMs appear only outside the model: as baselines, in one test of the same memory on SmolLM2, in the side
+study, and in v8's teacher tests, which are always labelled.
+
 ## The question
 
 Language models freeze when training ends. Fine-tuning on new text is slow and damages old knowledge. RAG works, but the
@@ -70,8 +83,8 @@ Test sets only, choosing among 5 names, so guessing scores 20%.
 | Five days on: a changed fact, newest value | 74.2% (v7) | 33.3% (RAG-3 on SmolLM2-135M) | [V7](V7.md) |
 | A change said in other words | 45.6% (v7) | 47.5% (RAG-3 on SmolLM2-135M) | [V7](V7.md) |
 | Five facts in one sentence | 39% (v7) | 68.5% (RAG-3 on SmolLM2-135M) | [V7](V7.md) |
-| Two facts combined, asked directly | 29% (v5, 135M) | 31% (RAG on SmolLM2-135M) | [V5](V5.md) |
-| Two facts combined, thinking out loud | 94% (v5, 135M) | 89% (RAG on SmolLM2-135M) | [V5](V5.md) |
+| Two facts combined, asked directly | 27.5% (v5, 12.8M, no LLM) | 31% (RAG on SmolLM2-135M) | [V5](V5.md) |
+| Two facts combined, thinking out loud | 97.5% (v5, 12.8M, no LLM) | 89% (RAG on SmolLM2-135M) | [V5](V5.md) |
 
 The five-day gain over RAG-3 has a 95% interval of +30 to +50.8 points. The tie on changes has −13.1 to +9.4.
 

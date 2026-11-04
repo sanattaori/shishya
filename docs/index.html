@@ -97,6 +97,11 @@ footer{margin-top:60px;border-top:1px solid var(--line);padding-top:18px;font-si
   <div class="card best"><h3>Shishya's try</h3><p class="muted">Reading a fact changes lasting connections inside the model, like a brain.</p></div>
 </div>
 
+<div class="card">
+  <h3>Is it an LLM?</h3>
+  <p class="muted" style="margin:0">No GPT-style LLM is inside, and there's no LLM API or stored text. It's a neural network with a lasting memory. We trained our own 12.8M network from random weights, on 100M bytes of children's stories, in 6 hours on a free GPU. It only knows children's stories, so the latest version uses a bigger network of the same design, trained by someone else and shared for free. LLMs only appear outside the model, as baselines and in clearly labelled tests.</p>
+</div>
+
 <h2 id="ideas">The ideas, in simple words</h2>
 <h3>Hebbian learning: "fire together, wire together"</h3>
 <p>Brains learn without a teacher checking every connection. When two neurons fire at the same moment, the link between them gets stronger. Try it:</p>
@@ -118,7 +123,8 @@ footer{margin-top:60px;border-top:1px solid var(--line);padding-top:18px;font-si
 <details><summary>Surprise: write harder when surprised</summary><p>You remember what surprises you. Shishya writes a letter harder when it didn't expect it. Expected text barely leaves a mark, so ordinary reading doesn't fill the memory.</p></details>
 <details><summary>Sparse: only a few fire at once</summary><p>Only a few neurons, or memory rows, are active for any one thing. So facts about different people don't overwrite each other.</p></details>
 <details><summary>Frozen: most of it never changes</summary><p>After training, the language part is locked. Only the lasting memory changes. That is why learning a new fact can't damage its language.</p></details>
-<details><summary>Childhood: learning how to learn</summary><p>One part is trained once, on made-up people and other kinds of facts, so it learns how to use a memory. Then training stops for good.</p></details>
+<details><summary>Birth: learning language from scratch</summary><p>It starts with random weights and reads 100M bytes of children's stories, as raw bytes, with normal training (backprop).</p></details>
+<details><summary>Childhood: learning how to learn</summary><p>One small part is trained on made-up people and other kinds of facts, so it learns how to use a memory. Then training stops for good.</p></details>
 
 <h2 id="bdh">Inside the reader: BDH</h2>
 <p>The part that knows English is <a href="https://arxiv.org/abs/2509.26507">BDH</a>, a brain-like language model from Pathway. Where GPT passes dense lists of numbers, BDH uses 65,536 neurons that fire or stay silent. Step through what happens for one letter:</p>
