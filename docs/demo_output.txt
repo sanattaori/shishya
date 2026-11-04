@@ -1,0 +1,40 @@
+Each answer starts fresh: only the unfinished sentence goes in, with nothing before it.
+
+# It reads each sentence once. No training runs.
+read  Priya lives in a town called Nashik.
+read  Zubak has a dog named Rex.
+read  Rahul's favourite food is pizza.
+
+# It knows them
+ask   Priya lives in a town called ...
+      before reading: Sangha in the s
+      now:            Nashik.
+ask   Zubak has a dog named ...
+      before reading: Spot who is a g
+      now:            Rex.
+ask   Rahul's favourite food is ...
+      before reading: cheese.
+      now:            pizza.
+
+# In words it has not read
+ask   The town where Priya lives is called ...
+      before reading: Priya Paramana.
+      now:            Nashik.
+ask   The name of Zubak's dog is ...
+      before reading: a strange one,
+      now:            Rex.
+
+# What it gets wrong: a change said in other words doesn't reach the old fact
+read  Priya moved to a town called Pune.
+ask   Priya lives in a town called ...
+      now:            Nashik and is
+
+# The same change, said the way the fact was first said, works
+read  Priya lives in a town called Pune.
+ask   Priya lives in a town called ...
+      now:            Pune.
+
+# What it gets wrong: a common name looks like nothing new, so nothing is stored
+read  Marie works at a company called Globex.
+ask   Marie works at a company called ...
+      now:            Star Wars tha

@@ -67,7 +67,8 @@ def make_address(key_bag: float, familiar: list[str]) -> Brain:
     cfg = BrainConfig(n_layer=1, n_embd=8, n_head=1, mult=1, key="words", key_window=8, key_decay=1.0,
                       key_sentence=True, key_novelty=True, key_bag=key_bag)
     a = Brain(cfg).eval()
-    a.learn_familiarity(familiar)
+    if familiar:
+        a.learn_familiarity(familiar)
     return a
 
 
