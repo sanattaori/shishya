@@ -92,7 +92,7 @@ so only the Brain's own numbers mean much):
   capped at 1.
 - On this CPU the tiny v2 takes 77 ms per session at a peak of 519 MB. L4's 50 ms fails even for the tiny model.
 
-**A measurement bug, fixed in e3a29b4.** The CPU check ran in a child process and read its peak memory
+**A measurement bug, fixed in 41746c2.** The CPU check ran in a child process and read its peak memory
 from `ru_maxrss`. On Linux that also counts the parent's memory at the fork. The first reading here was 2.7 GB, and
 the canary's 5.5 GB below was inflated the same way. The check now reads the child's own peak (`VmHWM`).
 
@@ -105,12 +105,12 @@ the canary's 5.5 GB below was inflated the same way. The check now reads the chi
 
 On a CPU (Kaggle's), the `bee` Brain v1 takes **625 ms** per 256-byte session. Rule L4 says ≤ 50 ms, so L4 fails as
 written. The 5.5 GB peak memory measured there is wrong. Part of it was the evaluation scoring 256 questions at once
-(fixed in 0484c13). Part of it was the parent's memory counted by `ru_maxrss` (see above). v1's memory is
+(fixed in 236b944). Part of it was the parent's memory counted by `ru_maxrss` (see above). v1's memory is
 re-measured with the fixed code after its run.
 
 ## 3. The verdict runs
 
-### v1 (Kaggle `sanattaori/shishya-brain-life`, code ba36374, 2× T4, finished 15:51 UTC): **FAIL**
+### v1 (Kaggle `sanattaori/shishya-brain-life`, code 8c85a34, 2× T4, finished 15:51 UTC): **FAIL**
 
 #### Childhood (same bytes for every model)
 
@@ -189,10 +189,10 @@ So L4 fails on speed only: the 50 ms target is about 7–11× too fast for BDH a
 
 ### v2 (Kaggle `sanattaori/shishya-brain-v2` training, then `sanattaori/shishya-brain-life2`)
 
-**Childhood, done 15:59 UTC** (code 0b0964d, 100M bytes, 6.2 h at 4,511 bytes/s): held-out **0.544** bits/byte.
+**Childhood, done 15:59 UTC** (code 56ae8d1, 100M bytes, 6.2 h at 4,511 bytes/s): held-out **0.544** bits/byte.
 That is 7.5% better than GPT (0.588); v1 Brain 0.561, BDH 0.532.
 
-**Life test, done 17:10 UTC** (kernel `shishya-brain-life2`, code 09f8841; the output's `commit.txt` wrongly
+**Life test, done 17:10 UTC** (kernel `shishya-brain-life2`, code d34e446; the output's `commit.txt` wrongly
 shows v1's, copied from the mounted v1 run, fixed since): **FAIL**, but far ahead of v1 and of gradient learning.
 
 #### Childhood (same bytes for every model)
@@ -375,9 +375,9 @@ candidate for v4, not part of v3.
 
 Reconsolidation does what it was meant to: with it, metaplasticity's changed facts go from 3% to 90–93%.
 
-## 6. The v3 verdict (Kaggle `sanattaori/shishya-brain-v3`, code b085a07, finished 23:20 UTC)
+## 6. The v3 verdict (Kaggle `sanattaori/shishya-brain-v3`, code a59d57a, finished 23:20 UTC)
 
-v3 is v2's trained network with v3's memory address (docs/PLAN.md, amendment of 31 Oct, committed in 543e43c
+v3 is v2's trained network with v3's memory address (docs/PLAN.md, amendment of 31 Oct, committed in 22a8959
 before this run). Same test stream, same GPT and BDH (their numbers are exactly those of the v1 and v2 runs), same
 rules. The "brain" childhood row is v2's network.
 
@@ -456,7 +456,7 @@ not harder than dev, against the prediction that it might be.
 ## 7. Choosing v4 (dev stream only, v2's network)
 
 v4 aims at questions in other words. The test stream gets wordings that were never used on dev
-(`data.HELDOUT_PARAPHRASE`, committed in 2d8d9d7, before v4's address was designed).
+(`data.HELDOUT_PARAPHRASE`, committed in 32c5bdf, before v4's address was designed).
 
 ### The meaning part of the address (`python -m brain.probes`, 100 dev facts, untrained codes)
 
@@ -551,7 +551,7 @@ in docs/PLAN.md.
   24% on Zifig). That fits the dev lives: v4 answers questions in other words about half the time (47%), not
   always.
 
-## 8. The v4 verdict (Kaggle `sanattaori/shishya-brain-v4`, code 318800a, the amendment's own commit)
+## 8. The v4 verdict (Kaggle `sanattaori/shishya-brain-v4`, code 08c9774, the amendment's own commit)
 
 v4 is v2's network with v4's memory (docs/PLAN.md, amendment of 1 Nov). Same test stream, same GPT and BDH (their
 numbers are again exactly those of the earlier runs), the rules as amended: L5 is new, L4 is reported only.

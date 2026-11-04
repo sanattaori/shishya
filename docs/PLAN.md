@@ -169,7 +169,7 @@ The analysis behind v3 used the dev stream only. The test stream was not looked 
 
 Six other lives were tried, with a write gate, metaplasticity (Larimar's protection, done locally) and
 reconsolidation. They are all in brain/RESULTS.md section 5, with the rule for the last choice, which was
-committed before its result (1cf73cf).
+committed before its result (d1d16a8).
 
 **Rules.**
 - v3 is judged by the same pass rules, on the same test stream, against the same GPT and BDH. L4 stays as written.
@@ -224,7 +224,7 @@ the words in their order, so "The town where Pimev lives is called" doesn't find
 **A new test: held-out wordings.**
 - A second way to ask each kind of question (`data.HELDOUT_PARAPHRASE`, for example "The word that Zubak keeps
   secret is").
-- They were committed (2d8d9d7) before v4's address was designed, and are used only on the test stream. So v4
+- They were committed (32c5bdf) before v4's address was designed, and are used only on the test stream. So v4
   can't have been fitted to them.
 
 **Rules.** L1, L2 and L3 as before. L4 is reported only. And a new one:

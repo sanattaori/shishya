@@ -40,6 +40,7 @@ delta rule. [ARCHITECTURE.md](ARCHITECTURE.md) explains how it works.
 
 - **Rules before runs.** Each version's plan, pass rules and predictions were committed before its first run. The
   commit history shows the order. If a rule failed by one question, it failed.
+  Commit author names were made uniform once before release; contents and dates did not change.
 - **Three sets of names.** Train names for childhood, dev names for choices, and test names used once. The world's facts
   use made-up names.
 - **Kinds of fact and wordings held out.** Childhood trains on 26 kinds of fact (teacher, boat, song), and none are the
