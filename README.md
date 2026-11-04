@@ -81,8 +81,8 @@ There's no database and no search. The answer is the network's normal guess, nud
 
 ### Inside the network: BDH
 
-The network uses [BDH](https://arxiv.org/abs/2509.26507), Pathway's brain-like design. Where GPT passes dense lists of numbers
-around, BDH passes neurons that fire or stay silent.
+The network uses [BDH](https://arxiv.org/abs/2509.26507), Pathway's brain-like design. Where GPT works with dense lists of numbers,
+BDH uses neurons that fire or stay silent.
 
 1. **Neurons fire.** Each byte switches on some neurons, and the rest stay silent.
 2. **They link to the past.** Where the same neurons fired on an earlier byte, a temporary link forms.
@@ -125,7 +125,7 @@ No. It can't hold a conversation. The research question is narrower: can a netwo
 
 ## Results
 
-The pass rules were fixed before each run. Each question is a choice among 5 names, so guessing scores 20%.
+The targets were fixed before each run. Each question is a choice among 5 names, so guessing scores 20%.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/img/research-dark.svg">
@@ -162,28 +162,28 @@ research, not a product. [The report](docs/RESEARCH.md#limits-of-this-work) list
 
 ## What we tried
 
-Eight versions, on free hardware. Each plan and pass rule was written down before its test ran.
+Eight versions, on free hardware. Each plan and target was written down before its test ran.
 
-| Version | What we tried | Result |
+| Version | What we tried | What happened |
 |---|---|---|
-| **v1, v2** | Train the network from scratch, and add lasting connections | Fail. Recall 35%, then 67%, and it lost old facts |
-| **v3** | Choose where to write by the sentence's rare words | 99%, and 96% after one reading. Failed only on speed |
-| **v4** | Add meaning and protection. Includes two ideas tried from IBM's Larimar, which the final model doesn't use | Fail. Other wordings stuck at 35% |
-| **Hybrid** | Test the same memory on a small LLM, against RAG | Fail. Other wordings 27% |
-| **v5** | Separate *who* from *what* | **All rules pass.** Other wordings 96.5% with no LLM |
-| **v6** | A harder exam: changing facts, five facts in one sentence | Fail, at 34–65%. But a five-day life passes |
-| **v7** | A bigger network, plus sleep | Fail. Changes 46%. The five-day life passes again |
-| **v8 tests** | A free LLM restates sentences first | Fail by one question. Changes 69%, needing 70% |
-| **v8, latest** | The same, and hide replaced values | Fail by two questions. Changes 85%, the best yet, but unchanged facts 81% |
-| **Side study** | A 270 KB layer that gives a frozen LLM habits | Mixed. Each habit passes alone; real trivia fails |
+| **v1, v2** | Train the network from scratch, and add lasting connections | Recall 35%, then 67%, and it lost old facts |
+| **v3** | Choose where to write by the sentence's rare words | 99%, and 96% after one reading. Too slow: 665 ms against a 50 ms target |
+| **v4** | Add meaning and protection. Includes two ideas tried from IBM's Larimar, which the final model doesn't use | Other wordings stuck at 35% |
+| **Hybrid** | Test the same memory on a small LLM, against RAG | Other wordings 27% |
+| **v5** | Separate *who* from *what* | **Met every target.** Other wordings 96.5% with no LLM |
+| **v6** | A harder exam: changing facts, five facts in one sentence | Changes 49%, one sentence 34%. A five-day life worked |
+| **v7** | A bigger network, plus sleep | Changes 46%, one sentence 39%. The five-day life worked again |
+| **v8 tests** | A free LLM restates sentences first | Changes 69%, one question short of the 70% target |
+| **v8, latest** | The same, and hide replaced values | Changes 85%, the best yet. Unchanged facts 81%, two questions short of the target |
+| **Side study** | A 270 KB layer that gives a frozen LLM habits | Each habit worked alone. On real trivia it lost too many right answers |
 
 The project began as a small [rules library](docs/DECISIONS.md), which is still here.
 
 ## How we kept it honest
 
-- **Rules first.** Each plan, pass rule and prediction was committed before its run. A version one question short still
-  fails.
-- **Failures stay.** Most versions failed, and all of them are [on the record](docs/RESEARCH.md#every-version).
+- **Targets first.** Each plan, target and prediction was committed before its run, and none was changed after.
+- **Nothing hidden.** Most versions missed at least one target, and all of them are
+  [on the record](docs/RESEARCH.md#every-version).
 - **Numbers you can check.** The raw outputs are in [`brain/results/`](brain/results/).
 
 ## Try it
@@ -207,11 +207,11 @@ python -m brain.teach             # teach it yourself
 ```
 
 Use rare names, and expect a few seconds per letter. Only the unfinished sentence goes in, so the answer can only come
-from its memory. The red lines are real failures, and we left them in.
+from its memory. The red lines are its real mistakes, and we left them in.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/img/teach-dark.svg">
-  <img alt="Terminal replay. Shishya reads three sentences once, then finishes them from memory, including in words it has not read. Two failures are shown as well." src="docs/img/teach-light.svg" width="100%">
+  <img alt="Terminal replay. Shishya reads three sentences once, then finishes them from memory, including in words it has not read. Two mistakes are shown as well." src="docs/img/teach-light.svg" width="100%">
 </picture>
 
 ## Find your way around
