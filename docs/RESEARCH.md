@@ -1,5 +1,7 @@
 # Can a neural network keep learning after training, with no gradients?
 
+> New here? The [interactive guide](https://sanattaori.github.io/shishya/) is the easiest way in.
+
 *Sanat Taori. An open research log, October–November 2026. Free hardware only: a 4-core CPU and Kaggle's free GPUs.*
 
 ## Summary
@@ -76,18 +78,18 @@ Raw outputs are in [`brain/results/`](../brain/results/).
 
 ### Every version
 
-| Version | The idea | Key numbers (test) | Rules | Verdict |
-|---|---|---|---|---:|
-| v1 | BDH + lasting synapses, delta rule | 35% after 3 readings, 24% after one | L1–L4 | FAIL (L1, L2, L4) |
-| v2 | Learns to use the memory better | 67% after 3 readings; early facts fade | L1–L4 | FAIL (L1, L2, L4) |
-| v3 | Address = the sentence's rare words | **99%, 96% after one**; other words 34% | L1–L4 | FAIL on speed only |
-| v4 | Adds a meaning part and protection | 98%; held-out wordings 35% | L1–L5 | FAIL (L5) |
-| Hybrid | v3's memory on a frozen LLM | 96%; other words 27% | H1–H5 | FAIL (H4, H5) |
-| **v5** | **who × what address** | **Other words 89.5–96.5%** at 12.8M, 135M and 1.7B | V1–V5 | **PASS, all three sizes** |
-| Hard school | New exam: changes, five facts in one sentence | v5 on 135M: changes 19%, one sentence 35.5% | D1–D4 | FAIL (v5 was never trained for this) |
-| v6 | A childhood with changes; a 5-day life | Changes 49%, kept 65%, one sentence 34%; **life passes** | X1–X6 | FAIL (X1, X3, X4) |
-| v7 | The 100M BDH reader; clause meaning; sleep | Changes 46%, kept 78%, one sentence 39%; **life passes** | Y1–Y5 | FAIL (Y1, Y2, Y3) |
-| v8, in progress | Sharp read; a free LLM rewrites at the door | Changes 69%, kept 89%, one sentence 50% (12 people) | P1–P3 | FAIL by one question on P1, and on P3 |
+| Date | Version | The idea | Key numbers (test) | Rules | Verdict |
+|---|---|---|---|---|---:|
+| 31 Oct | v1 | BDH + lasting synapses, delta rule | 35% after 3 readings, 24% after one | L1–L4 | FAIL (L1, L2, L4) |
+| 31 Oct | v2 | Learns to use the memory better | 67% after 3 readings; early facts fade | L1–L4 | FAIL (L1, L2, L4) |
+| 31 Oct | v3 | Address = the sentence's rare words | **99%, 96% after one**; other words 34% | L1–L4 | FAIL on speed only |
+| 1 Nov | v4 | Adds a meaning part and protection | 98%; held-out wordings 35% | L1–L5 | FAIL (L5) |
+| 1 Nov | Hybrid | v3's memory on a frozen LLM | 96%; other words 27% | H1–H5 | FAIL (H4, H5) |
+| 2 Nov | **v5** | **who × what address** | **Other words 89.5–96.5%** at 12.8M, 135M and 1.7B | V1–V5 | **PASS, all three sizes** |
+| 2 Nov | Hard school | New exam: changes, five facts in one sentence | v5 on 135M: changes 19%, one sentence 35.5% | D1–D4 | FAIL (v5 was never trained for this) |
+| 2 Nov | v6 | A childhood with changes; a 5-day life | Changes 49%, kept 65%, one sentence 34%; **life passes** | X1–X6 | FAIL (X1, X3, X4) |
+| 3 Nov | v7 | The 100M BDH reader; clause meaning; sleep | Changes 46%, kept 78%, one sentence 39%; **life passes** | Y1–Y5 | FAIL (Y1, Y2, Y3) |
+| 3–4 Nov | v8, in progress | Sharp read; a free LLM rewrites at the door | Changes 69%, kept 89%, one sentence 50% (12 people) | P1–P3 | FAIL by one question on P1, and on P3 |
 
 The most useful row is v5's. Earlier versions failed on other wordings at 22–35%. Splitting the address into *who* and
 *what* took that past 89%, at every size. Then the hard school showed that recall is the easy part.
@@ -138,7 +140,8 @@ Read every number here with these in mind.
 - **Few seeds, small samples.** Each verdict is one test run. The v8 tests use 12 people, so only large gains count.
 - **Memory is large and fixed.** 268 MB, about 800 times RAG's text in the long life.
 - **Speed.** 231 ms per session on a GPU. v3 failed a 50 ms CPU rule, and from v4 on speed is reported, not ruled.
-- **v8 is unfinished.** Its latest test was still running when this was written. See [V8_POC](V8_POC.md).
+- **v8 is unfinished.** Its latest test, which hides replaced values from the read, was still running when this was
+  written. See [V8_POC](V8_POC.md).
 
 ## Related work
 

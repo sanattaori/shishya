@@ -1,5 +1,7 @@
 # How Shishya works
 
+> Prefer to click? Try the [interactive guide](https://sanattaori.github.io/shishya/).
+
 This page explains the model twice. [Part 1](#part-1-in-plain-words) uses plain words and needs no machine learning.
 [Part 2](#part-2-the-engineering) gives the shapes, the equations and the code. [Part 3](#part-3-the-repository) is a
 map of the repository.
@@ -88,6 +90,18 @@ neurons, in 4 groups of 16,384. For each byte it runs this loop:
    6 rounds in all. Then it guesses the next byte.
 
 Those links vanish when the text ends, so BDH on its own remembers nothing afterwards. Our memory is the part that lasts.
+
+### Words you'll meet
+
+| Word | In plain words |
+|---|---|
+| **Hebbian learning** | "Fire together, wire together." A link between two neurons grows when they fire together, using only what the link can see. |
+| **Delta rule** | Compare what the memory says with what was read, and write only the difference. A new value replaces the old one. |
+| **Surprise** | How unexpected a letter was. A bigger surprise means a harder write. |
+| **Sparse** | Only a few neurons or rows are active at once, so facts stay apart. |
+| **Frozen** | Locked after training. Only the memory changes. |
+| **Childhood** | The one training run, on made-up worlds, where it learns how to use a memory. |
+| **RAG** | Keep the text, find the matching part, and paste it in front of the question. The usual way, and our reference point. |
 
 ### Why it fails where it fails
 
@@ -316,7 +330,8 @@ docs/
   V5.md – V8_POC.md   Each version's plan, written before its run, then its results
   ROADMAP*.md         Why these steps, in this order
   HYBRID.md           The frozen-LLM test
-  STATUS.md, RESUME.md  Working hand-off notes
+  README.md           A guide to every document
+  index.html          The interactive guide
 
 shishya/              A separate library: most likely answer that breaks no rule (DECISIONS.md)
 bench/, train/        That library's benchmark and its news classifier
