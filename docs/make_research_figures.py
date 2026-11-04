@@ -22,7 +22,7 @@ ROWS = [
     ("Five days on: a changed fact, newest value", 74.2, "Shishya v7", 33.3, "RAG-3 on a 135M LLM"),
     ("A change said in other words", 45.6, "Shishya v7", 47.5, "RAG-3 on a 135M LLM"),
     ("Five facts in one sentence", 39, "Shishya v7", 68.5, "RAG-3 on a 135M LLM"),
-    ("Two facts combined, no thinking out loud", 29, "Shishya v5", 31, "RAG on a 135M LLM"),
+    ("Two facts combined, no thinking out loud", 27.5, "Shishya v5", 31, "RAG on a 135M LLM"),
 ]
 
 
@@ -64,54 +64,70 @@ def chart(theme: str) -> str:
 
 def architecture(theme: str) -> str:
     t = THEMES[theme]
-    W, H = 900, 500
+    W, H = 900, 590
     blue = t["shishya"]
 
-    def box(x, y, w, h, title, lines, fill=None, ink=None, ink2=None):
-        fill, ink, ink2 = fill or t["card"], ink or t["text"], ink2 or t["text2"]
-        out = [f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="8" fill="{fill}" stroke="{t["line"]}"/>',
-               text(x + 14, y + 24, title, ink, 14, 650)]
-        out += [text(x + 14, y + 46 + i * 19, ln, ink2, 12.5) for i, ln in enumerate(lines)]
+    def stage(x, num, title, lines, active=False):
+        fill, ink, ink2 = (blue, "#ffffff", "#ffffff") if active else (t["card"], t["text"], t["text2"])
+        out = [f'<rect x="{x}" y="92" width="268" height="132" rx="8" fill="{fill}" stroke="{t["line"]}"/>',
+               text(x + 14, 118, f"{num}. {title}", ink, 15, 650)]
+        out += [text(x + 14, 142 + i * 19, ln, ink2, 12.5) for i, ln in enumerate(lines)]
         return "".join(out)
 
-    def arrow(points, label=None, at=None):
-        d = "M" + " L".join(f"{x},{y}" for x, y in points)
-        (x0, y0), (x1, y1) = points[-2], points[-1]
+    def arrow(x0, y0, x1, y1):
         ux, uy = (x1 > x0) - (x1 < x0), (y1 > y0) - (y1 < y0)
         head = (f"{x1},{y1} {x1 - 8 * ux + 4 * uy},{y1 - 8 * uy + 4 * ux} "
                 f"{x1 - 8 * ux - 4 * uy},{y1 - 8 * uy - 4 * ux}")
-        s = (f'<path d="{d}" fill="none" stroke="{t["text2"]}" stroke-width="1.5"/>'
-             f'<polygon points="{head}" fill="{t["text2"]}"/>')
-        if label:
-            s += text(at[0], at[1], label, t["text2"], 12)
-        return s
+        return (f'<line x1="{x0}" y1="{y0}" x2="{x1}" y2="{y1}" stroke="{t["text2"]}" stroke-width="1.5"/>'
+                f'<polygon points="{head}" fill="{t["text2"]}"/>')
 
+    def panel(x, w, title, lines, fill=None, ink=None, ink2=None):
+        fill, ink, ink2 = fill or t["card"], ink or t["text"], ink2 or t["text2"]
+        out = [f'<rect x="{x}" y="296" width="{w}" height="270" rx="8" fill="{fill}" stroke="{t["line"]}"/>',
+               text(x + 14, 322, title, ink, 15, 650)]
+        y0 = 480 if w > 200 else 352
+        out += [text(x + 14, y0 + i * 19, ln, ink2, 12.5) for i, ln in enumerate(lines)]
+        return "".join(out)
+
+    # neurons: a few fire. The pattern is only a picture.
+    lit = {2, 9, 13, 20, 26, 31, 37, 44}
+    dots = []
+    for i in range(48):
+        cx, cy = 248 + (i % 8) * 25, 350 + (i // 8) * 19
+        dots.append(f'<circle cx="{cx}" cy="{cy}" r="7" fill="{blue if i in lit else t["line"]}"/>')
+    # memory rows: only the name's rows are used.
+    rows = {1, 4, 6}
+    cells = []
+    for r in range(7):
+        for c in range(12):
+            on = r in rows and c in (3, 4, 5)
+            cells.append(f'<rect x="{540 + c * 17}" y="{340 + r * 17}" width="14" height="14" rx="2" '
+                         f'fill="#ffffff" opacity="{1 if on else 0.28}"/>')
     out = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="100%" role="img" '
-           'aria-label="Architecture. Text goes to a frozen BDH reader and to the who part of the address. The reader '
-           'gives the what part. Who and what address a lasting memory, the only part that changes. The memory nudges '
-           'the next letter.">',
+           'aria-label="The life of the model. Birth: it learns language from scratch on children\'s stories. '
+           'Childhood: it learns to use a memory. Life: it reads and learns with no backprop. While it lives, text '
+           'goes '
+           'to a frozen neural network, a name and a meaning choose a place in the lasting memory, and the memory '
+           'nudges the next letter. There is no LLM, stored text or search inside.">',
            f'<rect width="{W}" height="{H}" rx="10" fill="{t["surface"]}"/>',
-           text(24, 34, "Inside Shishya", t["text"], 20, 650),
-           text(24, 56, "Only the blue part changes after training.", t["text2"], 13),
-           box(24, 92, 220, 76, "The text", ["Priya lives in a town called"]),
-           box(300, 76, 340, 164, "Reader: BDH  (100.9M, frozen)",
-               ["1  Neurons fire", "2  They link to earlier bytes", "3  Neurons fire again",
-                "4  A neuron stays on only if both agree", "5  Update, then repeat: 6 rounds"]),
-           box(696, 92, 180, 76, "Next letter", ["N", "guess + nudge"]),
-           box(24, 288, 220, 92, "Who  (frozen)", ["The rare name picks", "40 of 16,384 rows"]),
-           box(300, 288, 220, 92, "What  (frozen)", ["What kind of fact this is:", "32 numbers"]),
-           box(580, 288, 296, 180, "Lasting memory", ["16,384 × 32 × 128 numbers", "The only part that changes", "",
-                                                      "To learn, it writes the next letter:",
-                                                      "M += β · who · what ⊗ error",
-                                                      "No gradients. No stored text."],
-               fill=blue, ink="#ffffff", ink2="#ffffff"),
-           arrow([(244, 130), (300, 130)]),
-           arrow([(640, 130), (696, 130)]),
-           arrow([(134, 168), (134, 288)]),
-           arrow([(410, 240), (410, 288)], "reader's state", (418, 268)),
-           arrow([(520, 334), (580, 334)]),
-           arrow([(134, 380), (134, 432), (580, 432)], "picks the row", (300, 424)),
-           arrow([(786, 288), (786, 168)], "nudges", (794, 232)),
+           text(24, 36, "A neural network with a lasting memory", t["text"], 21, 650),
+           text(24, 60, "No LLM inside. No stored text. No search.", t["text2"], 14),
+           stage(24, 1, "Birth", ["Starts with random weights.", "Learns language from scratch on",
+                                  "100M bytes of children's stories.", "Backprop. 6 hours on a free GPU."]),
+           stage(316, 2, "Childhood", ["Language is now frozen.", "Learns how to use a memory,",
+                                       "on made-up people and facts.", "Backprop, for the last time."]),
+           stage(608, 3, "Life", ["Reads, and learns as it reads.", "No backprop, ever again.",
+                                  "Only the memory changes,", "by one simple local rule."], active=True),
+           arrow(292, 158, 316, 158), arrow(584, 158, 608, 158),
+           text(24, 272, "What happens in life", t["text"], 15, 650),
+           panel(24, 176, "1. It reads", ['"Priya lives in', 'a town called', 'Nashik."']),
+           panel(224, 240, "2. Neurons fire", ["The network knows language.", "Frozen. It never changes.",
+                                               "Reading doesn't touch it."]),
+           panel(526, 246, "3. Memory is written", ["The rare name picks the rows.", "The meaning picks the spot.",
+                                                    "This is the learning."], fill=blue, ink="#ffffff", ink2="#ffffff"),
+           panel(792, 84, "Later", ["Priya ...", "Nashik."]),
+           "".join(dots), "".join(cells),
+           arrow(200, 430, 224, 430), arrow(464, 430, 526, 430), arrow(772, 430, 792, 430),
            "</svg>"]
     return "".join(out)
 
