@@ -10,19 +10,9 @@ It reads a sentence once and knows it. No retraining, and no notes kept on the s
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sanattaori/shishya/blob/main/brain/demo.ipynb)
 
-**[Try it](#try-it)** · **[How it works](#how-it-works)** · **[Results](#results)** · **[Full report](docs/RESEARCH.md)**
+**[Architecture](#the-architecture)** · **[Results](#results)** · **[Try it](#try-it)** · **[Full report](docs/RESEARCH.md)**
 
 </div>
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/img/teach-dark.svg">
-  <img alt="Terminal replay. Shishya reads three sentences once, then finishes them from memory, including in words it has not read. Two failures are shown as well." src="docs/img/teach-light.svg" width="100%">
-</picture>
-
-Only the unfinished sentence goes in, so "Nashik" can only come from its memory. The network's weights don't change.
-Only a separate block of lasting connections does, as it reads.
-
-The red lines are real failures. We left them in.
 
 ## The idea
 
@@ -32,46 +22,58 @@ Language models stop learning when training ends. There are two usual fixes:
 - **Keep the text and paste it back in (RAG).** This works well, but the model itself has learned nothing.
 
 Shishya tries a third way, closer to a brain: **reading a fact changes lasting connections inside the model**, using a
-simple local rule.
+simple local rule. After one reading it scores 96%, where a same-size GPT, fine-tuned, scores 14%.
 
-## Try it
+## The architecture
 
-It runs on a normal CPU. You don't need a GPU or an API key. The first run downloads a free 400 MB model.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/architecture-dark.svg">
+  <img alt="Architecture. The text goes to a frozen BDH reader and to the who part of the address. The reader gives the what part. Who and what address a lasting memory, the only part that changes. The memory nudges the next letter." src="docs/img/architecture-light.svg" width="100%">
+</picture>
 
-```bash
-git clone https://github.com/sanattaori/shishya && cd shishya
-pip install torch numpy huggingface_hub
+| Part | What it does | Changes after training? |
+|---|---|---:|
+| **Reader** | A language model that already knows English | No |
+| **Who** | The rare name picks 40 of the memory's 16,384 rows | No |
+| **What** | The meaning picks a spot in those rows | No |
+| **Lasting memory** | A fixed block of numbers that holds what it learned | **Yes. This is the learning.** |
 
-python -m brain.teach --tour      # what it can do, and what it can't
-python -m brain.teach             # teach it yourself
-```
+### How it learns
+
+Say it reads *"Priya lives in a town called Nashik."*
+
+1. "Priya" is new to it, so the sentence is worth keeping, and the name picks the rows.
+2. The reader's sense of "a town comes next" picks the spot.
+3. It writes the next letter there, harder when it is more surprised.
+
+The whole learning rule fits on one line, with no gradients and no optimiser:
 
 ```text
-> Zubak has a dog named Rex.      a line ending in "." is taught
-> The name of Zubak's dog is      anything else is a sentence for it to finish
+M[row] += strength · who(row) · what ⊗ (next letter − what the memory says now)
 ```
 
-Use rare names, and expect a few seconds per letter.
+### How it answers
 
-## How it works
+Ask *"The town where Priya lives is called"*. The name opens the same rows. The words are different, but the meaning is
+close, so it finds a nearby spot. What is stored there nudges the next letter towards **N**, then **a**, then **s**.
 
-There are three parts, and only one ever changes.
+There's no database and no search. The answer is the reader's normal guess, nudged by the memory.
 
-```mermaid
-flowchart LR
-    A["<b>Reader</b><br/>knows the language<br/><i>frozen</i>"] --> B["<b>Address</b><br/>who is this about?<br/>what kind of fact?<br/><i>frozen</i>"]
-    B --> C["<b>Memory</b><br/>lasting connections<br/><b>changes as it reads</b>"]
-    C -- "nudges the next letter" --> A
-```
+### Inside the reader: BDH
 
-**To learn,** it reads a sentence. The rare name picks a place in the memory, and the meaning picks a spot there. It
-writes the next letter at that spot, harder when it is more surprised.
+The reader is [BDH](https://arxiv.org/abs/2509.26507), Pathway's brain-like language model. Where GPT passes dense lists
+of numbers around, BDH passes **65,536 neurons that fire or stay silent**.
 
-**To answer,** the same name opens the same place, and a similar meaning finds a nearby spot, even in other words. What
-is stored there nudges the next letter. The answer comes out one letter at a time.
+1. **Neurons fire.** Each byte switches on some neurons, and the rest stay silent.
+2. **They link to the past.** Where the same neurons fired on an earlier byte, a temporary link forms and brings that
+   information forward. It's "fire together, wire together", computed as attention.
+3. **Neurons fire again,** this time from that context.
+4. **Both must agree.** A neuron stays on only if steps 1 and 3 both fired it.
+5. **Update and repeat.** The same weights run 6 rounds, like one brain thinking 6 times.
 
-There's no database and no search. **[Read the architecture](docs/ARCHITECTURE.md)**: plain words first, then the
-shapes, equations and code.
+Those temporary links vanish when the text ends, so BDH remembers nothing afterwards. **Shishya adds the part that lasts.**
+
+**[Read the full architecture](docs/ARCHITECTURE.md)**: plain words first, then the shapes, equations and code.
 
 ## Results
 
@@ -96,6 +98,31 @@ The pass rules were fixed before each run. Each question is a choice among 5 nam
 under 1 MB, against a fixed 268 MB. And Shishya has only been tested on made-up names in simple sentences. This is
 research, not a product. [The report](docs/RESEARCH.md#limits-of-this-work) lists every limit we know of.
 
+## Try it
+
+It runs on a normal CPU. You don't need a GPU or an API key. The first run downloads a free 400 MB model.
+
+```bash
+git clone https://github.com/sanattaori/shishya && cd shishya
+pip install torch numpy huggingface_hub
+
+python -m brain.teach --tour      # what it can do, and what it can't
+python -m brain.teach             # teach it yourself
+```
+
+```text
+> Zubak has a dog named Rex.      a line ending in "." is taught
+> The name of Zubak's dog is      anything else is a sentence for it to finish
+```
+
+Use rare names, and expect a few seconds per letter. Only the unfinished sentence goes in, so the answer can only come
+from its memory. The red lines are real failures, and we left them in.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/teach-dark.svg">
+  <img alt="Terminal replay. Shishya reads three sentences once, then finishes them from memory, including in words it has not read. Two failures are shown as well." src="docs/img/teach-light.svg" width="100%">
+</picture>
+
 ## How we kept it honest
 
 - **Rules first.** Each plan, pass rule and prediction was committed before its run. A version one question short still
@@ -110,10 +137,10 @@ are welcome.
 
 | Where | What |
 |---|---|
-| [`brain/teach.py`](brain/teach.py) | The demo. Start here. |
-| [`brain/v5.py`](brain/v5.py) | The memory: address, read, write and training |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How it works, in plain words and in full detail |
 | [`docs/RESEARCH.md`](docs/RESEARCH.md) | The report: results, lessons, limits and open problems |
+| [`brain/v5.py`](brain/v5.py) | The memory: address, read, write and training |
+| [`brain/teach.py`](brain/teach.py) | The demo |
 | [`lab/`](lab/) | A side study: a 270 KB layer that gives a frozen LLM habits |
 | [`shishya/`](shishya/) | A separate library: the most likely answer that breaks no rule. [Docs](docs/DECISIONS.md) |
 
