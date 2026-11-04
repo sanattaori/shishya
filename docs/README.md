@@ -26,4 +26,3 @@ were added after.
 | Document | What it covers |
 |---|---|
 | [DECISIONS.md](DECISIONS.md) | The separate rules library |
-| [parked/compile-to-program.md](parked/compile-to-program.md) | A plan that was set aside |

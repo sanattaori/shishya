@@ -1,8 +1,7 @@
 # Shishya Brain: a small network that keeps learning after training
 
 *Plan, written 31 Oct 2026, before any run. The pass rules below are fixed now and must not change after we see
-results. The earlier "compile LLM tasks into programs" plan is parked in
-[parked/compile-to-program.md](parked/compile-to-program.md).*
+results. An earlier plan, compiling LLM tasks into programs, was set aside.*
 
 ## The idea
 
