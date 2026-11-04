@@ -149,6 +149,9 @@ Read every number here with these in mind.
   updated at test time by surprise, close to our delta rule.
 - **"Language Models Need Sleep"**, Google ([arXiv 2606.03979](https://arxiv.org/pdf/2606.03979)). Wake–sleep consolidation.
 - **Sparse memory finetuning**, Meta ([arXiv 2510.15103](https://arxiv.org/abs/2510.15103)). Update only the slots a fact uses.
+- **Larimar**, IBM ([code](https://github.com/IBM/larimar)). One-shot edits and forgetting, through an encoder and a memory
+  written by least squares. It reports 83–88% on questions in other words. We tried local versions of its forgetting and
+  protection in the early versions ([details](ARCHITECTURE.md#ideas-we-tried-from-larimar)).
 - **The two-hop curse** ([arXiv 2411.16353](https://arxiv.org/abs/2411.16353)). LLMs too mostly fail to combine two separately
   learned facts without thinking out loud, as we found.
 

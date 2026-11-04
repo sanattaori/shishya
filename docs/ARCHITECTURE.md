@@ -74,6 +74,21 @@ it once, before life starts, on made-up people and **other** kinds of facts (tea
 
 After childhood the training stops for good. Everything it learns later comes from the one simple writing rule.
 
+### Inside the reader: BDH
+
+The reader is BDH, a language model from Pathway built to work like neurons. It reads one byte at a time and has 65,536
+neurons, in 4 groups of 16,384. For each byte it runs this loop:
+
+1. **Neurons fire.** The byte switches on some neurons. The rest stay silent.
+2. **They link to the past.** Where the same neurons fired on an earlier byte, a temporary link forms, and that byte's
+   information flows forward. This is "fire together, wire together".
+3. **Neurons fire again,** this time excited by that context.
+4. **Both must agree.** A neuron stays on only if steps 1 and 3 both fired it.
+5. **Update and repeat.** The neurons that survive update the model's understanding, and the same weights run again, for
+   6 rounds in all. Then it guesses the next byte.
+
+Those links vanish when the text ends, so BDH on its own remembers nothing afterwards. Our memory is the part that lasts.
+
 ### Why it fails where it fails
 
 Once you see the notebook, the failures make sense.
@@ -127,6 +142,47 @@ flowchart TB
 | Value codes | `Z`: 256 × 128, unit length | fixed random projection `P` | `v5.Reader.Z` |
 | Lasting memory | `M`: 16,384 × 32 × 128 | **written in life** | `v5.Student` |
 | Rate and gain | 2 scalars: rate 0.20, gain 13.3 | trained once | `v5.Reader` |
+
+### Inside BDH
+
+One round, from `brain/third_party/bdh.py` (Pathway's code, unchanged). `x` is `[B, 1, T, D]`, with `D = 512`, `nh = 4`
+heads and `N = 16,384` neurons per head:
+
+```text
+x_sparse  = ReLU(x @ encoder)                              neurons fire        [B, nh, T, N]
+yKV       = LN(attn(Q = x_sparse, K = x_sparse, V = x))    links to past bytes
+y_sparse  = ReLU(yKV @ encoder_v)                          fire from context   [B, nh, T, N]
+xy_sparse = x_sparse * y_sparse                            both must agree
+x         = LN(x + LN(flatten(xy_sparse) @ decoder))       update
+```
+
+`attn` is causal attention with rotary phases: `scores = (QR @ QRᵀ).tril(-1)`, then `scores @ V`. Q and K are the same
+non-negative neuron activity, so a score is high only where the same neurons fired at both bytes. Pathway reads these
+scores as temporary Hebbian synapses, which exist only for the current text.
+
+All 6 rounds share one set of weights. `encoder`, `encoder_v` and `decoder` hold 33.5M numbers each, and they make up
+nearly all of the 100.9M. The final state goes through `lm_head` to give the next byte's logits.
+
+| Measured at about 12.7M parameters, same 100M bytes | GPT | BDH |
+|---|---:|---:|
+| Held-out bits per byte (lower is better) | 0.588 | 0.532 |
+| Training speed, bytes per second (T4) | 62,058 | 8,240 |
+
+Our memory doesn't change any of this. It reads the state at layer 3 as the *what*, and adds its bias to the final logits.
+In v1–v4 the memory sat inside each layer; v5 moved it outside, which is what let it work on any reader.
+
+### Ideas we tried from Larimar
+
+[Larimar](https://github.com/IBM/larimar) (IBM, ICML 2024) has a BERT encoder, a memory matrix written by least squares,
+and an LLM that reads from it. We didn't run it. We tried local versions of two of its ideas on the 12.8M Brain:
+
+| Idea | Our local version | Outcome |
+|---|---|---|
+| Forget on request | Write zero over a text's addresses, 8 passes (`Brain.forget`) | A corrected fact fell to 9% at the same address. Not in v7. |
+| Protect what is stored | A unit changes less the more it has stored: `1 / (1 + use / τ)` | Nothing was forgotten, but new values won only 3% of the time, until corrections could reopen a unit. Used in v4. Not in v7. |
+
+The deeper difference is in the write. Least squares fits everything stored at once. The delta rule corrects one write at
+a time, using only local information. That is simpler and closer to a brain, but later writes can disturb earlier ones.
 
 ### The address
 
