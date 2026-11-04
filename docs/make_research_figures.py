@@ -1,6 +1,6 @@
 """Make the research figures (light and dark SVGs).
 
-    python docs/make_research_figures.py     # writes docs/img/research-*.svg and docs/img/teach-*.svg
+    python docs/make_research_figures.py     # writes docs/img/{architecture,research,teach}-*.svg
 
 The numbers are the test-set results in docs/RESEARCH.md, written here once so the figures can be rebuilt without
 rerunning anything. The animated demo replays docs/demo_output.txt, line by line, sped up. It is pure CSS inside the
@@ -62,6 +62,59 @@ def chart(theme: str) -> str:
     return "".join(out)
 
 
+def architecture(theme: str) -> str:
+    t = THEMES[theme]
+    W, H = 900, 500
+    blue = t["shishya"]
+
+    def box(x, y, w, h, title, lines, fill=None, ink=None, ink2=None):
+        fill, ink, ink2 = fill or t["card"], ink or t["text"], ink2 or t["text2"]
+        out = [f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="8" fill="{fill}" stroke="{t["line"]}"/>',
+               text(x + 14, y + 24, title, ink, 14, 650)]
+        out += [text(x + 14, y + 46 + i * 19, ln, ink2, 12.5) for i, ln in enumerate(lines)]
+        return "".join(out)
+
+    def arrow(points, label=None, at=None):
+        d = "M" + " L".join(f"{x},{y}" for x, y in points)
+        (x0, y0), (x1, y1) = points[-2], points[-1]
+        ux, uy = (x1 > x0) - (x1 < x0), (y1 > y0) - (y1 < y0)
+        head = (f"{x1},{y1} {x1 - 8 * ux + 4 * uy},{y1 - 8 * uy + 4 * ux} "
+                f"{x1 - 8 * ux - 4 * uy},{y1 - 8 * uy - 4 * ux}")
+        s = (f'<path d="{d}" fill="none" stroke="{t["text2"]}" stroke-width="1.5"/>'
+             f'<polygon points="{head}" fill="{t["text2"]}"/>')
+        if label:
+            s += text(at[0], at[1], label, t["text2"], 12)
+        return s
+
+    out = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="100%" role="img" '
+           'aria-label="Architecture. Text goes to a frozen BDH reader and to the who part of the address. The reader '
+           'gives the what part. Who and what address a lasting memory, the only part that changes. The memory nudges '
+           'the next letter.">',
+           f'<rect width="{W}" height="{H}" rx="10" fill="{t["surface"]}"/>',
+           text(24, 34, "Inside Shishya", t["text"], 20, 650),
+           text(24, 56, "Only the blue part changes after training.", t["text2"], 13),
+           box(24, 92, 220, 76, "The text", ["Priya lives in a town called"]),
+           box(300, 76, 340, 164, "Reader: BDH  (100.9M, frozen)",
+               ["1  Neurons fire", "2  They link to earlier bytes", "3  Neurons fire again",
+                "4  A neuron stays on only if both agree", "5  Update, then repeat: 6 rounds"]),
+           box(696, 92, 180, 76, "Next letter", ["N", "guess + nudge"]),
+           box(24, 288, 220, 92, "Who  (frozen)", ["The rare name picks", "40 of 16,384 rows"]),
+           box(300, 288, 220, 92, "What  (frozen)", ["What kind of fact this is:", "32 numbers"]),
+           box(580, 288, 296, 180, "Lasting memory", ["16,384 × 32 × 128 numbers", "The only part that changes", "",
+                                                      "To learn, it writes the next letter:", "M += β · who · what ⊗ error",
+                                                      "No gradients. No stored text."],
+               fill=blue, ink="#ffffff", ink2="#ffffff"),
+           arrow([(244, 130), (300, 130)]),
+           arrow([(640, 130), (696, 130)]),
+           arrow([(134, 168), (134, 288)]),
+           arrow([(410, 240), (410, 288)], "reader's state", (418, 268)),
+           arrow([(520, 334), (580, 334)]),
+           arrow([(134, 380), (134, 432), (580, 432)], "picks the row", (300, 424)),
+           arrow([(786, 288), (786, 168)], "nudges", (794, 232)),
+           "</svg>"]
+    return "".join(out)
+
+
 def demo(theme: str) -> str:
     t = THEMES[theme]
     lines = (HERE / "demo_output.txt").read_text().splitlines()
@@ -100,5 +153,6 @@ def demo(theme: str) -> str:
 if __name__ == "__main__":
     OUT.mkdir(exist_ok=True)
     for theme in THEMES:
+        (OUT / f"architecture-{theme}.svg").write_text(architecture(theme))
         (OUT / f"research-{theme}.svg").write_text(chart(theme))
         (OUT / f"teach-{theme}.svg").write_text(demo(theme))
